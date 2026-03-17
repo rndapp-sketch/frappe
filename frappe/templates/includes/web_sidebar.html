@@ -1,0 +1,452 @@
+<!--{% macro render_sidebar_item(item) %}
+<li class="{{ 'sidebar-group' if item.group_title else 'sidebar-item' }}">
+	{%- if item.group_title -%}
+
+	<h6>{{ _(item.group_title) }}</h6>
+	{{ render_sidebar_items(item.group_items) }}
+
+	{%- else -%}
+
+	{% if item.type != 'input' %}
+	{%- set item_route = item.route[1:] if item.route[0] == '/' else item.route -%}
+	<a href="{{ item.route }}" class="{{ 'active' if pathname == item_route else '' }}"
+		{% if item.target %}target="{{ item.target }}" {% endif %}>
+		{{ _(item.title) or _(item.label) }}
+	</a>
+	{% else %}
+	<form action='{{ item.route }}' class="mr-4">
+		<input name='q' class='form-control' type='text' style="outline: none"
+			placeholder="{{ _(item.title) or _(item.label) }}">
+	</form>
+	{% endif %}
+
+	{%- endif -%}
+</li>
+{% endmacro %}
+
+{% macro render_sidebar_items(items) %}
+{%- if items | len > 0 -%}
+<ul class="list-unstyled">
+	{% for item in items -%}
+	{{ render_sidebar_item(item) }}
+	{%- endfor %}
+</ul>
+{%- endif -%}
+{% endmacro %}
+
+{% macro my_account() %}
+{% if frappe.user != 'Guest' %}
+<ul class="list-unstyled">
+	<li class="sidebar-item">
+		<a href="/me">{{ _("My Account") }}</a>
+	</li>
+</ul>
+{% endif %}
+{% endmacro %}
+
+<div class="web-sidebar">
+	{% if sidebar_title %}
+	<li class="title">
+		{{ _(sidebar_title) }}
+	</li>
+	{% endif %}
+	<div class="sidebar-items">
+		{{ render_sidebar_items(sidebar_items) }}
+		{{ my_account() }}
+	</div>
+</div>
+
+<script>
+	frappe.ready(function () {
+		$('.sidebar-item a').each(function (index) {
+			const active_class = 'active'
+			const non_active_class = ''
+			let page_href = window.location.href;
+			if (page_href.indexOf('#') !== -1) {
+				page_href = page_href.slice(0, page_href.indexOf('#'));
+			}
+			if (this.href.trim() == page_href) {
+				$(this).removeClass(non_active_class).addClass(active_class);
+			} else {
+				$(this).removeClass(active_class).addClass(non_active_class);
+			}
+		});
+
+		// scroll the active sidebar item into view
+		let active_sidebar_item = $('.sidebar-item a.active');
+		if (active_sidebar_item.length > 0) {
+			active_sidebar_item.get(0)
+				.scrollIntoView({behavior: "auto", block: "center", inline: "nearest"});
+		}
+	});
+</script>-->
+
+
+<!--new ui design-->
+
+<!--
+This is a redesigned sidebar component using Tailwind CSS for a modern look and feel.
+It replaces the default list styling with a clean, card-based navigation panel.
+-->
+<!--<style>
+	/* This style block defines the visual appearance of the "active" navigation link.
+    It's used by the JavaScript below to highlight the current page's link in the sidebar.
+    We use static CSS classes here instead of @apply because the Tailwind CDN script
+    does not process @apply directives within style tags.
+    */
+	.sidebar-item-link.active {
+		background-color: #f1f5f9; /* Corresponds to Tailwind's bg-slate-100 */
+		color: #0f172a; /* Corresponds to Tailwind's text-slate-900 */
+	}
+</style>
+
+{#
+    MACRO: render_sidebar_item
+    Renders a single navigation item, which can be a link, a group title, or a search input.
+#}
+{% macro render_sidebar_item(item) %}
+<li class="{{ 'pt-5' if item.group_title else '' }}">
+	{%- if item.group_title -%}
+	{# Renders a title for a group of navigation items #}
+	<h5 class="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ _(item.group_title) }}</h5>
+	{{ render_sidebar_items(item.group_items, is_group=True) }}
+
+	{%- else -%}
+
+	{% if item.type != 'input' %}
+	{# Renders a standard navigation link #}
+	{%- set item_route = item.route[1:] if item.route[0] == '/' else item.route -%}
+	<a href="{{ item.route }}" class="sidebar-item-link flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-150"
+		{% if item.target %}target="{{ item.target }}" {% endif %}>
+		{{ _(item.title) or _(item.label) }}
+	</a>
+	{% else %}
+	{# Renders a search input form #}
+	<form action='{{ item.route }}' class="px-3">
+		<label for="sidebar-search-{{ item.title | slugify }}" class="sr-only">{{ _(item.title) or _(item.label) }}</label>
+		<div class="relative">
+			<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+				<svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+					<path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+				</svg>
+			</div>
+			<input id="sidebar-search-{{ item.title | slugify }}" name='q' class='block w-full rounded-lg border-0 py-1.5 pl-9 bg-slate-100 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6' type='text'
+				placeholder="{{ _(item.title) or _(item.label) }}">
+		</div>
+	</form>
+	{% endif %}
+
+	{%- endif -%}
+</li>
+{% endmacro %}
+
+
+{#
+    MACRO: render_sidebar_items
+    Renders a list (<ul>) of sidebar items by iterating over a collection.
+#}
+{% macro render_sidebar_items(items, is_group=False) %}
+{%- if items | len > 0 -%}
+<ul class="space-y-1 {{ 'mt-1' if is_group else '' }}">
+	{% for item in items -%}
+	{{ render_sidebar_item(item) }}
+	{%- endfor %}
+</ul>
+{%- endif -%}
+{% endmacro %}
+
+
+{#
+    MACRO: my_account
+    Renders the "My Account" link for logged-in users, separated from other nav items.
+#}
+{% macro my_account() %}
+{% if frappe.user != 'Guest' %}
+<div class="border-t border-slate-200/80 mt-4 pt-4">
+	<ul class="space-y-1">
+		<li>
+			<a href="/me" class="sidebar-item-link flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-150">
+				<svg class="w-5 h-5 mr-3 text-slate-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+					<circle cx="12" cy="7" r="4"></circle>
+				</svg>
+				<span>{{ _("My Account") }}</span>
+			</a>
+		</li>
+	</ul>
+</div>
+{% endif %}
+{% endmacro %}
+{% macro logout_link() %}
+<li class="mt-2">
+    <button onclick="logoutUser()"
+            class="w-full text-left sidebar-item-link flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors duration-150">
+        <svg class="w-5 h-5 mr-3 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+        </svg>
+        <span>{{ _("Logout") }}</span>
+    </button>
+</li>
+
+<script>
+function logoutUser() {
+    // Call Frappe logout API
+    fetch("/api/method/logout", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "X-Frappe-CSRF-Token": frappe.csrf_token
+        }
+    }).then(response => response.json())
+      .then(data => {
+          // Redirect to login page after logout
+          window.location.href = "/login?redirect-to=%2Fapp%2Fproject-registration#login";
+      })
+      .catch(err => {
+          console.error("Logout failed", err);
+      });
+}
+</script>
+{% endmacro %}
+
+<!--here-->
+<!-- The main sidebar container, styled as a modern card -->
+<!--<div class="web-sidebar bg-white border border-slate-200/80 rounded-xl p-4">
+	{% if sidebar_title %}
+	<h4 class="text-base font-semibold text-slate-900 mb-4 px-3">
+		{{ _(sidebar_title) }}
+	</h4>
+	{% endif %}
+	<nav class="sidebar-items" aria-label="Sidebar">
+		{{ render_sidebar_items(sidebar_items) }}
+		{{ my_account() }}
+	</nav>
+</div>
+
+
+<script>
+	frappe.ready(function () {
+		// This script ensures the correct sidebar link is highlighted as "active"
+		// even when the URL has hashes or query parameters.
+		$('.sidebar-item-link').each(function () {
+			const active_class = 'active';
+
+			try {
+				// Use the URL object for a more reliable comparison of the main path.
+				const currentUrl = new URL(window.location.href);
+				currentUrl.hash = '';
+				currentUrl.search = '';
+
+				const linkUrl = new URL(this.href);
+				linkUrl.hash = '';
+				linkUrl.search = '';
+
+				if (linkUrl.href === currentUrl.href) {
+					$(this).addClass(active_class);
+				} else {
+					$(this).removeClass(active_class);
+				}
+			} catch(e) {
+				// A simple fallback for older browsers or invalid URLs.
+				if (this.href.trim() == window.location.href.split('#')[0].split('?')[0]) {
+					 $(this).addClass(active_class);
+				} else {
+					$(this).removeClass(active_class);
+				}
+			}
+		});
+
+		// If an active item is found, scroll it into the center of the view for better UX.
+		const active_sidebar_item = $('.sidebar-item-link.active');
+		if (active_sidebar_item.length > 0) {
+			active_sidebar_item.get(0)
+				.scrollIntoView({
+					behavior: "smooth",
+					block: "center",
+					inline: "nearest"
+				});
+		}
+	});
+</script>-->
+
+
+<!--v2-->
+
+<!-- Modern Sidebar with Collapsible Roles and Logout -->
+<style>
+    .sidebar-item-link.active {
+        background-color: #f1f5f9; /* bg-slate-100 */
+        color: #0f172a; /* text-slate-900 */
+    }
+    .rotate-90 { transform: rotate(90deg); }
+</style>
+
+{% macro render_sidebar_item(item) %}
+<li class="{{ 'pt-5' if item.group_title else '' }}">
+    {%- if item.group_title -%}
+    <!-- Group Title -->
+    <h5 class="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ _(item.group_title) }}</h5>
+    {{ render_sidebar_items(item.group_items, is_group=True) }}
+    {%- else -%}
+
+    {% if item.type != 'input' %}
+    <!-- Standard Link -->
+    {%- set item_route = item.route[1:] if item.route[0] == '/' else item.route -%}
+    <a href="{{ item.route }}" class="sidebar-item-link flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-150"
+        {% if item.target %}target="{{ item.target }}" {% endif %}>
+        <span>{{ _(item.title) or _(item.label) }}</span>
+        {% if item.roles %}
+            <svg class="w-3 h-3 text-slate-400 ml-2 transition-transform duration-200" data-toggle="collapse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        {% endif %}
+    </a>
+
+    {% if item.roles %}
+    <ul class="ml-5 mt-1 hidden space-y-1 text-slate-600 text-sm">
+        {% for role in item.roles %}
+        <li>{{ role }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% else %}
+    <!-- Search Input -->
+    <form action='{{ item.route }}' class="px-3">
+        <label for="sidebar-search-{{ item.title | slugify }}" class="sr-only">{{ _(item.title) or _(item.label) }}</label>
+        <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <input id="sidebar-search-{{ item.title | slugify }}" name='q' class='block w-full rounded-lg border-0 py-1.5 pl-9 bg-slate-100 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6' type='text'
+                placeholder="{{ _(item.title) or _(item.label) }}">
+        </div>
+    </form>
+    {% endif %}
+
+    {%- endif -%}
+</li>
+{% endmacro %}
+
+
+{% macro render_sidebar_items(items, is_group=False) %}
+{%- if items | length > 0 -%}
+<ul class="space-y-1 {{ 'mt-1' if is_group else '' }}">
+    {% for item in items %}
+        {{ render_sidebar_item(item) }}
+    {% endfor %}
+</ul>
+{%- endif -%}
+{% endmacro %}
+
+
+{% macro my_account() %}
+{% if frappe.user != 'Guest' %}
+<div class="border-t border-slate-200/80 mt-4 pt-4">
+    <ul class="space-y-1">
+        <li>
+            <a href="/me" class="sidebar-item-link flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-150">
+                <!-- <svg class="w-5 h-5 mr-3 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"> -->
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                <!-- </svg> -->
+                <span>{{ _("My Account") }}</span>
+            </a>
+        </li>
+    </ul>
+</div>
+{% endif %}
+{% endmacro %}
+
+
+{% macro logout_link() %}
+<ul class="list-none">
+    <li class="mt-2">
+        <a href="#" onclick="logoutUser()" class="w-full text-left sidebar-item-link flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors duration-150">
+            <svg class="w-5 h-5 mr-3 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+            </svg>
+            <span>{{ _("Logout") }}</span>
+        </a>
+    </li>
+</ul>
+
+{% endmacro %}
+<div class="web-sidebar bg-white  p-4">
+
+<!-- <div class="web-sidebar bg-white border border-slate-200/80 rounded-xl p-4"> -->
+    {% if sidebar_title %}
+        <h4 class="text-base font-semibold text-slate-900 mb-4 px-3">
+            {{ _(sidebar_title) }}
+        </h4>
+    {% endif %}
+    <nav class="sidebar-items" aria-label="Sidebar">
+        {{ render_sidebar_items(sidebar_items) }}
+        {{ my_account() }}
+        {{ logout_link() }}
+    </nav>
+</div>
+
+
+<script>
+frappe.ready(function () {
+    // Highlight active link
+    $('.sidebar-item-link').each(function () {
+        const active_class = 'active';
+        try {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.hash = '';
+            currentUrl.search = '';
+            const linkUrl = new URL(this.href);
+            linkUrl.hash = '';
+            linkUrl.search = '';
+            if (linkUrl.href === currentUrl.href) {
+                $(this).addClass(active_class);
+            } else {
+                $(this).removeClass(active_class);
+            }
+        } catch(e) {
+            if (this.href.trim() == window.location.href.split('#')[0].split('?')[0]) {
+                $(this).addClass(active_class);
+            } else {
+                $(this).removeClass(active_class);
+            }
+        }
+    });
+
+    // Scroll active item into view
+    const active_sidebar_item = $('.sidebar-item-link.active');
+    if (active_sidebar_item.length > 0) {
+        active_sidebar_item.get(0).scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest"
+        });
+    }
+
+    // Collapsible roles
+    $('.sidebar-item-link').click(function(e){
+        const nextUl = $(this).next('ul');
+        if(nextUl.length) {
+            e.preventDefault();
+            nextUl.slideToggle(150);
+            $(this).find('svg[data-toggle]').toggleClass('rotate-90');
+        }
+    });
+
+    // Logout function
+    window.logoutUser = function() {
+        fetch("/api/method/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {"X-Frappe-CSRF-Token": frappe.csrf_token}
+        })
+        .then(() => {
+            window.location.href = "/login?redirect-to=%2Fapp%2Fproject-registration#login";
+        })
+        .catch(err => console.error("Logout failed", err));
+    }
+});
+</script>

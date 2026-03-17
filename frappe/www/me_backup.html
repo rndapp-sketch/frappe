@@ -1,0 +1,492 @@
+{% from "frappe/templates/includes/avatar_macro.html" import avatar %}
+{% extends "templates/web.html" %}
+
+{% block title %}
+{{ _("My Account") }}
+{% endblock %}
+
+{% block page_content %}
+<!-- <style>
+    .avatar {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 9999px;
+        border: 2px solid #e2e8f0;
+    }
+</style> -->
+
+<!-- Tailwind CSS -->
+<!-- <script src="https://cdn.tailwindcss.com"></script> -->
+
+<!-- Google Font: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: { sans: ['Inter', 'sans-serif'] }
+            }
+        }
+    }
+</script>
+
+<div class="bg-slate-50 min-h-screen font-sans py-10">
+    <div class="container mx-auto px-4 max-w-3xl">
+
+        <!-- Header -->
+        <header class="mb-10 text-center sm:text-left">
+            <h1 class="text-4xl font-bold text-slate-900">{{ _("My Account") }}</h1>
+            <p class="text-slate-500 mt-2">{{ _("Manage your profile, password, and connected applications.") }}</p>
+        </header>
+
+        <!-- Profile Section -->
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
+            <div class="w-28 h-28 flex-shrink-0">
+                {{ avatar(current_user.name) }}
+            </div>
+            <div class="flex-grow text-center sm:text-left">
+                <h2 class="text-2xl font-semibold text-slate-900">{{ current_user.full_name }}</h2>
+                <p class="text-slate-500 text-sm">{{ current_user.name }}</p>
+            </div>
+            <div class="flex-shrink-0">
+                <a href="/update-profile/{{ user }}" class="px-4 py-2 bg-primary text-white font-medium text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                        <path d="m15 5 4 4"></path>
+                    </svg>
+                    {{ _("Edit Profile") }}
+                </a>
+            </div>
+        </div>
+
+        <!-- Additional User Info -->
+        <div class="bg-white rounded-xl p-6 mb-8 border border-slate-200">
+            <h3 class="text-xl font-semibold text-slate-900 mb-4">{{ _("Additional Info") }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-700 text-sm">
+                <div><strong>{{ _("Email:") }}</strong> {{ user_info.email }}</div>
+                <div><strong>{{ _("User Type:") }}</strong> {{ user_info.user_type }}</div>
+                <div><strong>{{ _("Enabled:") }}</strong> {{ "Yes" if user_info.enabled else "No" }}</div>
+                <div><strong>{{ _("Last Login:") }}</strong> {{ user_info.last_login }}</div>
+                <div><strong>{{ _("Account Created:") }}</strong> {{ user_info.creation }}</div>
+                {% if user_info.mobile_no %}
+                <div><strong>{{ _("Mobile No:") }}</strong> {{ user_info.mobile_no }}</div>
+                {% endif %}
+                {% if user_info.location %}
+                <div><strong>{{ _("Location:") }}</strong> {{ user_info.location }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Collapsible Roles -->
+            <div class="mt-4">
+                <button type="button" class="w-full flex justify-between items-center text-sm font-medium text-primary hover:text-blue-700 focus:outline-none" onclick="document.getElementById('rolesPanel').classList.toggle('hidden')">
+                    <span>{{ _("Roles") }}</span>
+                    <svg class="w-4 h-4 transform transition-transform duration-200" id="rolesIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div class="mt-2 hidden" id="rolesPanel">
+                    <ul class="list-disc list-inside text-slate-700 text-sm">
+                        {% for role in user_info.roles %}
+                        <li class="py-1">{{ role }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="space-y-4">
+            <a href="/update-password" class="flex items-center justify-between px-6 py-4 bg-red-50 hover:bg-red-100 rounded-xl text-red-700 transition">
+                <span>{{ _("Reset Password") }}</span>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+
+            <a href="/third_party_apps" class="flex items-center justify-between px-6 py-4 bg-sky-50 hover:bg-sky-100 rounded-xl text-sky-700 transition">
+                <span>{{ _("Manage Third Party Apps") }}</span>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+
+            {% if frappe.db.get_single_value("Website Settings", "show_account_deletion_link") %}
+            <a href="/request-for-account-deletion?new=1" class="flex items-center justify-between px-6 py-4 bg-rose-50 hover:bg-rose-100 rounded-xl text-rose-700 transition">
+                <span>{{ _("Request Account Deletion") }}</span>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Optional: rotate arrow on toggle
+    const toggleButton = document.querySelector('[onclick*="rolesPanel"]');
+    const icon = document.getElementById('rolesIcon');
+    toggleButton?.addEventListener('click', () => {
+        icon.classList.toggle('rotate-180');
+    });
+</script>
+
+{% endblock %}
+
+
+
+
+<!-- v2-->
+
+{% from "frappe/templates/includes/avatar_macro.html" import avatar %}
+{% extends "templates/web.html" %}
+
+{% block title %}
+{{ _("My Account") }}
+{% endblock %}
+
+{% block page_content %}
+<style>
+    /* General Body and Font Styles */
+    body, .account-page {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #f8fafc; /* slate-50 */
+        color: #334155; /* slate-700 */
+        margin: 0;
+    }
+
+    .account-page {
+        min-height: 100vh;
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem;
+    }
+
+    /* Container */
+    .container {
+        max-width: 56rem; /* max-w-3xl */
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Header */
+    .account-header {
+        margin-bottom: 2.5rem;
+        text-align: center;
+    }
+    .account-header h1 {
+        font-size: 2.25rem; /* text-4xl */
+        font-weight: 700; /* font-bold */
+        color: #0f172a; /* slate-900 */
+        line-height: 2.5rem;
+        margin: 0;
+    }
+    .account-header p {
+        color: #64748b; /* slate-500 */
+        margin-top: 0.5rem;
+    }
+
+    /* Profile Section */
+    .profile-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .profile-avatar {
+        width: 7rem; /* w-28 */
+        height: 7rem; /* h-28 */
+        flex-shrink: 0;
+    }
+    .profile-avatar .avatar {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 9999px;
+        border: 2px solid #e2e8f0;
+    }
+    .profile-info {
+        flex-grow: 1;
+        text-align: center;
+    }
+    .profile-info h2 {
+        font-size: 1.5rem; /* text-2xl */
+        line-height: 2rem;
+        font-weight: 600; /* font-semibold */
+        color: #0f172a; /* slate-900 */
+        margin: 0;
+    }
+    .profile-info p {
+        color: #64748b; /* slate-500 */
+        font-size: 0.875rem; /* text-sm */
+        line-height: 1.25rem;
+        margin: 0;
+    }
+    .profile-actions {
+        flex-shrink: 0;
+    }
+    .edit-profile-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: #2563eb; /* bg-primary, assuming it's a blue */
+        color: white;
+        font-weight: 500;
+        font-size: 0.875rem;
+        border-radius: 0.5rem; /* rounded-lg */
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out;
+    }
+    .edit-profile-btn:hover {
+        background-color: #1d4ed8; /* hover:bg-blue-700 */
+    }
+    .edit-profile-btn svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+
+    /* Info Card */
+    .info-card {
+        background-color: #ffffff;
+        border-radius: 0.75rem; /* rounded-xl */
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0; /* border-slate-200 */
+    }
+    .info-card h3 {
+        font-size: 1.25rem; /* text-xl */
+        font-weight: 600; /* font-semibold */
+        color: #0f172a; /* slate-900 */
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+
+    /* Collapsible Roles */
+    .roles-toggle {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #2563eb; /* text-primary */
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: color 0.2s ease-in-out;
+    }
+    .roles-toggle:hover {
+        color: #1d4ed8; /* hover:text-blue-700 */
+    }
+    .roles-toggle svg {
+        width: 1rem;
+        height: 1rem;
+        transition: transform 0.2s ease-in-out;
+    }
+    .roles-panel {
+        margin-top: 0.5rem;
+    }
+    .roles-panel ul {
+        list-style-type: disc;
+        list-style-position: inside;
+        padding-left: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+    .roles-panel li {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
+    /* Account Actions */
+    .actions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .action-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem; /* rounded-xl */
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out;
+    }
+    .action-link svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    .action-link.password {
+        background-color: #fef2f2; /* bg-red-50 */
+        color: #b91c1c; /* text-red-700 */
+    }
+    .action-link.password:hover {
+        background-color: #fee2e2; /* hover:bg-red-100 */
+    }
+    .action-link.apps {
+        background-color: #f0f9ff; /* bg-sky-50 */
+        color: #0369a1; /* text-sky-700 */
+    }
+    .action-link.apps:hover {
+        background-color: #e0f2fe; /* hover:bg-sky-100 */
+    }
+    .action-link.delete {
+        background-color: #fff1f2; /* bg-rose-50 */
+        color: #be123c; /* text-rose-700 */
+    }
+    .action-link.delete:hover {
+        background-color: #ffe4e6; /* hover:bg-rose-100 */
+    }
+
+
+    /* Utility Classes */
+    .hidden {
+        display: none;
+    }
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    /* Responsive Styles */
+    @media (min-width: 640px) { /* sm breakpoint */
+        .account-header {
+            text-align: left;
+        }
+        .profile-section {
+            flex-direction: row;
+            align-items: flex-start;
+        }
+        .profile-info {
+            text-align: left;
+        }
+        .info-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+</style>
+
+<!-- Google Font: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<div class="account-page">
+    <div class="container">
+
+        <!-- Header -->
+        <header class="account-header">
+            <h1>{{ _("My Account") }}</h1>
+            <p>{{ _("Manage your profile, password, and connected applications.") }}</p>
+        </header>
+
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="profile-avatar">
+                {{ avatar(current_user.name) }}
+            </div>
+            <div class="profile-info">
+                <h2>{{ current_user.full_name }}</h2>
+                <p>{{ current_user.name }}</p>
+            </div>
+            <div class="profile-actions">
+                <a href="/update-profile/{{ user }}" class="edit-profile-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                        <path d="m15 5 4 4"></path>
+                    </svg>
+                    {{ _("Edit Profile") }}
+                </a>
+            </div>
+        </div>
+
+        <!-- Additional User Info -->
+        <div class="info-card">
+            <h3>{{ _("Additional Info") }}</h3>
+            <div class="info-grid">
+                <div><strong>{{ _("Email:") }}</strong> {{ user_info.email }}</div>
+                <div><strong>{{ _("User Type:") }}</strong> {{ user_info.user_type }}</div>
+                <div><strong>{{ _("Enabled:") }}</strong> {{ "Yes" if user_info.enabled else "No" }}</div>
+                <div><strong>{{ _("Last Login:") }}</strong> {{ user_info.last_login }}</div>
+                <div><strong>{{ _("Account Created:") }}</strong> {{ user_info.creation }}</div>
+                {% if user_info.mobile_no %}
+                <div><strong>{{ _("Mobile No:") }}</strong> {{ user_info.mobile_no }}</div>
+                {% endif %}
+                {% if user_info.location %}
+                <div><strong>{{ _("Location:") }}</strong> {{ user_info.location }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Collapsible Roles -->
+            <div>
+                <button type="button" class="roles-toggle" onclick="toggleRoles()">
+                    <span>{{ _("Roles") }}</span>
+                    <svg id="rolesIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div class="roles-panel hidden" id="rolesPanel">
+                    <ul>
+                        {% for role in user_info.roles %}
+                        <li class="py-1">{{ role }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="actions-list">
+            <a href="/update-password" class="action-link password">
+                <span>{{ _("Reset Password") }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+
+            <a href="/third_party_apps" class="action-link apps">
+                <span>{{ _("Manage Third Party Apps") }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+
+            {% if frappe.db.get_single_value("Website Settings", "show_account_deletion_link") %}
+            <a href="/request-for-account-deletion?new=1" class="action-link delete">
+                <span>{{ _("Request Account Deletion") }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleRoles() {
+        const panel = document.getElementById('rolesPanel');
+        const icon = document.getElementById('rolesIcon');
+        panel.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+</script>
+
+{% endblock %}

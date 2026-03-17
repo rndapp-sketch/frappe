@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-button.active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px #c7d2fe;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: #374151;
+        }
+        .form-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #374151;
+        }
+        .form-checkbox {
+            height: 1rem;
+            width: 1rem;
+            border-radius: 0.25rem;
+            border-color: #d1d5db;
+            color: #4f46e5;
+        }
+        .form-button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .form-button:hover {
+            background-color: #4338ca;
+        }
+        .table-action-button {
+             background-color: #10b981;
+             color: white;
+             padding: 0.5rem 1rem;
+             border-radius: 0.375rem;
+             font-weight: 500;
+             font-size: 0.875rem;
+             transition: background-color 0.2s;
+        }
+        .table-action-button:hover {
+            background-color: #059669;
+        }
+        .table-action-button.delete {
+            background-color: #ef4444;
+        }
+        .table-action-button.delete:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">New Project Registration</h1>
+            <p class="text-gray-500 mt-1">Fill in the details below to register a new project.</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex flex-wrap -mb-px" id="tab-buttons">
+                <button class="tab-button active text-sm font-medium text-center text-gray-500 border-b-2 border-transparent px-4 py-3 hover:text-gray-600 hover:border-gray-300" data-tab="project-details">Project Details</button>
+                <button class="tab-button text-sm font-medium text-center text-gray-500 border-b-2 border-transparent px-4 py-3 hover:text-gray-600 hover:border-gray-300" data-tab="pi-details">PI & Collaborators</button>
+                <button class="tab-button text-sm font-medium text-center text-gray-500 border-b-2 border-transparent px-4 py-3 hover:text-gray-600 hover:border-gray-300" data-tab="budget-details">Proposed Budget</button>
+                <button class="tab-button text-sm font-medium text-center text-gray-500 border-b-2 border-transparent px-4 py-3 hover:text-gray-600 hover:border-gray-300" data-tab="clearance-declaration">Clearance & Declaration</button>
+                <button class="tab-button text-sm font-medium text-center text-gray-500 border-b-2 border-transparent px-4 py-3 hover:text-gray-600 hover:border-gray-300" data-tab="sanction-funds">Sanction & Funds</button>
+            </nav>
+        </div>
+
+        <form id="project-registration-form">
+            <!-- Project Details Tab -->
+            <div id="project-details" class="tab-content active">
+                <div class="form-section">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-6">Project Description</h2>
+                    <div class="space-y-6">
+                         <div>
+                            <label for="pi_webmail" class="form-label">If registering on behalf of another PI, enter their email:</label>
+                            <input type="email" id="pi_webmail" class="form-input" placeholder="example@iitg.ac.in">
+                        </div>
+                        <div>
+                            <label for="project_title" class="form-label">Project Title</label>
+                            <input type="text" id="project_title" class="form-input" required>
+                        </div>
+                        <div class="form-grid">
+                            <div>
+                                <label for="project_type" class="form-label">Project Type</label>
+                                <select id="project_type" class="form-select" required>
+                                    <option>Research</option>
+                                    <option>Consultancy</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div id="consultancy_category_container" class="hidden">
+                                <label for="consultancy_category" class="form-label">Consultancy Category</label>
+                                <select id="consultancy_category" class="form-select">
+                                    <option>Category D : Technology Transfer / Research Based</option>
+                                    <option>Category E : Non-Routine</option>
+                                    <option>Category F : Routine / Testing</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Container for all research-specific fields -->
+                        <div id="research_specific_fields" class="hidden space-y-6">
+                            <hr class="border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-700 -mb-2">Funding Details</h3>
+                             <div>
+                                 <label for="funding_agen" class="form-label">Select Funding Agency</label>
+                                 <input type="text" id="funding_agen" class="form-input" placeholder="Begin typing for results...">
+                             </div>
+                            <div class="form-grid">
+                                <div><label for="funding_agency_type" class="form-label">Type of Funding Agency</label><input type="text" id="funding_agency_type" class="form-input bg-gray-100" readonly></div>
+                                <div><label for="origin_of_funding_agency" class="form-label">Origin of Funding</label><input type="text" id="origin_of_funding_agency" class="form-input bg-gray-100" readonly></div>
+                                <div><label for="funding_agency_ministry" class="form-label">Ministry</label><input type="text" id="funding_agency_ministry" class="form-input bg-gray-100" readonly></div>
+                                 <div>
+                                     <label for="funding_agency_schemes" class="form-label">Research Scheme Name (if applicable)</label>
+                                     <input type="text" id="funding_agency_schemes" class="form-input">
+                                 </div>
+                            </div>
+                             <div class="p-4 border rounded-md bg-gray-50">
+                                 <h3 class="font-medium text-gray-700 mb-2">Agency Address</h3>
+                                 <div class="form-grid">
+                                     <div><label for="address_street_village_locality" class="form-label text-sm">Street/Locality</label><input type="text" id="address_street_village_locality" class="form-input bg-gray-100 text-sm" readonly></div>
+                                     <div><label for="address_state" class="form-label text-sm">State</label><input type="text" id="address_state" class="form-input bg-gray-100 text-sm" readonly></div>
+                                     <div><label for="address_postal_code" class="form-label text-sm">Postal Code</label><input type="text" id="address_postal_code" class="form-input bg-gray-100 text-sm" readonly></div>
+                                     <div><label for="address_country" class="form-label text-sm">Country</label><input type="text" id="address_country" class="form-input bg-gray-100 text-sm" readonly></div>
+                                 </div>
+                             </div>
+                             <hr class="border-gray-200">
+                             <h3 class="text-lg font-semibold text-gray-700 -mb-2">Implementation Details</h3>
+                             <div>
+                                <label for="implementation_department" class="form-label">Department/Centre where the project will be implemented</label>
+                                <input type="text" id="implementation_department" class="form-input" placeholder="Begin typing for results...">
+                             </div>
+                             <div>
+                                <label for="involves_international_travel" class="form-label">Does this project involve international travel?</label>
+                                <select id="involves_international_travel" class="form-select">
+                                    <option>No</option>
+                                    <option>Yes</option>
+                                </select>
+                            </div>
+                            <hr class="border-gray-200">
+                        </div>
+
+                        <div>
+                            <label for="project_objective" class="form-label">Objective of the Project</label>
+                            <textarea id="project_objective" rows="3" class="form-textarea"></textarea>
+                        </div>
+                        <div>
+                            <label for="project_deliverables" class="form-label">Deliverables of the Project</label>
+                            <textarea id="project_deliverables" rows="3" class="form-textarea"></textarea>
+                        </div>
+                         <div>
+                            <label for="executive_summary" class="form-label">Executive Summary</label>
+                            <textarea id="executive_summary" rows="3" class="form-textarea"></textarea>
+                        </div>
+                         <div class="form-grid">
+                            <div id="duration_months_container">
+                                <label for="project_duration_months" class="form-label">Duration (Months)</label>
+                                <input type="number" id="project_duration_months" class="form-input">
+                            </div>
+                             <div id="duration_days_container" class="hidden">
+                                <label for="project_duration_days" class="form-label">Duration (Days)</label>
+                                <input type="number" id="project_duration_days" class="form-input">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="upload_proj_prop" class="form-label">Upload Project Proposal</label>
+                            <input type="file" id="upload_proj_prop" class="form-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-between">
+                    <button type="button" class="form-button prev-tab-button bg-gray-500 hover:bg-gray-600">Previous</button>
+                    <button type="button" class="form-button next-tab-button">Next</button>
+                </div>
+            </div>
+
+            <!-- PI & Collaborators Tab -->
+            <div id="pi-details" class="tab-content">
+                <div class="form-section">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-6">Principal Investigator (PI) Details</h2>
+                    <div class="form-grid">
+                        <div><label for="pi_employee_id" class="form-label">Employee ID of PI</label><input type="text" id="pi_employee_id" class="form-input bg-gray-100" readonly></div>
+                        <div><label for="principal_investigator_name" class="form-label">Name of PI</label><input type="text" id="principal_investigator_name" class="form-input bg-gray-100" readonly></div>
+                        <div><label for="designation" class="form-label">Designation</label><input type="text" id="designation" class="form-input bg-gray-100" readonly></div>
+                        <div><label for="applicant_department" class="form-label">Department of Applicant</label><input type="text" id="applicant_department" class="form-input bg-gray-100" readonly></div>
+                    </div>
+                    <hr class="my-8">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-6">Collaborators</h2>
+                    <div class="space-y-6">
+                        <div class="form-grid">
+                            <div>
+                                <label for="is_additional_pi" class="form-label">Does this project have additional PI(s)?</label>
+                                <select id="is_additional_pi" class="form-select"><option>No</option><option>Yes</option></select>
+                            </div>
+                            <div>
+                                <label for="has_co_pi" class="form-label">Does this project have Co-PI(s)?</label>
+                                <select id="has_co_pi" class="form-select"><option>No</option><option>Yes</option></select>
+                            </div>
+                        </div>
+                        <div id="additional_pi_table_container" class="hidden mt-6">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Details of Additional Principal Investigator(s)</h3>
+                            <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email ID</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="additional_pi_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                            <button type="button" id="add_additional_pi_button" class="table-action-button mt-2">Add Additional PI</button>
+                        </div>
+                        <div id="co_pi_table_container" class="hidden mt-6">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Details of Co-Principal Investigator(s)</h3>
+                            <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email ID</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="co_pi_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                            <button type="button" id="add_co_pi_button" class="table-action-button mt-2">Add Co-PI</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-between">
+                    <button type="button" class="form-button prev-tab-button bg-gray-500 hover:bg-gray-600">Previous</button>
+                    <button type="button" class="form-button next-tab-button">Next</button>
+                </div>
+            </div>
+
+            <!-- Budget Details Tab -->
+            <div id="budget-details" class="tab-content">
+                <div class="form-section">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-6">Proposed Budget Breakup</h2>
+                    <p class="text-gray-600 mb-4">Please provide a detailed year-wise breakup of the proposed budget.</p>
+                     <div class="overflow-x-auto">
+                        <table id="proposed_budget_table" class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr id="proposed_budget_thead_row">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Head</th>
+                                    <!-- Year columns inserted here by JS -->
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="proposed_budget_tbody" class="bg-white divide-y divide-gray-200">
+                                <!-- Dynamic rows will be inserted here -->
+                            </tbody>
+                            <tfoot class="bg-gray-50">
+                                <tr id="proposed_budget_tfoot_row">
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">Total</th>
+                                    <!-- Year totals inserted here by JS -->
+                                    <td></td> <!-- Placeholder for actions column -->
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="flex space-x-2 mt-2">
+                        <button type="button" id="add_budget_row_button" class="table-action-button">Add Budget Row</button>
+                        <button type="button" id="add_year_button" class="table-action-button">Add Year</button>
+                        <button type="button" id="delete_year_button" class="table-action-button delete">Delete Last Year</button>
+                    </div>
+                     <div class="mt-6 flex justify-end">
+                        <div class="w-full md:w-1/3">
+                            <label for="total_budget_amount" class="form-label font-bold text-lg">Grand Total Proposed Budget (₹)</label>
+                            <input type="text" id="total_budget_amount" class="form-input text-lg font-bold bg-gray-100" readonly>
+                        </div>
+                    </div>
+                    <hr class="my-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Project Head Details</h3>
+                    <div class="flex space-x-8">
+                        <label class="form-checkbox-label"><input type="checkbox" id="equipment_checkbox" class="form-checkbox"><span>Equipment</span></label>
+                        <label class="form-checkbox-label"><input type="checkbox" id="manpower_checkbox" class="form-checkbox"><span>Manpower</span></label>
+                    </div>
+                    <div id="equipment_details_container" class="hidden mt-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Proposed Equipment Details</h3>
+                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost (₹)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="equipment_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                        <button type="button" id="add_equipment_button" class="table-action-button mt-2">Add Equipment</button>
+                    </div>
+                    <div id="manpower_details_container" class="hidden mt-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Proposed Manpower Details</h3>
+                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salary (₹)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="manpower_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                        <button type="button" id="add_manpower_button" class="table-action-button mt-2">Add Manpower</button>
+                    </div>
+                </div>
+                 <div class="mt-8 flex justify-between">
+                    <button type="button" class="form-button prev-tab-button bg-gray-500 hover:bg-gray-600">Previous</button>
+                    <button type="button" class="form-button next-tab-button">Next</button>
+                </div>
+            </div>
+
+            <!-- Clearance & Declaration Tab -->
+            <div id="clearance-declaration" class="tab-content">
+                <div class="form-section">
+                     <h2 class="text-xl font-semibold text-gray-700 mb-6">Committee Clearance</h2>
+                     <div>
+                         <label for="needs_committee_clearance" class="form-label">Does this project need clearance from any committee?</label>
+                         <select id="needs_committee_clearance" class="form-select"><option>No</option><option>Yes</option></select>
+                     </div>
+                     <div id="clearance_section_container" class="hidden mt-6 space-y-6">
+                        <div class="form-grid">
+                            <div>
+                                <label for="committees" class="form-label">Select Committee</label>
+                                <select id="committees" class="form-select"><option>Ethics Committee</option><option>Biosafety Committee</option><option>Animal Ethics Committee</option><option>Other</option></select>
+                            </div>
+                            <div id="other_committee_container" class="hidden">
+                                <label for="other_committee_specify" class="form-label">Specify Other Committee</label>
+                                <input type="text" id="other_committee_specify" class="form-input">
+                            </div>
+                        </div>
+                     </div>
+                    <hr class="my-8">
+                     <h2 class="text-xl font-semibold text-gray-700 mb-6">Declaration</h2>
+                      <div class="p-4 bg-gray-100 rounded-md text-sm text-gray-700 space-y-3"><p><strong>Biosafety Categories:</strong></p><ul class="list-disc list-inside space-y-1"><li><strong>Category I:</strong> Experiments involving self-cloning, using strains and also inter-species cloning belonging to organisms in the same exchanger group etc. are exempt for the purpose of intimation and approval.</li><li><strong>Category II:</strong> Experiments falling under containment levels II, III and IV, large-scale use of recombinants made of self-cloning in systems belonging to exempt category etc. require prior intimation to IBSC.</li><li><strong>Category III:</strong> Experiments involving toxin gene cloning, cloning of genes for vaccine production, use of infectious animal and plant viruses, self-fusion experiments, field testing and release of GMOs etc. require review and approval of IBSC before commencement.</li></ul><p>In case of a multi-department/centre project, from an administrative point of view, the project will be registered in the name of the PI.</p></div>
+                      <div class="mt-4"><label class="form-checkbox-label"><input type="checkbox" id="declaration_html" class="form-checkbox"><span>I Accept the above Declaration</span></label></div>
+                </div>
+                 <div class="mt-8 flex justify-between">
+                    <button type="button" class="form-button prev-tab-button bg-gray-500 hover:bg-gray-600">Previous</button>
+                    <button type="button" class="form-button next-tab-button">Next</button>
+                </div>
+            </div>
+
+            <!-- Sanction & Funds Tab -->
+            <div id="sanction-funds" class="tab-content">
+                 <div class="form-section space-y-8">
+                     <div>
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Sanction Details</h2>
+                        <div>
+                            <label for="have_sanction_details" class="form-label">Do you have Sanctioned Details?</label>
+                            <select id="have_sanction_details" class="form-select"><option>No</option><option>Yes</option></select>
+                        </div>
+                        <div id="sanction_details_container" class="hidden mt-6 space-y-6">
+                            <div class="form-grid">
+                                <div><label for="total_sanctioned_amount" class="form-label">Total Sanctioned Amount (₹)</label><input type="number" id="total_sanctioned_amount" class="form-input" placeholder="0.00"></div>
+                                <div><label for="sanctioned_letter_no" class="form-label">Sanctioned Letter No.</label><input type="text" id="sanctioned_letter_no" class="form-input"></div>
+                                <div><label for="sanctioned_letter_date" class="form-label">Date of Sanctioned Letter</label><input type="date" id="sanctioned_letter_date" class="form-input"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-4">Sanctioned Budget Breakup</h3>
+                                <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Head</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (₹)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="sanctioned_budget_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                                <button type="button" id="add_sanctioned_budget_button" class="table-action-button mt-2">Add Sanctioned Budget Row</button>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-4">Upload Sanction Related Files</h3>
+                                <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="sanction_files_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                                <button type="button" id="add_sanction_file_button" class="table-action-button mt-2">Add File</button>
+                            </div>
+                        </div>
+                    </div>
+                     <hr>
+                      <div>
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Fund Details</h2>
+                        <div><label for="have_fund_details" class="form-label">Have you received funds?</label><select id="have_fund_details" class="form-select"><option>No</option><option>Yes</option></select></div>
+                        <div id="fund_details_container" class="hidden mt-6 space-y-6">
+                             <div class="form-grid">
+                                <div><label for="amount_received" class="form-label">Amount Received (₹)</label><input type="number" id="amount_received" class="form-input" placeholder="0.00"></div>
+                                <div><label for="iitg_bank_account_number" class="form-label">IITG Bank Account Number</label><input type="text" id="iitg_bank_account_number" class="form-input"></div>
+                                <div><label for="is_gst_invoice_issued" class="form-label">Is GST Invoice Issued?</label><select id="is_gst_invoice_issued" class="form-select"><option></option><option>Yes</option><option>No</option></select></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-4">Installment Details</h3>
+                                <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Installment No.</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Received</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Received (₹)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="fund_installments_tbody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                                <button type="button" id="add_installment_button" class="table-action-button mt-2">Add Installment</button>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 <div class="mt-8 flex justify-between">
+                    <button type="button" class="form-button prev-tab-button bg-gray-500 hover:bg-gray-600">Previous</button>
+                    <button type="button" class="form-button next-tab-button">Next</button>
+                </div>
+            </div>
+
+            <!-- Form Submission -->
+            <div class="mt-8 flex justify-end gap-4">
+                <button type="button" class="form-button bg-gray-300 hover:bg-gray-400 text-gray-800">Save Draft</button>
+                <button type="submit" class="form-button">Submit Registration</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- TAB NAVIGATION LOGIC ---
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            let currentTab = 0;
+
+            function showTab(tabIndex) {
+                if (tabIndex < 0 || tabIndex >= tabButtons.length) return;
+                tabButtons.forEach((btn, index) => btn.classList.toggle('active', index === tabIndex));
+                tabContents.forEach((content, index) => content.classList.toggle('active', index === tabIndex));
+                currentTab = tabIndex;
+            }
+
+            tabButtons.forEach((button, index) => {
+                button.addEventListener('click', () => showTab(index));
+            });
+
+            document.querySelectorAll('.next-tab-button').forEach(button => {
+                button.addEventListener('click', () => showTab(currentTab + 1));
+            });
+
+            document.querySelectorAll('.prev-tab-button').forEach(button => {
+                button.addEventListener('click', () => showTab(currentTab - 1));
+            });
+
+            document.querySelector('#project-details .prev-tab-button').classList.add('hidden');
+            document.querySelector('#sanction-funds .next-tab-button').classList.add('hidden');
+
+            // --- CONDITIONAL VISIBILITY LOGIC ---
+            function setupConditionalLogic() {
+                const projectTypeController = document.getElementById('project_type');
+
+                const setupListener = (controllerId, targetId, triggerValue, isCheckbox = false) => {
+                    const controller = document.getElementById(controllerId);
+                    const target = document.getElementById(targetId);
+                    if (!controller || !target) return;
+                    const checkCondition = () => {
+                        const condition = isCheckbox ? controller.checked : controller.value === triggerValue;
+                        target.classList.toggle('hidden', !condition);
+                    };
+                    controller.addEventListener('change', checkCondition);
+                    checkCondition();
+                };
+
+                const handleProjectTypeChange = () => {
+                    if (!projectTypeController) return;
+                    const selectedType = projectTypeController.value;
+
+                    const researchContainer = document.getElementById('research_specific_fields');
+                    if(researchContainer) researchContainer.classList.toggle('hidden', selectedType !== 'Research');
+
+                    const durationMonthsContainer = document.getElementById('duration_months_container');
+                    if(durationMonthsContainer) durationMonthsContainer.classList.toggle('hidden', selectedType !== 'Research');
+
+                    const consultancyFields = [
+                        document.getElementById('consultancy_category_container'),
+                        document.getElementById('duration_days_container')
+                    ];
+                    consultancyFields.forEach(field => {
+                        if(field) field.classList.toggle('hidden', selectedType !== 'Consultancy');
+                    });
+                };
+
+                projectTypeController.addEventListener('change', handleProjectTypeChange);
+                handleProjectTypeChange();
+
+                setupListener('is_additional_pi', 'additional_pi_table_container', 'Yes');
+                setupListener('has_co_pi', 'co_pi_table_container', 'Yes');
+                setupListener('equipment_checkbox', 'equipment_details_container', null, true);
+                setupListener('manpower_checkbox', 'manpower_details_container', null, true);
+                setupListener('needs_committee_clearance', 'clearance_section_container', 'Yes');
+                setupListener('committees', 'other_committee_container', 'Other');
+                setupListener('have_sanction_details', 'sanction_details_container', 'Yes');
+                setupListener('have_fund_details', 'fund_details_container', 'Yes');
+            }
+
+            // --- GENERIC TABLE ROW MANAGEMENT LOGIC ---
+            function setupGenericTable(addButtonId, tableBodyId, rowHTML) {
+                const addButton = document.getElementById(addButtonId);
+                const tableBody = document.getElementById(tableBodyId);
+                if (!addButton || !tableBody) return;
+                const addRow = () => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = rowHTML;
+                    tableBody.appendChild(row);
+                };
+                addButton.addEventListener('click', addRow);
+                tableBody.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-row')) {
+                        e.target.closest('tr').remove();
+                    }
+                });
+                 addRow();
+            }
+
+            // --- DYNAMIC BUDGET TABLE LOGIC ---
+            function setupBudgetCalculations() {
+                const budgetTableBody = document.getElementById('proposed_budget_tbody');
+                const budgetTheadRow = document.getElementById('proposed_budget_thead_row');
+                const budgetTfootRow = document.getElementById('proposed_budget_tfoot_row');
+                const addRowButton = document.getElementById('add_budget_row_button');
+                const addYearButton = document.getElementById('add_year_button');
+                const deleteYearButton = document.getElementById('delete_year_button');
+                const actionsHeader = budgetTheadRow.querySelector('th:last-child');
+                const actionsFooter = budgetTfootRow.querySelector('td:last-child');
+                let yearCount = 0;
+
+                const calculateTotals = () => {
+                    let grandTotal = 0;
+                    for (let i = 1; i <= yearCount; i++) {
+                        let yearTotal = 0;
+                        document.querySelectorAll(.budget-year-${i}).forEach(input => {
+                            yearTotal += parseFloat(input.value) || 0;
+                        });
+                        const totalField = document.getElementById(total_year_${i});
+                        if (totalField) totalField.value = yearTotal.toFixed(2);
+                        grandTotal += yearTotal;
+                    }
+                    const grandTotalField = document.getElementById('total_budget_amount');
+                    if (grandTotalField) grandTotalField.value = grandTotal.toFixed(2);
+                };
+
+                const addYearColumn = () => {
+                    yearCount++;
+                    const newHeader = document.createElement('th');
+                    newHeader.className = "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider";
+                    newHeader.textContent = Year ${yearCount} (₹);
+                    budgetTheadRow.insertBefore(newHeader, actionsHeader);
+
+                    const newFooterCell = document.createElement('td');
+                    newFooterCell.className = "px-6 py-4";
+                    newFooterCell.innerHTML = <input type="text" id="total_year_${yearCount}" class="form-input bg-gray-100 text-sm font-semibold" readonly>;
+                    budgetTfootRow.insertBefore(newFooterCell, actionsFooter);
+
+                    budgetTableBody.querySelectorAll('tr').forEach(row => {
+                        const newCell = document.createElement('td');
+                        newCell.className = "px-6 py-4 whitespace-nowrap";
+                        newCell.innerHTML = <input type="number" class="form-input text-sm budget-year-${yearCount}" placeholder="0.00" value="0">;
+                        row.insertBefore(newCell, row.querySelector('td:last-child'));
+                    });
+                    calculateTotals();
+                };
+
+                const deleteYearColumn = () => {
+                    if (yearCount <= 1) {
+                        alert("At least one year is required.");
+                        return;
+                    }
+                    budgetTheadRow.removeChild(actionsHeader.previousElementSibling);
+                    budgetTfootRow.removeChild(actionsFooter.previousElementSibling);
+                    budgetTableBody.querySelectorAll('tr').forEach(row => {
+                       row.removeChild(row.querySelector('td:last-child').previousElementSibling);
+                    });
+                    yearCount--;
+                    calculateTotals();
+                }
+
+                const addBudgetRow = () => {
+                    if (yearCount === 0) {
+                        alert("Please add at least one year before adding a budget row.");
+                        return;
+                    }
+                    const row = document.createElement('tr');
+                    let yearInputs = '';
+                    for (let i = 1; i <= yearCount; i++) {
+                        yearInputs += <td class="px-6 py-4 whitespace-nowrap"><input type="number" class="form-input text-sm budget-year-${i}" placeholder="0.00" value="0"></td>;
+                    }
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="e.g., Equipment"></td>
+                        ${yearInputs}
+                        <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-budget-row">Delete</button></td>
+                    `;
+                    budgetTableBody.appendChild(row);
+                };
+
+                addYearButton.addEventListener('click', addYearColumn);
+                deleteYearButton.addEventListener('click', deleteYearColumn);
+                addRowButton.addEventListener('click', addBudgetRow);
+                budgetTableBody.addEventListener('input', e => {
+                    if (e.target.type === 'number') calculateTotals();
+                });
+                budgetTableBody.addEventListener('click', e => {
+                    if (e.target.classList.contains('delete-budget-row')) {
+                        e.target.closest('tr').remove();
+                        calculateTotals();
+                    }
+                });
+
+                addYearColumn();
+                addBudgetRow();
+            }
+
+            // --- INITIALIZE ALL SCRIPTS ---
+            setupConditionalLogic();
+
+            setupGenericTable('add_additional_pi_button', 'additional_pi_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="email" class="form-input text-sm" placeholder="pi@example.com"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="Name"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="Designation"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+            setupGenericTable('add_co_pi_button', 'co_pi_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="email" class="form-input text-sm" placeholder="co-pi@example.com"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="Name"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="Designation"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+
+            setupGenericTable('add_equipment_button', 'equipment_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="e.g., Microscope"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="number" class="form-input text-sm" placeholder="0.00" value="0"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+            setupGenericTable('add_manpower_button', 'manpower_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="e.g., Research Assistant"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="number" class="form-input text-sm" placeholder="0.00" value="0"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+
+            setupGenericTable('add_sanctioned_budget_button', 'sanctioned_budget_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="e.g., Equipment"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="number" class="form-input text-sm" placeholder="0.00" value="0"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+             setupGenericTable('add_sanction_file_button', 'sanction_files_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="file" class="form-input text-sm"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+            setupGenericTable('add_installment_button', 'fund_installments_tbody',
+                `<td class="px-6 py-4 whitespace-nowrap"><input type="text" class="form-input text-sm" placeholder="e.g., 1st"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="date" class="form-input text-sm"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><input type="number" class="form-input text-sm" placeholder="0.00" value="0"></td>
+                 <td class="px-6 py-4 whitespace-nowrap"><button type="button" class="table-action-button delete delete-row">Delete</button></td>`
+            );
+
+            setupBudgetCalculations();
+        });
+    </script>
+</body>
+</html>
