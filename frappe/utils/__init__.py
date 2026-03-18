@@ -1168,3 +1168,48 @@ class CallbackManager:
 
 	def reset(self):
 		self._functions.clear()
+
+
+def validate_iban(iban: str | None, throw: bool = False) -> bool:
+	"""Validate an IBAN (International Bank Account Number) using the ISO 13616 checksum.
+
+	Args:
+		iban: The IBAN string to validate (spaces are ignored).
+		throw: If True, raise a ValidationError on invalid IBANs.
+
+	Returns:
+		True if the IBAN is valid, False otherwise.
+	"""
+	import frappe
+	from frappe import _
+
+	if not iban:
+		return False
+
+	# Strip spaces and convert to uppercase
+	iban = iban.replace(" ", "").upper()
+
+	# Basic structural check: at least 4 characters, country code + 2 check digits
+	if len(iban) < 4 or not iban[:2].isalpha() or not iban[2:4].isdigit():
+		if throw:
+			frappe.throw(_("Invalid IBAN: must start with a 2-letter country code followed by 2 check digits."))
+		return False
+
+	# Move the first 4 characters to the end
+	rearranged = iban[4:] + iban[:4]
+
+	# Replace letters with numbers (A=10, B=11, ..., Z=35)
+	numeric_str = ""
+	for char in rearranged:
+		if char.isalpha():
+			numeric_str += str(ord(char) - ord("A") + 10)
+		else:
+			numeric_str += char
+
+	# Validate using mod-97 rule
+	is_valid = int(numeric_str) % 97 == 1
+
+	if not is_valid and throw:
+		frappe.throw(_("Invalid IBAN: checksum validation failed for {0}.").format(frappe.bold(iban)))
+
+	return is_valid
