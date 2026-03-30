@@ -125,7 +125,37 @@
             z-index: 90;
             transition: left 0.3s ease;
             backdrop-filter: blur(8px);
-            justify-content: flex-end;
+            justify-content: space-between;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0.4rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: var(--bg-page);
+            color: var(--accent);
+        }
+
+        body.sidebar-collapsed nav {
+            transform: translateX(-100%);
+        }
+
+        body.sidebar-collapsed main {
+            margin-left: 0;
+        }
+
+        body.sidebar-collapsed .top-nav {
+            left: 0;
         }
 
         .user-profile {
@@ -339,6 +369,13 @@
     </nav>
 
     <header class="top-nav">
+        <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
         <div class="user-profile">
             <span style="font-size: 0.9rem; color: var(--text-muted);">{{ frappe.session.user }}</span>
             <button onclick="frappe.app.logout()" class="logout-btn">
@@ -434,6 +471,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Database SQL Execution -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h3 class="card-title">Database SQL Execution (Ready Mode)</h3>
+                </div>
+                <div class="control-group">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Pass any SQL query and return the result. Supports SELECT queries.</p>
+                    <textarea id="sql-query-input" rows="3" style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: var(--bg-page); color: var(--text-main);" placeholder="Enter SQL query here... e.g. SELECT * FROM `tabResearch Deposit Slip` WHERE name = 'RES-DS-2026-00070'"></textarea>
+                    <button class="btn btn-primary" onclick="executeSql()" style="align-self: flex-start; margin-top: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        Execute SQL
+                    </button>
+                    
+                    <div id="sql-result-container" class="console-output terminal-mode" style="display: none; height: auto; max-height: 500px; margin-top: 1rem; overflow-y: auto;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- System Logs/Console -->
@@ -450,10 +506,12 @@
                     <button class="log-tab" data-tab="terminal">Terminal</button>
                     <button class="log-tab" data-tab="terminal_error" style="color: #ff6b6b; font-weight: 600;">Terminal
                         Error</button>
+                    <button class="log-tab" data-tab="kafka_logs" style="color: #d0bfff; font-weight: 600;">Kafka Logs</button>
+                    <button class="log-tab" data-tab="po_logs" style="color: #69db7c; font-weight: 600;">PO Logs</button>
                 </div>
                 <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 0.3rem;">
-                        <input type="number" id="log-lines" value="100" min="10" max="5000"
+                        <input type="number" id="log-lines" value="1000" min="10" max="5000"
                             style="padding: 0.3rem; border: 1px solid var(--border); border-radius: 4px; width: 60px; font-size: 0.8rem;"
                             title="Lines to fetch">
                         <span style="font-size: 0.8rem; color: var(--text-muted);">lines</span>
@@ -479,6 +537,21 @@
     <script src="/assets/js/frappe-web.min.js"></script>
 
     <script>
+        // Sidebar Toggle
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            if (document.body.classList.contains('sidebar-collapsed')) {
+                localStorage.setItem('kafkaControlSidebar', 'collapsed');
+            } else {
+                localStorage.setItem('kafkaControlSidebar', 'expanded');
+            }
+        }
+
+        // Initialize sidebar state on load
+        if (localStorage.getItem('kafkaControlSidebar') === 'collapsed') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
         // Log Store
         const logs = {
             activity: [],
@@ -487,7 +560,9 @@
             error: [],
             debug: [],
             terminal: [],
-            terminal_error: []
+            terminal_error: [],
+            kafka_logs: [],
+            po_logs: []
         };
         let currentTab = 'activity';
         let refreshInterval = null;
@@ -507,13 +582,28 @@
             }
         }
 
+        // Track whether user is manually scrolling
+        let userScrolling = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const consoleEl = document.getElementById('console-output');
+            consoleEl.addEventListener('scroll', function() {
+                const atBottom = consoleEl.scrollHeight - consoleEl.scrollTop - consoleEl.clientHeight < 60;
+                userScrolling = !atBottom;
+            });
+        });
+
         // Render current tab logs
         function renderLogs() {
             const consoleEl = document.getElementById('console-output');
             const entries = logs[currentTab];
+            const atBottom = consoleEl.scrollHeight - consoleEl.scrollTop - consoleEl.clientHeight < 60;
 
             consoleEl.innerHTML = entries.length ? entries.join('') : '<div style="color: var(--text-muted); font-style: italic; padding: 1rem;">No logs available.</div>';
-            consoleEl.scrollTop = consoleEl.scrollHeight;
+
+            // Only auto-scroll if user is not manually scrolling
+            if (!userScrolling || atBottom) {
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
         }
 
         function clearCurrentLog() {
@@ -602,17 +692,17 @@
             const consoleEl = document.getElementById('console-output');
 
             // Toggle Terminal Mode
-            if (currentTab === 'terminal' || currentTab === 'terminal_error') {
+            if (currentTab === 'terminal' || currentTab === 'terminal_error' || currentTab === 'kafka_logs' || currentTab === 'po_logs') {
                 consoleEl.classList.add('terminal-mode');
             } else {
                 consoleEl.classList.remove('terminal-mode');
             }
 
             try {
-                const linesArg = document.getElementById('log-lines').value || ((currentTab === 'terminal' || currentTab === 'terminal_error') ? 100 : 50);
+                const linesArg = document.getElementById('log-lines').value || ((currentTab === 'terminal' || currentTab === 'terminal_error' || currentTab === 'kafka_logs' || currentTab === 'po_logs') ? 100 : 50);
                 const searchArg = document.getElementById('log-search').value;
 
-                const fetchType = currentTab === 'terminal_error' ? 'terminal' : currentTab;
+                const fetchType = (currentTab === 'terminal_error' || currentTab === 'kafka_logs' || currentTab === 'po_logs') ? 'terminal' : currentTab;
 
                 const r = await callMethod('rndopsapp.rndopsapp.kafka.consumer_service.fetch_kafka_logs', {
                     log_type: fetchType,
@@ -624,6 +714,12 @@
                     let contentLines = r.message.content;
                     if (currentTab === 'terminal_error') {
                         contentLines = contentLines.filter(line => line.includes('[ERROR]'));
+                    } else if (currentTab === 'kafka_logs') {
+                        contentLines = contentLines.filter(line => line.toLowerCase().includes('kafka'));
+                    } else if (currentTab === 'po_logs') {
+                        contentLines = contentLines.filter(line => line.includes('[PO UPLOAD]'));
+                    } else if (currentTab === 'terminal') {
+                        contentLines = contentLines.filter(line => !line.toLowerCase().includes('kafka') && !line.includes('[PO UPLOAD]'));
                     }
 
                     // Process lines and colorize
@@ -637,7 +733,7 @@
                             styledLine = styledLine.replace(regex, '<mark style="background: rgba(255, 255, 0, 0.2); color: inherit; padding: 0;">$1</mark>');
                         }
 
-                        if (currentTab === 'terminal' || currentTab === 'terminal_error') {
+                        if (currentTab === 'terminal' || currentTab === 'terminal_error' || currentTab === 'kafka_logs' || currentTab === 'po_logs') {
                             // HTTP Methods
                             styledLine = styledLine.replace(/(GET|POST|PUT|DELETE|PATCH|OPTIONS|HEAD)/g, '<span style="color: #d0bfff; font-weight: bold;">$1</span>');
 
@@ -662,6 +758,12 @@
                                 if (currentTab === 'terminal_error') {
                                     return `<div class="log-entry" style="color: #ff6b6b; background: rgba(255, 0, 0, 0.05); border-left: 3px solid #ff6b6b; padding-left: 10px;">${styledLine}</div>`;
                                 }
+                            }
+                            if (currentTab === 'kafka_logs') {
+                                return `<div class="log-entry" style="color: #d0bfff; border-left: 3px solid #845ef7; padding-left: 10px;">${styledLine}</div>`;
+                            }
+                            if (currentTab === 'po_logs') {
+                                return `<div class="log-entry" style="color: #69db7c; border-left: 3px solid #69db7c; padding-left: 10px;">${styledLine}</div>`;
                             }
 
                         } else {
@@ -766,6 +868,39 @@
                 }
             } catch (e) {
                 log('Error manually consuming: ' + e.message, 'error');
+            }
+        }
+
+        async function executeSql() {
+            const query = document.getElementById('sql-query-input').value;
+            const resultContainer = document.getElementById('sql-result-container');
+            
+            if (!query.trim()) {
+                alert("Please enter a SQL query.");
+                return;
+            }
+            
+            resultContainer.style.display = "block";
+            resultContainer.innerHTML = '<span style="color: var(--text-muted)">Executing query...</span>';
+            
+            try {
+                // Determine if it is a SELECT or an UPDATE/INSERT
+                const isSelect = query.trim().toUpperCase().startsWith('SELECT') || query.trim().toUpperCase().startsWith('DESC') || query.trim().toUpperCase().startsWith('SHOW');
+                
+                const r = await callMethod('rndopsapp.rndopsapp.api.execute_database_sql', { sql_query: query });
+                if (r.message && r.message.status === 'success') {
+                    if (isSelect) {
+                        const count = Array.isArray(r.message.result) ? r.message.result.length : 0;
+                        const formattedJson = JSON.stringify(r.message.result, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        resultContainer.innerHTML = `<span style="color: #69db7c; font-weight: bold;">Query executed successfully (${count} rows returned)</span>\n<hr style="border-top: 1px solid rgba(255,255,255,0.1); margin: 0.5rem 0;">\n${formattedJson}`;
+                    } else {
+                        resultContainer.innerHTML = `<span style="color: #69db7c; font-weight: bold;">Query executed successfully (Commit effective immediately)</span>`;
+                    }
+                } else {
+                    resultContainer.innerHTML = `<span style="color: #ff6b6b; font-weight: bold;">Execution Error:</span>\n${r.message ? r.message.message : 'Unknown error'}`;
+                }
+            } catch (e) {
+                resultContainer.innerHTML = `<span style="color: #ff6b6b; font-weight: bold;">Exception:</span> ${e.message}`;
             }
         }
 
