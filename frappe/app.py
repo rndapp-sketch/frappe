@@ -191,6 +191,11 @@ def init_request(request):
 		request.max_content_length = cint(frappe.local.conf.get("max_file_size")) or 25 * 1024 * 1024
 	make_form_dict(request)
 
+	# Apply external auth patch before HTTPRequest processes login
+	if frappe.local.form_dict.get("cmd") == "login" or request.path == "/api/method/login":
+		for before_login_task in frappe.get_hooks("before_login"):
+			frappe.call(before_login_task)
+
 	if request.method != "OPTIONS":
 		frappe.local.http_request = HTTPRequest()
 
