@@ -100,7 +100,7 @@ class User(Document):
 		full_name: DF.Data | None
 		gender: DF.Link | None
 		home_settings: DF.Code | None
-		inst_name_address: DF.SmallText | None
+		inst_name_address: DF.LongText | None
 		interest: DF.SmallText | None
 		language: DF.Link | None
 		last_active: DF.Datetime | None
@@ -123,6 +123,7 @@ class User(Document):
 		notifications: DF.Check
 		onboarding_status: DF.SmallText | None
 		phone: DF.Data | None
+		pi_initials: DF.Data | None
 		piheadmentor_user_id: DF.Link | None
 		redirect_url: DF.SmallText | None
 		reset_password_key: DF.Data | None
@@ -270,7 +271,11 @@ class User(Document):
 				self.set(field, sanitize_html(field_value, always_sanitize=True))
 
 	def set_full_name(self):
-		self.full_name = " ".join(filter(None, [self.first_name, self.last_name]))
+		# START Edit by MKY
+		# Date: 2026-04-23, Time: 08:14 IST
+		# Description: Modified full_name to include middle_name
+		self.full_name = " ".join(filter(None, [self.first_name, self.middle_name, self.last_name]))
+		# END Edit by MKY
 
 	def check_enable_disable(self):
 		# do not allow disabling administrator/guest
@@ -398,8 +403,11 @@ class User(Document):
 		return link
 
 	def get_fullname(self):
-		"""get first_name space last_name"""
-		return (self.first_name or "") + (self.first_name and " " or "") + (self.last_name or "")
+		# START Edit by OJS
+		# Date: 2026-04-23, Time: 08:14 IST
+		# Description: Modified get_fullname to include middle_name
+		return " ".join(filter(None, [self.first_name, self.middle_name, self.last_name]))
+		# END Edit by OJS
 
 	def password_reset_mail(self, link):
 		reset_password_template = frappe.db.get_system_setting("reset_password_template")

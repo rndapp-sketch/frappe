@@ -11,6 +11,7 @@
   "enabled",
   "section_break_3",
   "email",
+  "pi_initials",
   "first_name",
   "middle_name",
   "last_name",
@@ -849,7 +850,7 @@
   },
   {
    "fieldname": "inst_name_address",
-   "fieldtype": "Small Text",
+   "fieldtype": "Long Text",
    "label": "Institute Name - Address"
   },
   {
@@ -858,6 +859,15 @@
    "label": "PI/Head/Mentor User Id",
    "link_filters": "[[\"User\",\"name\",\"!=\",\"eval:doc.email\"],[\"User\",\"empclass\",\"!=\",\"5ucn86a636\"],[\"User\",\"empclass\",\"!=\",\"64rqq35p8v\"],[\"User\",\"empclass\",\"!=\",\"7ts843e2e6\"]]",
    "options": "User"
+  },
+  {
+   "fieldname": "pi_initials",
+   "fieldtype": "Data",
+   "label": "PI Initials",
+   "no_copy": 1,
+   "oldfieldname": "email",
+   "oldfieldtype": "Data",
+   "unique": 1
   }
  ],
  "icon": "fa fa-user",
@@ -921,7 +931,7 @@
   }
  ],
  "make_attachments_public": 1,
- "modified": "2026-01-16 15:45:53.805968",
+ "modified": "2026-04-21 14:46:36.546663",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "User",
@@ -967,6 +977,7 @@
  "quick_entry": 1,
  "route": "user",
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "search_fields": "full_name",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

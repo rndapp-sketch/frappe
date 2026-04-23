@@ -472,6 +472,59 @@
                 </div>
             </div>
 
+            <!-- Delete Project Registrations -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h3 class="card-title">🗑️ Delete Project Registrations</h3>
+                    <span class="status-badge" style="background:#fff0f0;color:#d32f2f;">DANGER ZONE</span>
+                </div>
+                <div class="control-group">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Enter Project Registration names (one per line or comma-separated). Only System Manager can perform this action. Documents will be force-deleted regardless of docstatus.</p>
+                    <textarea id="delete-projects-input" rows="4" style="width: 100%; padding: 0.8rem; border: 1px solid #ffcdd2; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: #fff8f8; color: var(--text-main);" placeholder="e.g.&#10;2026040201000105&#10;2026040601000134"></textarea>
+                    <button class="btn btn-danger" onclick="deleteProjects()" style="align-self: flex-start; margin-top: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                        Delete Projects
+                    </button>
+                    <div id="delete-projects-result" class="console-output terminal-mode" style="display: none; height: auto; max-height: 300px; margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Universal DocType Delete -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h3 class="card-title">🗑️ Delete DocType Records</h3>
+                    <span class="status-badge" style="background:#fff0f0;color:#d32f2f;">DANGER ZONE</span>
+                </div>
+                <div class="control-group">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Enter a DocType name and one or more document names (one per line or comma-separated). Only System Manager can perform this action. Documents will be force-deleted regardless of docstatus.</p>
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <div style="flex: 0 0 280px;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">DocType Name</label>
+                            <input type="text" id="delete-doctype-input" style="width: 100%; padding: 0.8rem; border: 1px solid #ffcdd2; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: #fff8f8; color: var(--text-main);" placeholder="e.g. Project Registration">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Document Name(s)</label>
+                            <textarea id="delete-docnames-input" rows="4" style="width: 100%; padding: 0.8rem; border: 1px solid #ffcdd2; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: #fff8f8; color: var(--text-main);" placeholder="e.g.&#10;2026040201000105&#10;2026040601000134"></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteDocTypeRecords()" style="align-self: flex-start; margin-top: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                        Delete Records
+                    </button>
+                    <div id="delete-doctype-result" class="console-output terminal-mode" style="display: none; height: auto; max-height: 300px; margin-top: 1rem;"></div>
+                </div>
+            </div>
+
             <!-- Database SQL Execution -->
             <div class="card" style="grid-column: 1 / -1;">
                 <div class="card-header">
@@ -868,6 +921,95 @@
                 }
             } catch (e) {
                 log('Error manually consuming: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteProjects() {
+            const input = document.getElementById('delete-projects-input').value.trim();
+            const resultEl = document.getElementById('delete-projects-result');
+
+            if (!input) {
+                alert('Please enter at least one project name.');
+                return;
+            }
+
+            // Normalise: split by newlines or commas
+            const projects = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+
+            if (!confirm(`⚠️ This will permanently delete ${projects.length} project(s):\n\n${projects.join('\n')}\n\nThis cannot be undone. Proceed?`)) {
+                return;
+            }
+
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<span style="color: var(--text-muted)">Deleting...</span>';
+
+            try {
+                const r = await callMethod('rndopsapp.delete_projects_tmp.delete_project_registrations', {
+                    projects: JSON.stringify(projects)
+                });
+                const res = r.message || {};
+                const deleted = res.deleted || [];
+                const notFound = res.not_found || [];
+                const errors = res.errors || [];
+
+                let html = '';
+                if (deleted.length) html += `<span style="color:#69db7c;font-weight:bold;">✅ Deleted (${deleted.length}):</span>\n` + deleted.map(d => `  • ${d}`).join('\n') + '\n\n';
+                if (notFound.length) html += `<span style="color:#f9ab00;font-weight:bold;">⚠️ Not Found (${notFound.length}):</span>\n` + notFound.map(d => `  • ${d}`).join('\n') + '\n\n';
+                if (errors.length) html += `<span style="color:#ff6b6b;font-weight:bold;">❌ Errors (${errors.length}):</span>\n` + errors.map(d => `  • ${d}`).join('\n');
+                if (!html) html = '<span style="color: var(--text-muted)">No results returned.</span>';
+
+                resultEl.innerHTML = html.replace(/\n/g, '<br>');
+                log(`Delete Projects: ${deleted.length} deleted, ${notFound.length} not found, ${errors.length} errors.`, deleted.length > 0 ? 'success' : 'warning');
+            } catch (e) {
+                resultEl.innerHTML = `<span style="color:#ff6b6b;font-weight:bold;">Exception:</span> ${e.message}`;
+                log('Delete Projects error: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteDocTypeRecords() {
+            const doctype = document.getElementById('delete-doctype-input').value.trim();
+            const input = document.getElementById('delete-docnames-input').value.trim();
+            const resultEl = document.getElementById('delete-doctype-result');
+
+            if (!doctype) {
+                alert('Please enter a DocType name.');
+                return;
+            }
+            if (!input) {
+                alert('Please enter at least one document name.');
+                return;
+            }
+
+            const docnames = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+
+            if (!confirm(`⚠️ This will permanently delete ${docnames.length} record(s) from "${doctype}":\n\n${docnames.join('\n')}\n\nThis cannot be undone. Proceed?`)) {
+                return;
+            }
+
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<span style="color: var(--text-muted)">Deleting...</span>';
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.delete_doctype_records', {
+                    doctype: doctype,
+                    docnames: JSON.stringify(docnames)
+                });
+                const res = r.message || {};
+                const deleted = res.deleted || [];
+                const notFound = res.not_found || [];
+                const errors = res.errors || [];
+
+                let html = '';
+                if (deleted.length) html += `<span style="color:#69db7c;font-weight:bold;">✅ Deleted (${deleted.length}):</span>\n` + deleted.map(d => `  • ${d}`).join('\n') + '\n\n';
+                if (notFound.length) html += `<span style="color:#f9ab00;font-weight:bold;">⚠️ Not Found (${notFound.length}):</span>\n` + notFound.map(d => `  • ${d}`).join('\n') + '\n\n';
+                if (errors.length) html += `<span style="color:#ff6b6b;font-weight:bold;">❌ Errors (${errors.length}):</span>\n` + errors.map(d => `  • ${d}`).join('\n');
+                if (!html) html = '<span style="color: var(--text-muted)">No results returned.</span>';
+
+                resultEl.innerHTML = html.replace(/\n/g, '<br>');
+                log(`Delete DocType Records [${doctype}]: ${deleted.length} deleted, ${notFound.length} not found, ${errors.length} errors.`, deleted.length > 0 ? 'success' : 'warning');
+            } catch (e) {
+                resultEl.innerHTML = `<span style="color:#ff6b6b;font-weight:bold;">Exception:</span> ${e.message}`;
+                log('Delete DocType Records error: ' + e.message, 'error');
             }
         }
 
