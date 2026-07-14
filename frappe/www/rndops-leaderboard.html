@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RnD Staff Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+	--ds-page-bg:        #FAFAF9;
+	--ds-card-bg:        #FFFFFF;
+	--ds-border:         #E4E4E7;
+	--ds-divider:        #F4F4F5;
+	--ds-text-primary:   #3F3F46;
+	--ds-text-secondary: #71717A;
+	--ds-text-muted:     #A1A1AA;
+	--ds-accent-blue:    #2563EB;
+	--ds-accent-indigo:  #4A6CF7;
+	--ds-accent-orange:  #D97757;
+	--ds-table-head-bg:  #EEF2FF;
+	--ds-table-head-txt: #1E3A8A;
+	--ds-table-head-bdr: rgba(199,210,254,0.7);
+	--ds-row-hover:      #F4F4F5;
+	--ds-topbar-bg:      #1E1B4B;
+	--gold:   #F59E0B;
+	--silver: #9CA3AF;
+	--bronze: #B45309;
+}
+
+* { box-sizing: border-box; }
+html, body {
+	margin: 0; padding: 0;
+	font-family: 'Outfit', sans-serif;
+	background: var(--ds-page-bg);
+	color: var(--ds-text-primary);
+}
+
+/* ── Top Bar ───────────────────────────────────────────────── */
+.ds-topbar {
+	background: var(--ds-topbar-bg);
+	display: flex; align-items: center; justify-content: space-between;
+	padding: 0.75rem 1.5rem;
+	position: sticky; top: 0; z-index: 20;
+	box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+}
+.ds-topbar-brand { display: flex; align-items: center; gap: 0.6rem; }
+.ds-topbar-logo {
+	width: 30px; height: 30px; border-radius: 8px;
+	background: linear-gradient(135deg, #4A6CF7, #D97757);
+	display: flex; align-items: center; justify-content: center;
+	font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.ds-topbar-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.15; }
+.ds-topbar-name small { display: block; font-size: 10px; font-weight: 500; color: #A5B4FC; }
+.ds-topbar-actions { display: flex; align-items: center; gap: 0.5rem; }
+.ds-topbar-user {
+	font-size: 12px; font-weight: 600; color: #E0E7FF;
+	padding: 0 0.6rem; white-space: nowrap; display: none;
+}
+.ds-topbar-link {
+	font-family: 'Outfit', sans-serif;
+	font-size: 12px; font-weight: 700;
+	color: #E0E7FF; text-decoration: none;
+	padding: 0.4rem 0.75rem; border-radius: 9999px;
+	border: 1px solid rgba(255,255,255,0.14);
+	transition: all 0.12s;
+}
+.ds-topbar-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* ── Page Scaffold ─────────────────────────────────────────── */
+.ds-page { min-height: 100vh; padding: 1.5rem 2rem 4rem; }
+.ds-page-inner { max-width: 1600px; margin: 0 auto; }
+
+/* ── Header Card ───────────────────────────────────────────── */
+.ds-header-card {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 1rem;
+	overflow: hidden;
+	margin-bottom: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.ds-header-accent {
+	height: 3px;
+	background: linear-gradient(to right, #4A6CF7, #2563EB, #D97757);
+}
+.ds-header-body {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding: 1.25rem 1.5rem;
+	flex-wrap: wrap;
+}
+.ds-header-left { display: flex; flex-direction: column; gap: 0.25rem; }
+.ds-eyebrow-row { display: flex; align-items: center; gap: 0.5rem; }
+.ds-eyebrow {
+	font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+	text-transform: uppercase; color: var(--ds-accent-orange);
+}
+.ds-trust-badge {
+	display: inline-flex; align-items: center; gap: 0.3rem;
+	font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+	color: #047857; background: rgba(16,185,129,0.1);
+	padding: 0.15rem 0.5rem; border-radius: 9999px;
+}
+.ds-trust-badge svg { width: 10px; height: 10px; }
+.ds-page-title { font-size: 22px; font-weight: 800; color: var(--ds-text-primary); margin: 0; line-height: 1.2; }
+.ds-page-subtitle { font-size: 12px; font-weight: 500; color: var(--ds-text-secondary); margin-top: 0.1rem; }
+
+/* ── Filter Pills ──────────────────────────────────────────── */
+.ds-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+.ds-pill-group { display: flex; gap: 0.25rem; }
+.ds-pill {
+	height: 32px;
+	padding: 0 0.75rem;
+	border: 1px solid var(--ds-border);
+	border-radius: 9999px;
+	background: var(--ds-card-bg);
+	color: var(--ds-text-secondary);
+	font-family: 'Outfit', sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	transition: all 0.12s;
+}
+.ds-pill:hover { background: var(--ds-page-bg); color: var(--ds-text-primary); border-color: #C7D2FE; }
+.ds-pill.active { background: var(--ds-accent-indigo); color: #fff; border-color: var(--ds-accent-indigo); }
+.ds-select {
+	height: 32px;
+	padding: 0 0.75rem;
+	border: 1px solid var(--ds-border);
+	border-radius: 9999px;
+	background: var(--ds-card-bg);
+	color: var(--ds-text-secondary);
+	font-family: 'Outfit', sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	outline: none;
+	appearance: none;
+	padding-right: 1.75rem;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2371717A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.6rem center;
+}
+.ds-select:focus { border-color: var(--ds-accent-indigo); }
+
+/* ── KPI Strip ─────────────────────────────────────────────── */
+.ds-kpi-strip {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+.ds-kpi-card {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 1rem;
+	padding: 1.25rem 1.5rem;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+	transition: transform 0.15s, box-shadow 0.15s;
+}
+.ds-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.ds-kpi-circle {
+	position: absolute; bottom: -10px; right: -10px;
+	width: 80px; height: 80px; border-radius: 50%;
+	pointer-events: none; opacity: 0.07;
+}
+.ds-kpi-icon {
+	width: 36px; height: 36px; border-radius: 10px;
+	display: flex; align-items: center; justify-content: center;
+	margin-bottom: 1rem; font-size: 16px;
+}
+.ds-kpi-label {
+	font-size: 11px; font-weight: 800; text-transform: uppercase;
+	letter-spacing: 0.12em; color: var(--ds-text-secondary); margin-bottom: 0.2rem;
+}
+.ds-kpi-value {
+	font-size: 32px; font-weight: 800; letter-spacing: -0.03em;
+	line-height: 1; margin-bottom: 0.5rem;
+}
+.ds-kpi-sub { font-size: 12px; font-weight: 500; color: var(--ds-text-secondary); }
+
+/* ── Section Separator ─────────────────────────────────────── */
+.ds-section-sep {
+	border-top: 2px solid rgba(74,108,247,0.2);
+	padding-top: 1.25rem; margin-bottom: 1rem;
+}
+.ds-sep-label {
+	display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.875rem;
+}
+.ds-sep-text {
+	font-size: 12px; font-weight: 700; color: #71717A;
+	text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
+}
+.ds-sep-line { flex: 1; height: 1px; background: #E4E4E7; }
+
+/* ── Table Shell ───────────────────────────────────────────── */
+.ds-table-shell {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 0.75rem;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.ds-table-scroll { overflow-x: auto; }
+.ds-table-shell table { width: 100%; border-collapse: collapse; }
+
+/* ── Table Head ────────────────────────────────────────────── */
+.ds-table-shell thead tr {
+	background: var(--ds-table-head-bg);
+	border-bottom: 1px solid rgba(199,210,254,0.8);
+}
+.ds-table-shell thead th {
+	padding: 0.75rem 1rem;
+	font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
+	text-transform: uppercase; color: var(--ds-table-head-txt);
+	text-align: left; border-right: 1px solid var(--ds-table-head-bdr);
+	white-space: nowrap;
+}
+.ds-table-shell thead th:last-child { border-right: none; }
+.ds-table-shell thead th.th-right { text-align: right; }
+.ds-table-shell thead th.th-center { text-align: center; }
+
+/* ── Table Rows ────────────────────────────────────────────── */
+.ds-table-shell tbody tr {
+	border-bottom: 1px solid var(--ds-border);
+	transition: background 0.12s;
+	animation: row-in 0.35s ease both;
+}
+@keyframes row-in {
+	from { opacity: 0; transform: translateY(4px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+.ds-table-shell tbody tr:last-child { border-bottom: none; }
+.ds-table-shell tbody tr:hover { background: var(--ds-row-hover); }
+.ds-table-shell tbody td {
+	padding: 0.75rem 1rem;
+	vertical-align: middle;
+	font-size: 13px;
+	color: var(--ds-text-primary);
+	border-right: 1px solid var(--ds-divider);
+}
+.ds-table-shell tbody td:last-child { border-right: none; }
+
+/* ── Rank Cell ─────────────────────────────────────────────── */
+.cell-rank { width: 60px; text-align: center; }
+.rank-medal {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 28px; height: 28px; border-radius: 50%;
+	font-size: 13px; font-weight: 800;
+}
+.rank-1 { background: rgba(245,158,11,0.15); color: var(--gold); }
+.rank-2 { background: rgba(156,163,175,0.15); color: var(--silver); }
+.rank-3 { background: rgba(180,83,9,0.15); color: var(--bronze); }
+.rank-n { font-size: 12px; font-weight: 600; color: var(--ds-text-muted); }
+
+/* ── Staff Cell ────────────────────────────────────────────── */
+.cell-staff-wrap { display: flex; align-items: center; gap: 0.75rem; }
+.staff-avatar {
+	width: 36px; height: 36px; border-radius: 50%;
+	display: flex; align-items: center; justify-content: center;
+	font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.staff-name { font-size: 13px; font-weight: 600; color: var(--ds-text-primary); }
+.staff-email { font-size: 11px; font-weight: 500; color: var(--ds-text-muted); }
+
+/* ── Role Badge ────────────────────────────────────────────── */
+.role-badge {
+	display: inline-flex; align-items: center;
+	background: rgba(74,108,247,0.08);
+	color: #4338CA;
+	font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+	padding: 0.2rem 0.55rem; border-radius: 9999px;
+	white-space: nowrap;
+}
+
+/* ── Count Cells ───────────────────────────────────────────── */
+.cell-count { text-align: center; }
+.count-chip {
+	display: inline-block;
+	font-size: 13px; font-weight: 700;
+	padding: 0.15rem 0.5rem;
+	border-radius: 6px;
+}
+.chip-total   { background: rgba(37,99,235,0.08); color: #1D4ED8; }
+.chip-approve { background: rgba(16,185,129,0.08); color: #047857; }
+.chip-reject  { background: rgba(239,68,68,0.08);  color: #B91C1C; }
+
+/* ── Avg Time Cell ─────────────────────────────────────────── */
+.time-green  { color: #047857; font-weight: 700; }
+.time-orange { color: #B45309; font-weight: 700; }
+.time-red    { color: #B91C1C; font-weight: 700; }
+.time-zero   { color: var(--ds-text-muted); font-weight: 500; }
+
+/* ── Rate Bar ──────────────────────────────────────────────── */
+.rate-wrap { display: flex; align-items: center; gap: 0.5rem; min-width: 90px; }
+.rate-bar-bg {
+	flex: 1; height: 6px; background: #E4E4E7; border-radius: 9999px; overflow: hidden;
+}
+.rate-bar-fill {
+	height: 100%; border-radius: 9999px;
+	background: linear-gradient(to right, #4A6CF7, #10B981);
+	transition: width 0.6s ease;
+}
+.rate-pct { font-size: 12px; font-weight: 700; color: var(--ds-text-primary); min-width: 30px; }
+
+/* ── Table Footer ──────────────────────────────────────────── */
+.ds-table-footer {
+	display: flex; align-items: center; justify-content: space-between;
+	padding: 0.625rem 1rem;
+	border-top: 1px solid var(--ds-divider);
+	background: var(--ds-page-bg);
+	flex-wrap: wrap; gap: 0.5rem;
+}
+.ds-table-footer-text { font-size: 11px; font-weight: 600; color: var(--ds-text-muted); }
+
+/* ── Pending Queue Card ────────────────────────────────────── */
+.ds-two-col { display: grid; grid-template-columns: 1fr 360px; gap: 1rem; align-items: start; }
+
+.ds-queue-card {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 0.75rem;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.ds-queue-header {
+	padding: 0.875rem 1rem;
+	border-bottom: 1px solid var(--ds-divider);
+	display: flex; align-items: center; gap: 0.5rem;
+}
+.ds-queue-title { font-size: 13px; font-weight: 700; color: var(--ds-text-primary); }
+.ds-queue-body { padding: 0.5rem 0; max-height: 360px; overflow-y: auto; }
+.ds-queue-row {
+	display: flex; align-items: center; justify-content: space-between;
+	padding: 0.5rem 1rem; gap: 0.75rem;
+	border-bottom: 1px solid var(--ds-divider);
+}
+.ds-queue-row:last-child { border-bottom: none; }
+.ds-queue-role { font-size: 12px; font-weight: 600; color: var(--ds-text-primary); }
+.ds-queue-state { font-size: 10px; font-weight: 500; color: var(--ds-text-muted); }
+.ds-queue-count {
+	background: rgba(217,119,87,0.1); color: #B45309;
+	font-size: 12px; font-weight: 800;
+	padding: 0.15rem 0.5rem; border-radius: 6px;
+	flex-shrink: 0;
+}
+.ds-queue-empty { padding: 1.5rem 1rem; text-align: center; color: var(--ds-text-muted); font-size: 12px; font-weight: 600; }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.ds-empty {
+	background: var(--ds-card-bg); border: 1px solid var(--ds-border);
+	border-radius: 0.75rem; padding: 4rem 2rem; text-align: center;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.ds-empty-icon {
+	width: 56px; height: 56px; border-radius: 14px;
+	background: var(--ds-table-head-bg);
+	display: flex; align-items: center; justify-content: center;
+	margin: 0 auto 1rem;
+}
+.ds-empty p { font-size: 14px; font-weight: 700; color: var(--ds-text-secondary); margin: 0 0 0.4rem; }
+.ds-empty small { font-size: 12px; font-weight: 500; color: var(--ds-text-muted); }
+
+/* ── Search ────────────────────────────────────────────────── */
+.ds-search-wrap { position: relative; flex: 1; min-width: 220px; }
+.ds-search-icon {
+	position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+	color: var(--ds-text-secondary); pointer-events: none; display: flex;
+}
+.ds-search-icon svg { width: 14px; height: 14px; }
+#lb-search {
+	width: 100%; height: 36px;
+	background: var(--ds-page-bg); border: 1.5px solid var(--ds-border);
+	border-radius: 7px; color: var(--ds-text-primary);
+	font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+	padding: 0 0.75rem 0 2.25rem; outline: none;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+#lb-search::placeholder { color: var(--ds-text-muted); }
+#lb-search:focus { border-color: var(--ds-accent-indigo); box-shadow: 0 0 0 3px rgba(74,108,247,0.1); }
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+.ds-toolbar {
+	background: var(--ds-card-bg); border: 1px solid var(--ds-border);
+	border-radius: 0.75rem; padding: 0.75rem;
+	display: flex; align-items: center; gap: 0.75rem;
+	margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+	flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+	.ds-two-col { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+	.ds-page { padding: 1rem 1rem 3rem; }
+	.ds-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 640px) {
+	.ds-topbar-user { display: inline-block; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Top Bar ─────────────────────────────────────────────── -->
+<div class="ds-topbar">
+	<div class="ds-topbar-brand">
+		<div class="ds-topbar-logo">R</div>
+		<div class="ds-topbar-name">RnD Ops<small>Staff Leaderboard</small></div>
+	</div>
+	<div class="ds-topbar-actions">
+		<span class="ds-topbar-user">{{ frappe.session.user }}</span>
+		<a class="ds-topbar-link" href="/app">Desk</a>
+		<a class="ds-topbar-link" href="/api/method/web_logout">Logout</a>
+	</div>
+</div>
+
+<div class="ds-page">
+<div class="ds-page-inner">
+
+	<!-- ── Header ──────────────────────────────────────────── -->
+	<div class="ds-header-card">
+		<div class="ds-header-accent"></div>
+		<div class="ds-header-body">
+			<div class="ds-header-left">
+				<div class="ds-eyebrow-row">
+					<div class="ds-eyebrow">RnD Operations</div>
+					<span class="ds-trust-badge">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+						Complete activity trail
+					</span>
+				</div>
+				<h1 class="ds-page-title">Staff Leaderboard</h1>
+				<p class="ds-page-subtitle">
+					Form-processing performance across all RnD approval roles &mdash;
+					<strong>{{ period_label }}</strong>
+				</p>
+			</div>
+			<div class="ds-filter-row">
+				<!-- Period tabs -->
+				<div class="ds-pill-group">
+					{% for key, label in period_labels.items() %}
+					<a href="?period={{ key }}&role={{ role_filter }}&category={{ category_filter }}"
+					   class="ds-pill {% if period == key %}active{% endif %}">{{ label }}</a>
+					{% endfor %}
+				</div>
+
+				<!-- Role filter -->
+				<select class="ds-select" id="role-select"
+				        onchange="applyFilter('role', this.value)">
+					<option value="">All Roles</option>
+					{% for r in approver_roles %}
+					<option value="{{ r }}" {% if role_filter == r %}selected{% endif %}>
+						{{ role_label_map[r] }}
+					</option>
+					{% endfor %}
+				</select>
+
+				<!-- Category filter -->
+				<select class="ds-select" id="cat-select"
+				        onchange="applyFilter('category', this.value)">
+					<option value="">All Categories</option>
+					{% for cat in categories %}
+					<option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>
+						{{ cat }}
+					</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+	</div>
+
+	<!-- ── KPI Strip ───────────────────────────────────────── -->
+	<div class="ds-kpi-strip">
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#2563EB;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563EB;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+			</div>
+			<div class="ds-kpi-label">Forms Processed</div>
+			<div class="ds-kpi-value" style="color:#2563EB;">{{ total_processed }}</div>
+			<div class="ds-kpi-sub">{{ period_label }}</div>
+		</div>
+
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#10B981;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(16,185,129,0.1); color:#10B981;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+			</div>
+			<div class="ds-kpi-label">Approved</div>
+			<div class="ds-kpi-value" style="color:#10B981;">{{ total_approved }}</div>
+			<div class="ds-kpi-sub">
+				{% if total_processed %}{{ overall_rate }}% approval rate{% else %}—{% endif %}
+			</div>
+		</div>
+
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#F59E0B;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(245,158,11,0.1); color:#F59E0B;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+			</div>
+			<div class="ds-kpi-label">Top Performer</div>
+			{% if top_staff %}
+			<div class="ds-kpi-value" style="color:#F59E0B; font-size:20px; padding-top:6px;">
+				{{ top_staff.full_name.split()[0] }}
+			</div>
+			<div class="ds-kpi-sub">{{ top_staff.total_processed }} forms &middot; {{ top_staff.primary_role }}</div>
+			{% else %}
+			<div class="ds-kpi-value" style="color:#F59E0B; font-size:20px; padding-top:6px;">—</div>
+			<div class="ds-kpi-sub">No data yet</div>
+			{% endif %}
+		</div>
+
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#D97757;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(217,119,87,0.1); color:#D97757;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+			</div>
+			<div class="ds-kpi-label">Fastest Avg Time</div>
+			{% if fastest and fastest.avg_time %}
+			<div class="ds-kpi-value" style="color:#D97757; font-size:24px; padding-top:4px;">
+				{{ fastest.avg_time }}h
+			</div>
+			<div class="ds-kpi-sub">{{ fastest.full_name.split()[0] }}</div>
+			{% else %}
+			<div class="ds-kpi-value" style="color:#D97757; font-size:20px; padding-top:6px;">—</div>
+			<div class="ds-kpi-sub">No data yet</div>
+			{% endif %}
+		</div>
+	</div>
+
+	<!-- ── Section Label ───────────────────────────────────── -->
+	<div class="ds-section-sep">
+		<div class="ds-sep-label">
+			<span class="ds-sep-text">Leaderboard</span>
+			<div class="ds-sep-line"></div>
+			{% if leaderboard %}
+			<span style="font-size:11px;font-weight:600;color:var(--ds-text-muted);white-space:nowrap;">
+				{{ leaderboard|length }} staff members
+			</span>
+			{% endif %}
+		</div>
+	</div>
+
+	{% if has_data %}
+	<div class="ds-two-col">
+
+		<!-- ── Leaderboard Table ──────────────────────────── -->
+		<div>
+			<!-- Search toolbar -->
+			<div class="ds-toolbar">
+				<div class="ds-search-wrap">
+					<span class="ds-search-icon">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+					</span>
+					<input type="text" id="lb-search" placeholder="Search staff member…" autocomplete="off">
+				</div>
+				<span id="lb-count" style="font-size:11px;font-weight:600;color:var(--ds-text-muted);white-space:nowrap;"></span>
+			</div>
+
+			<div class="ds-table-shell">
+				<div class="ds-table-scroll">
+				<table id="lb-table">
+					<thead>
+						<tr>
+							<th class="th-center" style="width:56px;">#</th>
+							<th>Staff Member</th>
+							<th>Role</th>
+							<th class="th-center">Processed</th>
+							<th class="th-center">Approved</th>
+							<th class="th-center">Rejected</th>
+							<th class="th-right">Avg Time</th>
+							<th>Rate</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for row in leaderboard %}
+						<tr data-name="{{ row.full_name|lower }}" data-email="{{ row.email|lower }}"
+						    style="animation-delay: {{ loop.index0 * 30 }}ms;">
+
+							<!-- Rank -->
+							<td class="cell-rank">
+								{% if row.rank == 1 %}
+								<span class="rank-medal rank-1">&#127942;</span>
+								{% elif row.rank == 2 %}
+								<span class="rank-medal rank-2">&#127943;</span>
+								{% elif row.rank == 3 %}
+								<span class="rank-medal rank-3">&#127944;</span>
+								{% else %}
+								<span class="rank-n">{{ row.rank }}</span>
+								{% endif %}
+							</td>
+
+							<!-- Staff -->
+							<td>
+								<div class="cell-staff-wrap">
+									<div class="staff-avatar" data-user="{{ row.email }}"></div>
+									<div>
+										<div class="staff-name">{{ row.full_name }}</div>
+										<div class="staff-email">{{ row.email }}</div>
+									</div>
+								</div>
+							</td>
+
+							<!-- Role -->
+							<td><span class="role-badge">{{ row.primary_role }}</span></td>
+
+							<!-- Processed -->
+							<td class="cell-count">
+								<span class="count-chip chip-total">{{ row.total_processed }}</span>
+							</td>
+
+							<!-- Approved -->
+							<td class="cell-count">
+								<span class="count-chip chip-approve">{{ row.approved }}</span>
+							</td>
+
+							<!-- Rejected -->
+							<td class="cell-count">
+								<span class="count-chip chip-reject">{{ row.rejected }}</span>
+							</td>
+
+							<!-- Avg Time -->
+							<td style="text-align:right;">
+								{% if row.avg_time %}
+								<span class="time-{{ row.avg_time_color }}">{{ row.avg_time }}h</span>
+								{% else %}
+								<span class="time-zero">—</span>
+								{% endif %}
+							</td>
+
+							<!-- Approval Rate -->
+							<td>
+								<div class="rate-wrap">
+									<div class="rate-bar-bg">
+										<div class="rate-bar-fill" data-rate="{{ row.approval_rate }}"></div>
+									</div>
+									<span class="rate-pct">{{ row.approval_rate }}%</span>
+								</div>
+							</td>
+						</tr>
+						{% endfor %}
+						<tr id="lb-no-match" style="display:none;">
+							<td colspan="8" style="text-align:center;padding:2rem;font-size:12px;font-weight:600;color:var(--ds-text-muted);border-right:none;">
+								No staff match your search.
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				</div>
+				<div class="ds-table-footer">
+					<span class="ds-table-footer-text" id="lb-footer">
+						{{ leaderboard|length }} staff member(s) &mdash; {{ period_label }}
+					</span>
+					<span class="ds-table-footer-text">
+						{{ total_rejected }} rejected &middot; {{ total_approved }} approved
+						&middot; <span style="color:#047857;">sourced from every workflow action, not just the last touch</span>
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- ── Pending Queue ──────────────────────────────── -->
+		<div>
+			<div class="ds-queue-card">
+				<div class="ds-queue-header">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+					<span class="ds-queue-title">Pending Queue</span>
+					<span style="font-size:10px;color:var(--ds-text-muted);font-weight:600;margin-left:auto;">LIVE</span>
+				</div>
+				<div class="ds-queue-body">
+					{% if pending_by_role %}
+						{% for p in pending_by_role %}
+						<div class="ds-queue-row">
+							<div>
+								<div class="ds-queue-role">{{ p.role }}</div>
+								<div class="ds-queue-state">{{ p.state }}</div>
+							</div>
+							<span class="ds-queue-count">{{ p.count }}</span>
+						</div>
+						{% endfor %}
+					{% else %}
+					<div class="ds-queue-empty">No pending forms tracked yet.</div>
+					{% endif %}
+				</div>
+			</div>
+
+			<!-- Category breakdown (from leaderboard data) -->
+			<div class="ds-queue-card" style="margin-top:1rem;">
+				<div class="ds-queue-header">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+					<span class="ds-queue-title">Top Performers by Role</span>
+				</div>
+				<div class="ds-queue-body">
+					{% set seen_roles = [] %}
+					{% for row in leaderboard %}
+					  {% if row.primary_role not in seen_roles %}
+					    {% set _ = seen_roles.append(row.primary_role) %}
+					    <div class="ds-queue-row">
+					      <div>
+					        <div class="ds-queue-role">{{ row.primary_role }}</div>
+					        <div class="ds-queue-state">{{ row.full_name }}</div>
+					      </div>
+					      <span class="ds-queue-count">{{ row.total_processed }}</span>
+					    </div>
+					  {% endif %}
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+
+	</div><!-- .ds-two-col -->
+
+	{% else %}
+	<!-- ── Empty State ───────────────────────────────────── -->
+	<div class="ds-empty">
+		<div class="ds-empty-icon">
+			<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+		</div>
+		<p>No activity recorded yet</p>
+		<small>
+			The leaderboard populates as staff process forms through the workflow.
+		</small>
+	</div>
+	{% endif %}
+
+</div><!-- .ds-page-inner -->
+</div><!-- .ds-page -->
+
+<script>
+(function () {
+	/* ── Avatar palette ── */
+	var palette = [
+		{ bg: 'rgba(37,99,235,0.12)',   color: '#1D4ED8' },
+		{ bg: 'rgba(217,119,87,0.12)',  color: '#B45309' },
+		{ bg: 'rgba(74,108,247,0.12)',  color: '#4338CA' },
+		{ bg: 'rgba(16,185,129,0.12)',  color: '#047857' },
+		{ bg: 'rgba(139,92,246,0.12)',  color: '#6D28D9' },
+		{ bg: 'rgba(236,72,153,0.12)',  color: '#BE185D' },
+	];
+
+	function hashStr(s) {
+		var h = 0;
+		for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+		return Math.abs(h);
+	}
+
+	/* Apply avatar initials + color */
+	document.querySelectorAll('.staff-avatar[data-user]').forEach(function (el) {
+		var email = el.dataset.user || '';
+		var local = email.split('@')[0];
+		var parts = local.split(/[._-]/);
+		var initials = parts.length >= 2
+			? (parts[0][0] + parts[1][0]).toUpperCase()
+			: local.slice(0, 2).toUpperCase();
+		var p = palette[hashStr(email) % palette.length];
+		el.style.background = p.bg;
+		el.style.color = p.color;
+		el.style.fontFamily = 'Outfit, sans-serif';
+		el.style.fontWeight = '800';
+		el.textContent = initials;
+	});
+
+	/* Rate bar animation on load */
+	document.querySelectorAll('.rate-bar-fill').forEach(function (el) {
+		var w = (el.dataset.rate || 0) + '%';
+		el.style.width = '0%';
+		setTimeout(function () { el.style.width = w; }, 200);
+	});
+
+	/* ── Search ── */
+	var input   = document.getElementById('lb-search');
+	var rows    = Array.from(document.querySelectorAll('#lb-table tbody tr:not(#lb-no-match)'));
+	var noMatch = document.getElementById('lb-no-match');
+	var countEl = document.getElementById('lb-count');
+	var footEl  = document.getElementById('lb-footer');
+
+	if (input) {
+		input.addEventListener('input', function () {
+			var q = this.value.trim().toLowerCase();
+			var vis = 0;
+			rows.forEach(function (row) {
+				var name  = row.dataset.name  || '';
+				var email = row.dataset.email || '';
+				var show  = !q || (name + email).includes(q);
+				row.style.display = show ? '' : 'none';
+				if (show) vis++;
+			});
+			if (noMatch) noMatch.style.display = (vis === 0 && q) ? '' : 'none';
+			if (countEl) countEl.textContent = q ? vis + ' match' + (vis !== 1 ? 'es' : '') : '';
+		});
+	}
+
+	/* ── Filter helper ── */
+	window.applyFilter = function (key, value) {
+		var url = new URL(window.location.href);
+		url.searchParams.set(key, value);
+		window.location.href = url.toString();
+	};
+})();
+</script>
+</body>
+</html>

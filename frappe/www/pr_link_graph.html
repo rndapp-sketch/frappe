@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR Link Graph — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page:    #f9f7f2;
+            --bg-sidebar: #f0ede4;
+            --bg-card:    #ffffff;
+            --text-main:  #3f3f46;
+            --text-muted: #71717a;
+            --text-accent:#9a7d5a;
+            --accent:     #d97757;
+            --accent-light:#e8e2d4;
+            --border:     #e4e4e7;
+            --border-sub: #f0ede4;
+            --shadow-sm:  0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.03);
+            --shadow-md:  0 4px 12px rgba(0,0,0,.06);
+            --radius:     10px;
+            --font-serif: 'Lora', Georgia, serif;
+            --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono:  'JetBrains Mono', monospace;
+
+            /* category colours */
+            --c-root:     #1e293b;
+            --c-finance:  #3b82f6;
+            --c-purchase: #f59e0b;
+            --c-hr:       #10b981;
+            --c-project:  #8b5cf6;
+
+            --c-finance-bg:  rgba(59,130,246,.08);
+            --c-purchase-bg: rgba(245,158,11,.08);
+            --c-hr-bg:       rgba(16,185,129,.08);
+            --c-project-bg:  rgba(139,92,246,.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Sidebar ── */
+        nav {
+            width: 240px;
+            min-width: 240px;
+            height: 100vh;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 2rem 1.25rem;
+            z-index: 100;
+            transition: transform .3s ease, width .3s ease;
+            flex-shrink: 0;
+        }
+        .nav-header {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-links li { margin-bottom: .3rem; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: .9rem;
+            display: block;
+            padding: .5rem .85rem;
+            border-radius: 6px;
+            transition: all .15s;
+            font-weight: 500;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* ── Top bar ── */
+        .top-nav {
+            position: fixed;
+            top: 0; left: 240px; right: 0;
+            height: 56px;
+            background: rgba(249,247,242,.95);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            z-index: 90;
+            backdrop-filter: blur(8px);
+            gap: 1rem;
+            justify-content: space-between;
+            transition: left .3s ease;
+        }
+        body.nav-collapsed nav    { transform: translateX(-100%); }
+        body.nav-collapsed .top-nav { left: 0; }
+        body.nav-collapsed main   { margin-left: 0; }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: .35rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: all .15s;
+        }
+        .sidebar-toggle:hover { background: var(--bg-page); color: var(--accent); }
+
+        .top-right { display: flex; align-items: center; gap: .75rem; }
+        .user-label { font-size: .85rem; color: var(--text-muted); }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: .35rem .75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .82rem;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            text-decoration: none;
+        }
+        .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Main layout ── */
+        main {
+            margin-left: 240px;
+            margin-top: 56px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 56px);
+            overflow: hidden;
+            transition: margin-left .3s ease;
+        }
+
+        /* ── Search bar ── */
+        .search-bar {
+            padding: .85rem 1.5rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+        .search-label {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            max-width: 420px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-page);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: .85rem;
+            padding: 0 .85rem;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .search-input:focus {
+            border-color: #a1a1aa;
+            box-shadow: 0 0 0 3px rgba(228,228,231,.5);
+        }
+        .search-input::placeholder { color: #a1a1aa; font-family: var(--font-sans); }
+
+        .btn {
+            height: 36px;
+            padding: 0 1rem;
+            border-radius: 7px;
+            font-family: var(--font-sans);
+            font-size: .84rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            white-space: nowrap;
+            transition: all .15s;
+        }
+        .btn:disabled { opacity: .45; cursor: not-allowed; }
+        .btn-primary  { background: #18181b; color: #fff; }
+        .btn-primary:not(:disabled):hover { opacity: .82; }
+        .btn-outline  { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:not(:disabled):hover { background: var(--bg-page); border-color: #a1a1aa; }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: flex;
+            gap: .5rem;
+            padding: .6rem 1.5rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .stat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: .76rem;
+            font-weight: 600;
+            border: 1px solid;
+        }
+        .stat-chip.total    { background: #f4f4f5; color: #52525b; border-color: #e4e4e7; }
+        .stat-chip.direct   { background: rgba(59,130,246,.1); color: #1d4ed8; border-color: rgba(59,130,246,.25); }
+        .stat-chip.indirect { background: rgba(245,158,11,.1); color: #b45309; border-color: rgba(245,158,11,.25); }
+        .stat-chip.chained  { background: rgba(16,185,129,.1); color: #065f46; border-color: rgba(16,185,129,.25); }
+        .stat-divider       { color: var(--border); margin: 0 .25rem; }
+        .pr-meta { font-size: .8rem; color: var(--text-muted); margin-left: auto; }
+        .pr-meta strong { color: var(--text-main); }
+
+        /* ── View toggle ── */
+        .view-toggle {
+            margin-left: .5rem;
+            display: flex;
+            gap: .25rem;
+        }
+        .view-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+        .view-btn.active, .view-btn:hover { background: var(--bg-sidebar); color: var(--accent); border-color: rgba(217,119,87,.4); }
+
+        /* ── Graph area ── */
+        .graph-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+
+        #graph-svg {
+            flex: 1;
+            cursor: grab;
+        }
+        #graph-svg:active { cursor: grabbing; }
+
+        /* ── Graph idle/loading states ── */
+        .graph-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            gap: .75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .graph-state svg { opacity: .3; }
+        .graph-state .state-title {
+            font-family: var(--font-serif);
+            font-size: 1.15rem;
+            color: var(--text-main);
+            margin: 0;
+        }
+        .graph-state .state-desc {
+            font-size: .85rem;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 320px;
+        }
+        .spinner {
+            width: 28px; height: 28px;
+            border: 2.5px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-banner {
+            background: #fce8e6;
+            border: 1px solid #ffd5d1;
+            border-radius: 8px;
+            padding: .65rem 1rem;
+            font-size: .84rem;
+            color: #c62828;
+            margin: .5rem 1.5rem;
+            display: none;
+            align-items: flex-start;
+            gap: .6rem;
+        }
+        .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Detail panel (fixed overlay, shared across all views) ── */
+        .detail-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 300px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform .25s ease;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-panel.open { transform: translateX(0); }
+
+        .panel-header {
+            padding: 1rem 1.1rem .75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+        }
+        .panel-title {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .panel-close {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: .25rem;
+            border-radius: 4px;
+            display: flex;
+            transition: color .15s;
+        }
+        .panel-close:hover { color: var(--text-main); }
+
+        .panel-body { padding: 1.1rem; flex: 1; display: flex; flex-direction: column; gap: .85rem; }
+
+        .panel-field { display: flex; flex-direction: column; gap: .15rem; }
+        .panel-field-label {
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--text-muted);
+        }
+        .panel-field-value {
+            font-size: .88rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .panel-field-value.mono {
+            font-family: var(--font-mono);
+            font-size: .8rem;
+        }
+        .panel-field-value.category-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .wf-badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-size: .74rem;
+            font-weight: 600;
+        }
+        .wf-draft    { background: #f4f4f5; color: #52525b; }
+        .wf-approved { background: #dcfce7; color: #166534; }
+        .wf-pending  { background: #fef9c3; color: #854d0e; }
+        .wf-rejected { background: #fee2e2; color: #991b1b; }
+        .wf-default  { background: #f4f4f5; color: #71717a; }
+
+        .panel-open-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1rem;
+            border-radius: 7px;
+            background: #18181b;
+            color: white;
+            text-decoration: none;
+            font-size: .83rem;
+            font-weight: 600;
+            transition: opacity .15s;
+            margin-top: .5rem;
+        }
+        .panel-open-btn:hover { opacity: .82; }
+
+        /* ── List view ── */
+        #list-view { display: none; flex: 1; overflow-y: auto; }
+        #list-view.active { display: block; }
+        #graph-view.hidden { display: none; }
+
+        /* ── Mindmap view ── */
+        #mindmap-view { display: none; flex: 1; overflow: hidden; position: relative; }
+        #mindmap-view.active { display: flex; }
+        #mindmap-svg { flex: 1; cursor: grab; }
+        #mindmap-svg:active { cursor: grabbing; }
+        .mm-node { user-select: none; }
+        .mm-leaf:hover circle { filter: brightness(1.15); }
+        .mm-cat-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .list-section { margin: 1rem 1.5rem; }
+        .list-section-title {
+            font-family: var(--font-serif);
+            font-size: .95rem;
+            font-weight: 600;
+            margin: 0 0 .6rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        .list-section-title .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .list-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .83rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .list-table th {
+            padding: .5rem .85rem;
+            text-align: left;
+            background: #fafaf9;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .list-table td {
+            padding: .55rem .85rem;
+            border-bottom: 1px solid var(--border-sub);
+            vertical-align: middle;
+        }
+        .list-table tr:last-child td { border-bottom: none; }
+        .list-table tbody tr:hover { background: #fafaf9; }
+        .mono-cell { font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); }
+        .desk-link-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            font-size: .75rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            transition: all .12s;
+        }
+        .desk-link-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Legend ── */
+        .legend {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: .65rem .85rem;
+            font-size: .74rem;
+            backdrop-filter: blur(4px);
+            box-shadow: var(--shadow-sm);
+            pointer-events: none;
+        }
+        .legend-title { font-weight: 700; color: var(--text-muted); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .06em; }
+        .legend-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .3rem; color: var(--text-main); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .legend-line { width: 22px; height: 2px; flex-shrink: 0; }
+        .legend-line.dashed { background: repeating-linear-gradient(90deg, #a1a1aa 0,#a1a1aa 4px,transparent 4px,transparent 7px); }
+
+        /* ── Zoom controls ── */
+        .zoom-controls {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+        }
+        .zoom-btn {
+            width: 32px; height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.92);
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all .15s;
+            backdrop-filter: blur(4px);
+        }
+        .zoom-btn:hover { background: var(--accent-light); color: var(--accent); border-color: rgba(217,119,87,.4); }
+
+        /* ── D3 graph node styles ── */
+        .node { cursor: pointer; }
+        .node circle { transition: r .15s; }
+        .node:hover circle { filter: brightness(1.15); }
+        .node-label {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            fill: #3f3f46;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+        .node-subtitle {
+            font-family: var(--font-sans);
+            font-size: 8px;
+            fill: #71717a;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+        .link { fill: none; }
+        .link.direct   { stroke-width: 1.5; stroke-opacity: .55; }
+        .link.indirect { stroke-width: 1; stroke-opacity: .35; stroke-dasharray: 4 3; }
+        .link.chained  { stroke-width: 1; stroke-opacity: .4;  stroke-dasharray: 2 2; }
+        .link.highlighted { stroke-opacity: .9 !important; stroke-width: 2 !important; }
+
+        .sector-label {
+            font-family: var(--font-sans);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            fill-opacity: .5;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(30,41,59,.9);
+            color: white;
+            padding: .4rem .65rem;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-family: var(--font-sans);
+            pointer-events: none;
+            z-index: 400;
+            display: none;
+            max-width: 260px;
+            white-space: normal;
+        }
+    </style>
+</head>
+
+<body>
+    <script>window.csrf_token = "{{ frappe.session.csrf_token }}";</script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/pr_link_graph';</script>
+    {% endif %}
+
+    <!-- ── Sidebar ── -->
+    <nav id="sidebar">
+        <div class="nav-header">
+            <span>rndopsapp</span>
+            <span style="font-size:.65rem;background:var(--accent);color:white;padding:2px 5px;border-radius:4px;">ADMIN</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/documentation">Documentation</a></li>
+            <li><a href="/kafka_control">Kafka Control</a></li>
+            <li><a href="/project_search">Search Projects</a></li>
+            <li><a href="/pr_link_graph" class="active">PR Link Graph</a></li>
+            <li><a href="/app">Desk</a></li>
+        </ul>
+    </nav>
+
+    <!-- ── Top bar ── -->
+    <header class="top-nav">
+        <button class="sidebar-toggle" onclick="toggleNav()" aria-label="Toggle sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="6"  x2="21" y2="6"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+        <div class="top-right">
+            <span class="user-label">{{ frappe.session.user }}</span>
+            <button onclick="frappe.app.logout()" class="logout-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- ── Main ── -->
+    <main>
+        <!-- Search bar -->
+        <div class="search-bar">
+            <span class="search-label">Project ID</span>
+            <input id="pr-input" class="search-input" type="text"
+                placeholder="Docname or project_no…"
+                autocomplete="off"
+                onkeydown="if(event.key==='Enter') loadGraph()">
+            <button class="btn btn-primary" id="load-btn" onclick="loadGraph()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Load Graph
+            </button>
+            <button class="btn btn-outline" id="reset-btn" onclick="resetGraph()" style="display:none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/>
+                </svg>
+                Reset
+            </button>
+        </div>
+
+        <!-- Error banner -->
+        <div id="error-banner" class="error-banner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span id="error-msg"></span>
+        </div>
+
+        <!-- Stats row (hidden until loaded) -->
+        <div class="stats-row" id="stats-row" style="display:none">
+            <span class="stat-chip total">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+                <span id="stat-total">0</span> documents
+            </span>
+            <span class="stat-chip direct">
+                <span id="stat-direct">0</span> direct links
+            </span>
+            <span class="stat-chip indirect">
+                <span id="stat-indirect">0</span> indirect
+            </span>
+            <span class="stat-chip chained">
+                <span id="stat-chained">0</span> chained
+            </span>
+            <span class="pr-meta" id="pr-meta"></span>
+            <div class="view-toggle">
+                <button class="view-btn active" id="btn-graph-view" onclick="switchView('graph')" title="Graph view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                </button>
+                <button class="view-btn" id="btn-list-view" onclick="switchView('list')" title="List view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6"  x2="3.01" y2="6"/>
+                        <line x1="3" y1="12" x2="3.01" y2="12"/>
+                        <line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                </button>
+                <button class="view-btn" id="btn-mindmap-view" onclick="switchView('mindmap')" title="Mind map">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <line x1="12" y1="9" x2="12" y2="3"/><circle cx="12" cy="2" r="1.5" fill="currentColor"/>
+                        <line x1="14.6" y1="10.4" x2="19" y2="6"/><circle cx="20" cy="5" r="1.5" fill="currentColor"/>
+                        <line x1="15" y1="12" x2="21" y2="12"/><circle cx="22" cy="12" r="1.5" fill="currentColor"/>
+                        <line x1="14.6" y1="13.6" x2="19" y2="18"/><circle cx="20" cy="19" r="1.5" fill="currentColor"/>
+                        <line x1="12" y1="15" x2="12" y2="21"/><circle cx="12" cy="22" r="1.5" fill="currentColor"/>
+                        <line x1="9.4" y1="13.6" x2="5" y2="18"/><circle cx="4" cy="19" r="1.5" fill="currentColor"/>
+                        <line x1="9" y1="12" x2="3" y2="12"/><circle cx="2" cy="12" r="1.5" fill="currentColor"/>
+                        <line x1="9.4" y1="10.4" x2="5" y2="6"/><circle cx="4" cy="5" r="1.5" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Graph + detail panel -->
+        <div class="graph-area" id="graph-view">
+            <!-- idle state -->
+            <div class="graph-state" id="state-idle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51"  x2="8.59"  y2="10.49"/>
+                </svg>
+                <p class="state-title">Enter a Project Registration ID</p>
+                <p class="state-desc">Type the document name (e.g. <strong>202507300DIIT000001</strong>) or the project number and click Load Graph.</p>
+            </div>
+
+            <!-- loading state -->
+            <div class="graph-state" id="state-loading" style="display:none">
+                <div class="spinner"></div>
+                <p class="state-desc">Fetching linked documents…</p>
+            </div>
+
+            <!-- SVG canvas -->
+            <svg id="graph-svg" style="display:none"></svg>
+
+            <!-- Legend -->
+            <div class="legend" id="legend" style="display:none">
+                <div class="legend-title">Categories</div>
+                <div class="legend-row"><div class="legend-dot" style="background:#1e293b"></div> Project Registration</div>
+                <div class="legend-row"><div class="legend-dot" style="background:#3b82f6"></div> Finance / Fund</div>
+                <div class="legend-row"><div class="legend-dot" style="background:#f59e0b"></div> Purchase</div>
+                <div class="legend-row"><div class="legend-dot" style="background:#10b981"></div> HR / Personnel</div>
+                <div class="legend-row"><div class="legend-dot" style="background:#8b5cf6"></div> Project Management</div>
+                <div style="border-top:1px solid var(--border);margin:.4rem 0"></div>
+                <div class="legend-row"><div class="legend-line" style="height:2px;background:#3b82f6;opacity:.7"></div> Direct link</div>
+                <div class="legend-row"><div class="legend-line dashed"></div> Indirect (project_no)</div>
+                <div class="legend-row"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#10b981 0,#10b981 2px,transparent 2px,transparent 4px);height:1px;opacity:.8"></div> Chained (nested)</div>
+            </div>
+
+            <!-- Zoom controls -->
+            <div class="zoom-controls" id="zoom-controls" style="display:none">
+                <button class="zoom-btn" onclick="zoomBy(1.3)" title="Zoom in">+</button>
+                <button class="zoom-btn" onclick="zoomBy(0.77)" title="Zoom out">−</button>
+                <button class="zoom-btn" onclick="zoomReset()" title="Fit" style="font-size:.7rem;font-weight:700;">FIT</button>
+            </div>
+
+        </div>
+
+        <!-- List view -->
+        <div id="list-view"></div>
+
+        <!-- Mindmap view -->
+        <div id="mindmap-view">
+            <svg id="mindmap-svg"></svg>
+            <div class="zoom-controls" id="mm-zoom-controls" style="display:none">
+                <button class="zoom-btn" onclick="mmZoomBy(1.3)" title="Zoom in">+</button>
+                <button class="zoom-btn" onclick="mmZoomBy(0.77)" title="Zoom out">−</button>
+                <button class="zoom-btn" onclick="mmFit()" title="Fit" style="font-size:.7rem;font-weight:700;">FIT</button>
+            </div>
+        </div>
+
+        <!-- Shared tooltip (fixed, visible across all views) -->
+        <div class="tooltip" id="tooltip"></div>
+
+        <!-- Shared detail panel (fixed overlay, slides from right) -->
+        <div class="detail-panel" id="detail-panel">
+            <div class="panel-header">
+                <h3 class="panel-title" id="panel-title">Document</h3>
+                <button class="panel-close" onclick="closePanel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="panel-body" id="panel-body"></div>
+        </div>
+    </main>
+
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/js/frappe-web.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script>
+    // ── Constants ────────────────────────────────────────────
+    const API = '/api/method/rndopsapp.rndopsapp.doctype.project_registration.project_registration.get_pr_link_graph';
+
+    const CAT_COLOR = {
+        root:     '#1e293b',
+        finance:  '#3b82f6',
+        purchase: '#f59e0b',
+        hr:       '#10b981',
+        project:  '#8b5cf6',
+    };
+    const CAT_LABEL = {
+        finance:  'Finance / Fund',
+        purchase: 'Purchase',
+        hr:       'HR / Personnel',
+        project:  'Project Mgmt',
+    };
+
+    // Sector angles (radians from center, clockwise from top)
+    const SECTORS = {
+        finance:  -Math.PI / 2,      // top
+        purchase:  0,                // right
+        hr:        Math.PI / 2,      // bottom
+        project:   Math.PI,          // left
+    };
+    const CLUSTER_R = 200;   // sector center distance from graph center
+
+    // ── State ────────────────────────────────────────────────
+    let graphData   = null;
+    let simulation  = null;
+    let svgZoom     = null;
+    let mmSvgZoom   = null;
+    let currentView = 'graph';
+
+    // ── Sidebar toggle ───────────────────────────────────────
+    function toggleNav() {
+        document.body.classList.toggle('nav-collapsed');
+        localStorage.setItem('prLinkNav', document.body.classList.contains('nav-collapsed') ? '0' : '1');
+        if (simulation) {
+            setTimeout(fitGraph, 350);
+        }
+    }
+    if (localStorage.getItem('prLinkNav') === '0') document.body.classList.add('nav-collapsed');
+
+    // ── Error helpers ─────────────────────────────────────────
+    function showError(msg) {
+        const b = document.getElementById('error-banner');
+        document.getElementById('error-msg').textContent = msg;
+        b.style.display = 'flex';
+    }
+    function hideError() {
+        document.getElementById('error-banner').style.display = 'none';
+    }
+
+    // ── State helpers ─────────────────────────────────────────
+    function setState(name) {
+        document.getElementById('state-idle').style.display    = name === 'idle'    ? 'flex' : 'none';
+        document.getElementById('state-loading').style.display = name === 'loading' ? 'flex' : 'none';
+        document.getElementById('graph-svg').style.display     = name === 'graph'   ? 'block' : 'none';
+        document.getElementById('legend').style.display        = name === 'graph'   ? 'block' : 'none';
+        document.getElementById('zoom-controls').style.display = name === 'graph'   ? 'flex'  : 'none';
+    }
+
+    // ── View switch ───────────────────────────────────────────
+    function switchView(v) {
+        currentView = v;
+        document.getElementById('btn-graph-view').classList.toggle('active', v === 'graph');
+        document.getElementById('btn-list-view').classList.toggle('active', v === 'list');
+        document.getElementById('btn-mindmap-view').classList.toggle('active', v === 'mindmap');
+        document.getElementById('graph-view').classList.toggle('hidden', v !== 'graph');
+        document.getElementById('list-view').classList.toggle('active', v === 'list');
+        document.getElementById('mindmap-view').classList.toggle('active', v === 'mindmap');
+        document.getElementById('mm-zoom-controls').style.display = (v === 'mindmap' && graphData) ? 'flex' : 'none';
+        closePanel();
+        if (v === 'list'    && graphData) renderListView(graphData);
+        if (v === 'mindmap' && graphData) renderMindmap(graphData);
+    }
+
+    // ── Workflow badge ────────────────────────────────────────
+    function wfBadge(state) {
+        if (!state) return '<span class="wf-badge wf-default">—</span>';
+        const s = state.toLowerCase();
+        let cls = 'wf-default';
+        if (s.includes('approved') || s.includes('sanctioned') || s.includes('completed')) cls = 'wf-approved';
+        else if (s.includes('pending') || s.includes('review') || s.includes('submitted')) cls = 'wf-pending';
+        else if (s.includes('rejected') || s.includes('cancelled')) cls = 'wf-rejected';
+        else if (s === 'draft') cls = 'wf-draft';
+        return `<span class="wf-badge ${cls}">${escHtml(state)}</span>`;
+    }
+
+    function escHtml(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function deskUrl(doctype, name) {
+        return `/app/${doctype.toLowerCase().replace(/ /g, '-')}/${encodeURIComponent(name)}`;
+    }
+
+    // ── Load graph ────────────────────────────────────────────
+    async function loadGraph() {
+        const raw = document.getElementById('pr-input').value.trim();
+        if (!raw) return;
+
+        hideError();
+        setState('loading');
+        document.getElementById('stats-row').style.display = 'none';
+        document.getElementById('reset-btn').style.display = 'none';
+        closePanel();
+
+        try {
+            const resp = await fetch(`${API}?docname=${encodeURIComponent(raw)}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Frappe-CSRF-Token': window.csrf_token || '',
+                },
+            });
+            const json = await resp.json();
+            const data = json.message || json;
+
+            if (!resp.ok || data.status === 'error') {
+                throw new Error(data.message || resp.statusText);
+            }
+
+            graphData = data;
+            updateStats(data);
+            document.getElementById('reset-btn').style.display = '';
+            document.getElementById('stats-row').style.display = 'flex';
+
+            if (currentView === 'graph')   renderGraph(data);
+            else if (currentView === 'mindmap') renderMindmap(data);
+            else renderListView(data);
+
+        } catch (err) {
+            setState('idle');
+            showError('Failed to load graph: ' + err.message);
+        }
+    }
+
+    function resetGraph() {
+        graphData = null;
+        document.getElementById('pr-input').value = '';
+        document.getElementById('reset-btn').style.display = 'none';
+        document.getElementById('stats-row').style.display = 'none';
+        document.getElementById('list-view').innerHTML = '';
+        document.getElementById('mm-zoom-controls').style.display = 'none';
+        closePanel();
+        hideError();
+        setState('idle');
+        if (simulation) { simulation.stop(); simulation = null; }
+        d3.select('#graph-svg').selectAll('*').remove();
+        d3.select('#mindmap-svg').selectAll('*').remove();
+        mmSvgZoom = null;
+    }
+
+    // ── Update stats row ─────────────────────────────────────
+    function updateStats(data) {
+        document.getElementById('stat-total').textContent    = data.summary.total;
+        document.getElementById('stat-direct').textContent   = data.summary.direct;
+        document.getElementById('stat-indirect').textContent = data.summary.indirect;
+        document.getElementById('stat-chained').textContent  = data.summary.chained || 0;
+
+        const pr = data.pr;
+        let meta = `<strong>${escHtml(pr.name)}</strong>`;
+        if (pr.project_no)    meta += ` · ${escHtml(pr.project_no)}`;
+        if (pr.project_title) meta += ` · ${escHtml(pr.project_title)}`;
+        if (pr.pi_name)       meta += ` · PI: ${escHtml(pr.pi_name)}`;
+        document.getElementById('pr-meta').innerHTML = meta;
+    }
+
+    // ── D3 force graph ────────────────────────────────────────
+    function renderGraph(data) {
+        const svg = d3.select('#graph-svg');
+        svg.selectAll('*').remove();
+        setState('graph');
+
+        const W = svg.node().clientWidth  || 900;
+        const H = svg.node().clientHeight || 600;
+        const cx = W / 2;
+        const cy = H / 2;
+
+        // ── Zoom behaviour
+        svgZoom = d3.zoom()
+            .scaleExtent([0.15, 4])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+        svg.call(svgZoom);
+
+        const g = svg.append('g');
+
+        // ── Sector background arcs
+        const sectorArc = d3.arc().innerRadius(0).outerRadius(CLUSTER_R * 1.55);
+        const sectors = [
+            { cat: 'finance',  start: -Math.PI * 1.25, end: -Math.PI * 0.75 },
+            { cat: 'purchase', start: -Math.PI * 0.25, end:  Math.PI * 0.25 },
+            { cat: 'hr',       start:  Math.PI * 0.25, end:  Math.PI * 0.75 },
+            { cat: 'project',  start:  Math.PI * 0.75, end:  Math.PI * 1.25 },
+        ];
+        const sectorGroup = g.append('g').attr('transform', `translate(${cx},${cy})`);
+        sectors.forEach(s => {
+            sectorGroup.append('path')
+                .attr('d', sectorArc({ startAngle: s.start, endAngle: s.end }))
+                .attr('fill', CAT_COLOR[s.cat])
+                .attr('fill-opacity', 0.04)
+                .attr('stroke', CAT_COLOR[s.cat])
+                .attr('stroke-opacity', 0.12)
+                .attr('stroke-width', 1);
+        });
+
+        // ── Sector labels
+        const labelR = CLUSTER_R * 1.45;
+        Object.entries(SECTORS).forEach(([cat, angle]) => {
+            const lx = cx + labelR * Math.cos(angle);
+            const ly = cy + labelR * Math.sin(angle);
+            g.append('text')
+                .attr('class', 'sector-label')
+                .attr('x', lx)
+                .attr('y', ly)
+                .attr('fill', CAT_COLOR[cat])
+                .text(CAT_LABEL[cat]);
+        });
+
+        // ── Build D3 nodes/links
+        const nodes = data.nodes.map(n => ({ ...n }));
+        const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+        const links = data.links.map(l => ({
+            ...l,
+            source: nodeById[l.source] || l.source,
+            target: nodeById[l.target] || l.target,
+        }));
+
+        // Assign initial positions
+        nodes.forEach(n => {
+            if (n.type === 'root') {
+                n.fx = cx;
+                n.fy = cy;
+            } else {
+                const angle = SECTORS[n.category] ?? 0;
+                const jitter = (Math.random() - 0.5) * 80;
+                n.x = cx + (CLUSTER_R + jitter) * Math.cos(angle);
+                n.y = cy + (CLUSTER_R + jitter) * Math.sin(angle) * 0.9;
+            }
+        });
+
+        // ── Draw links
+        const linkSel = g.append('g')
+            .selectAll('line')
+            .data(links)
+            .join('line')
+            .attr('class', d => `link ${d.type}`)
+            .attr('stroke', d => {
+                const target = d.target;
+                return CAT_COLOR[target.category] || '#a1a1aa';
+            });
+
+        // ── Draw nodes
+        const nodeSel = g.append('g')
+            .selectAll('g')
+            .data(nodes)
+            .join('g')
+            .attr('class', 'node')
+            .on('click', (event, d) => {
+                event.stopPropagation();
+                showPanel(d, links);
+                highlightNode(d, nodeSel, linkSel);
+            })
+            .on('mouseover', (event, d) => showTooltip(event, d))
+            .on('mousemove', (event) => moveTooltip(event))
+            .on('mouseout', () => hideTooltip())
+            .call(d3.drag()
+                .on('start', dragStart)
+                .on('drag',  dragging)
+                .on('end',   dragEnd)
+            );
+
+        nodeSel.append('circle')
+            .attr('r', d => d.type === 'root' ? 24 : 12)
+            .attr('fill', d => CAT_COLOR[d.category] || '#a1a1aa')
+            .attr('stroke', 'white')
+            .attr('stroke-width', d => d.type === 'root' ? 3 : 2);
+
+        // Doc-status overlay (submitted = extra ring)
+        nodeSel.filter(d => d.docstatus === 1)
+            .append('circle')
+            .attr('r', d => d.type === 'root' ? 28 : 15)
+            .attr('fill', 'none')
+            .attr('stroke', d => CAT_COLOR[d.category])
+            .attr('stroke-width', 1.5)
+            .attr('stroke-opacity', .45);
+
+        // Root icon
+        nodeSel.filter(d => d.type === 'root')
+            .append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'central')
+            .attr('fill', 'white')
+            .attr('font-size', '11px')
+            .attr('font-weight', '700')
+            .attr('pointer-events', 'none')
+            .text('PR');
+
+        // Node label (below circle)
+        nodeSel.filter(d => d.type !== 'root')
+            .append('text')
+            .attr('class', 'node-label')
+            .attr('y', 21)
+            .text(d => d.label.length > 20 ? d.label.slice(0, 18) + '…' : d.label);
+
+        nodeSel.filter(d => d.type !== 'root')
+            .append('text')
+            .attr('class', 'node-subtitle')
+            .attr('y', 30)
+            .text(d => d.subtitle.length > 22 ? d.subtitle.slice(0, 20) + '…' : d.subtitle);
+
+        // ── Force simulation
+        simulation = d3.forceSimulation(nodes)
+            .force('link', d3.forceLink(links).id(d => d.id).distance(d => {
+                if (d.type === 'chained')  return 190;
+                if (d.type === 'indirect') return 160;
+                return 130;
+            }).strength(0.4))
+            .force('charge', d3.forceManyBody().strength(-180))
+            .force('collide', d3.forceCollide(d => d.type === 'root' ? 40 : 30))
+            .force('cluster', forceCluster(nodes, cx, cy))
+            .on('tick', () => {
+                linkSel
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+            })
+            .on('end', fitGraph);
+
+        // Click on background deselects
+        svg.on('click', () => {
+            resetHighlight(nodeSel, linkSel);
+            closePanel();
+        });
+
+        // ── Drag handlers
+        function dragStart(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x; d.fy = d.y;
+        }
+        function dragging(event, d) {
+            d.fx = event.x; d.fy = event.y;
+        }
+        function dragEnd(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            if (d.type !== 'root') { d.fx = null; d.fy = null; }
+        }
+    }
+
+    // ── Custom cluster force ──────────────────────────────────
+    function forceCluster(nodes, cx, cy) {
+        return function(alpha) {
+            nodes.forEach(n => {
+                if (n.type === 'root') return;
+                const angle = SECTORS[n.category];
+                if (angle === undefined) return;
+                const tx = cx + CLUSTER_R * Math.cos(angle);
+                const ty = cy + CLUSTER_R * Math.sin(angle);
+                n.vx += (tx - n.x) * alpha * 0.25;
+                n.vy += (ty - n.y) * alpha * 0.25;
+            });
+        };
+    }
+
+    // ── Highlight connected nodes ─────────────────────────────
+    function highlightNode(d, nodeSel, linkSel) {
+        const connectedIds = new Set([d.id]);
+        linkSel.each(l => {
+            if (l.source.id === d.id || l.target.id === d.id) {
+                connectedIds.add(l.source.id);
+                connectedIds.add(l.target.id);
+            }
+        });
+        nodeSel.select('circle').attr('opacity', n => connectedIds.has(n.id) ? 1 : 0.2);
+        nodeSel.selectAll('text').attr('opacity', n => connectedIds.has(n.id) ? 1 : 0.2);
+        linkSel
+            .attr('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 0.85 : 0.08)
+            .attr('stroke-width', l => (l.source.id === d.id || l.target.id === d.id)
+                ? (l.type === 'direct' ? 2.5 : 1.5) : (l.type === 'direct' ? 1.5 : 1));
+    }
+
+    function resetHighlight(nodeSel, linkSel) {
+        nodeSel.select('circle').attr('opacity', 1);
+        nodeSel.selectAll('text').attr('opacity', 1);
+        linkSel
+            .attr('stroke-opacity', l => l.type === 'direct' ? 0.55 : 0.35)
+            .attr('stroke-width',  l => l.type === 'direct' ? 1.5 : 1);
+    }
+
+    // ── Zoom helpers ──────────────────────────────────────────
+    function zoomBy(factor) {
+        d3.select('#graph-svg').transition().duration(250)
+            .call(svgZoom.scaleBy, factor);
+    }
+
+    function zoomReset() { fitGraph(); }
+
+    function fitGraph() {
+        const svg = document.getElementById('graph-svg');
+        const W = svg.clientWidth;
+        const H = svg.clientHeight;
+        if (!W || !H) return;
+        d3.select('#graph-svg').transition().duration(500)
+            .call(svgZoom.transform, d3.zoomIdentity.translate(W / 2, H / 2).scale(0.9).translate(-W / 2, -H / 2));
+    }
+
+    // ── Tooltip ───────────────────────────────────────────────
+    function showTooltip(event, d) {
+        const tip = document.getElementById('tooltip');
+        let html = `<strong>${escHtml(d.label)}</strong>`;
+        if (d.doctype !== 'Project Registration') {
+            html += `<br><span style="opacity:.75">${escHtml(d.doctype)}</span>`;
+        }
+        if (d.workflow_state) html += `<br>${escHtml(d.workflow_state)}`;
+        if (d.link_field)     html += `<br><span style="opacity:.6;font-family:monospace">via ${escHtml(d.link_field)}</span>`;
+        tip.innerHTML = html;
+        tip.style.display = 'block';
+        moveTooltip(event);
+    }
+    function moveTooltip(event) {
+        const tip = document.getElementById('tooltip');
+        tip.style.left = (event.clientX + 14) + 'px';
+        tip.style.top  = (event.clientY - 10) + 'px';
+    }
+    function hideTooltip() {
+        document.getElementById('tooltip').style.display = 'none';
+    }
+
+    // ── Detail panel ──────────────────────────────────────────
+    function showPanel(d, links) {
+        const panel = document.getElementById('detail-panel');
+        const body  = document.getElementById('panel-body');
+        const title = document.getElementById('panel-title');
+
+        title.textContent = d.type === 'root' ? 'Project Registration' : d.subtitle || d.doctype;
+
+        const catColor = CAT_COLOR[d.category] || '#71717a';
+        const catLabel = d.category === 'root' ? 'Project Registration' : CAT_LABEL[d.category] || d.category;
+
+        // Connected docs count
+        const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
+
+        let html = `
+            <div class="panel-field">
+                <span class="panel-field-label">Document Name</span>
+                <span class="panel-field-value mono">${escHtml(d.name)}</span>
+            </div>
+            <div class="panel-field">
+                <span class="panel-field-label">DocType</span>
+                <span class="panel-field-value">${escHtml(d.doctype)}</span>
+            </div>
+            <div class="panel-field">
+                <span class="panel-field-label">Category</span>
+                <span class="panel-field-value">
+                    <span class="category-pill" style="background:${catColor}18;color:${catColor};border:1px solid ${catColor}33">
+                        ${escHtml(catLabel)}
+                    </span>
+                </span>
+            </div>`;
+
+        if (d.workflow_state) {
+            html += `<div class="panel-field">
+                <span class="panel-field-label">Workflow State</span>
+                <span class="panel-field-value">${wfBadge(d.workflow_state)}</span>
+            </div>`;
+        }
+
+        if (d.type !== 'root') {
+            html += `<div class="panel-field">
+                <span class="panel-field-label">Link Type</span>
+                <span class="panel-field-value">
+                    ${d.type === 'direct'
+                        ? `<span class="stat-chip direct" style="font-size:.72rem">Direct (Link field)</span>`
+                        : d.type === 'chained'
+                        ? `<span class="stat-chip chained" style="font-size:.72rem">Chained (via ${escHtml(d.via || 'parent')})</span>`
+                        : `<span class="stat-chip indirect" style="font-size:.72rem">Indirect (Data field)</span>`}
+                </span>
+            </div>`;
+            if (d.link_field) {
+                html += `<div class="panel-field">
+                    <span class="panel-field-label">Link Field</span>
+                    <span class="panel-field-value mono">${escHtml(d.link_field)}</span>
+                </div>`;
+            }
+        }
+
+        if (d.type === 'root') {
+            const pr = graphData.pr;
+            if (pr.project_no)    html += `<div class="panel-field"><span class="panel-field-label">Project No</span><span class="panel-field-value mono">${escHtml(pr.project_no)}</span></div>`;
+            if (pr.project_title) html += `<div class="panel-field"><span class="panel-field-label">Title</span><span class="panel-field-value">${escHtml(pr.project_title)}</span></div>`;
+            if (pr.pi_name)       html += `<div class="panel-field"><span class="panel-field-label">PI</span><span class="panel-field-value">${escHtml(pr.pi_name)}</span></div>`;
+            if (pr.project_type)  html += `<div class="panel-field"><span class="panel-field-label">Type</span><span class="panel-field-value">${escHtml(pr.project_type)}</span></div>`;
+            html += `<div class="panel-field">
+                <span class="panel-field-label">Linked Documents</span>
+                <span class="panel-field-value">${graphData.summary.total} total (${graphData.summary.direct} direct, ${graphData.summary.indirect} indirect)</span>
+            </div>`;
+        }
+
+        html += `<a class="panel-open-btn" href="${deskUrl(d.doctype, d.name)}" target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Open in Desk
+        </a>`;
+
+        body.innerHTML = html;
+        panel.classList.add('open');
+    }
+
+    function closePanel() {
+        document.getElementById('detail-panel').classList.remove('open');
+    }
+
+    // ── List view ─────────────────────────────────────────────
+    function renderListView(data) {
+        const container = document.getElementById('list-view');
+        const categories = ['finance', 'purchase', 'hr', 'project'];
+        const catNodes = {};
+        categories.forEach(c => { catNodes[c] = { direct: [], indirect: [], chained: [] }; });
+
+        data.nodes.forEach(n => {
+            if (n.type === 'root') return;
+            const bucket = catNodes[n.category];
+            if (!bucket) return;
+            const slot = n.type === 'direct' ? 'direct' : n.type === 'chained' ? 'chained' : 'indirect';
+            bucket[slot].push(n);
+        });
+
+        // find link_field per node
+        const linkFieldMap = {};
+        data.links.forEach(l => { linkFieldMap[l.target] = l.field; });
+
+        let html = '';
+
+        categories.forEach(cat => {
+            const nodes = [...catNodes[cat].direct, ...catNodes[cat].indirect, ...catNodes[cat].chained];
+            if (!nodes.length) return;
+
+            html += `<div class="list-section">
+                <h3 class="list-section-title">
+                    <span class="dot" style="background:${CAT_COLOR[cat]}"></span>
+                    ${CAT_LABEL[cat]}
+                    <span style="font-size:.75rem;color:var(--text-muted);font-weight:500">(${nodes.length})</span>
+                </h3>
+                <div style="overflow-x:auto">
+                <table class="list-table">
+                    <thead><tr>
+                        <th>Document Name</th>
+                        <th>DocType</th>
+                        <th>Link Type</th>
+                        <th>Link Field</th>
+                        <th>Workflow State</th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody>`;
+
+            nodes.forEach(n => {
+                const ltype = n.type === 'direct'
+                    ? `<span class="stat-chip direct" style="font-size:.7rem">Direct</span>`
+                    : n.type === 'chained'
+                    ? `<span class="stat-chip chained" style="font-size:.7rem">Chained</span>`
+                    : `<span class="stat-chip indirect" style="font-size:.7rem">Indirect</span>`;
+                html += `<tr>
+                    <td class="mono-cell">${escHtml(n.name)}</td>
+                    <td>${escHtml(n.subtitle)}</td>
+                    <td>${ltype}</td>
+                    <td class="mono-cell">${escHtml(n.link_field || '—')}</td>
+                    <td>${wfBadge(n.workflow_state)}</td>
+                    <td>
+                        <a class="desk-link-sm" href="${deskUrl(n.doctype, n.name)}" target="_blank" rel="noopener">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Open
+                        </a>
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table></div></div>`;
+        });
+
+        container.innerHTML = html || '<div style="padding:2rem 1.5rem;color:var(--text-muted)">No linked documents found.</div>';
+    }
+
+    // ── Mind map ─────────────────────────────────────────────
+    function buildMindmapTree(data) {
+        const cats = ['finance', 'purchase', 'hr', 'project'];
+        const catGroups = {};
+        cats.forEach(c => { catGroups[c] = {}; });
+
+        data.nodes.forEach(n => {
+            if (n.type === 'root') return;
+            const cat = n.category || 'project';
+            if (!catGroups[cat]) catGroups[cat] = {};
+            const dt = n.doctype;
+            if (!catGroups[cat][dt]) catGroups[cat][dt] = { label: n.subtitle || dt, docs: [] };
+            catGroups[cat][dt].docs.push(n);
+        });
+
+        return {
+            id: 'root', name: data.pr.project_no || data.pr.name,
+            type: 'root', category: 'root',
+            children: cats
+                .filter(c => Object.keys(catGroups[c]).length > 0)
+                .map(c => ({
+                    id: `cat::${c}`, name: CAT_LABEL[c],
+                    type: 'category', category: c,
+                    children: Object.entries(catGroups[c]).map(([dt, info]) => ({
+                        id: `dt::${c}::${dt}`, name: info.label,
+                        type: 'doctype', category: c,
+                        children: info.docs.map(d => ({
+                            ...d, type: 'leaf', category: c,
+                        }))
+                    }))
+                }))
+        };
+    }
+
+    function renderMindmap(data) {
+        const svgEl = document.getElementById('mindmap-svg');
+        const svg   = d3.select('#mindmap-svg');
+        svg.selectAll('*').remove();
+
+        const W = svgEl.clientWidth  || 900;
+        const H = svgEl.clientHeight || 600;
+
+        mmSvgZoom = d3.zoom().scaleExtent([0.05, 4])
+            .on('zoom', e => g.attr('transform', e.transform));
+        svg.call(mmSvgZoom);
+
+        const g = svg.append('g').attr('transform', `translate(${W/2},${H/2})`);
+
+        const hier = d3.hierarchy(buildMindmapTree(data));
+        const R = Math.min(W, H) * 0.44;
+        d3.tree()
+            .size([2 * Math.PI, R])
+            .separation((a, b) => (a.parent === b.parent ? 1 : 2) / a.depth)
+            (hier);
+
+        // Links
+        g.append('g').attr('fill', 'none')
+            .selectAll('path')
+            .data(hier.links())
+            .join('path')
+            .attr('d', d3.linkRadial().angle(d => d.x).radius(d => d.y))
+            .attr('stroke', d => CAT_COLOR[d.target.data.category] || '#e4e4e7')
+            .attr('stroke-width',   d => [0, 2.5, 1.5, 1][d.target.depth]   || 1)
+            .attr('stroke-opacity', d => [0, 0.65, 0.45, 0.28][d.target.depth] || 0.28);
+
+        // Nodes
+        const node = g.append('g')
+            .selectAll('g')
+            .data(hier.descendants())
+            .join('g')
+            .attr('class', d => `mm-node mm-${d.data.type}`)
+            .attr('transform', d =>
+                d.depth === 0 ? '' :
+                `rotate(${d.x * 180/Math.PI - 90}) translate(${d.y},0)`)
+            .style('cursor', d => d.data.type === 'leaf' ? 'pointer' : 'default')
+            .on('click', (event, d) => {
+                if (d.data.type !== 'leaf') return;
+                event.stopPropagation();
+                showPanel(d.data, data.links);
+            })
+            .on('mouseover', (event, d) => d.data.type === 'leaf' && showTooltip(event, d.data))
+            .on('mousemove', moveTooltip)
+            .on('mouseout', hideTooltip);
+
+        // Root
+        node.filter(d => d.depth === 0).call(sel => {
+            sel.append('circle').attr('r', 22).attr('fill', '#1e293b').attr('stroke', '#fff').attr('stroke-width', 3);
+            sel.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+                .attr('fill', '#fff').attr('font-size', '11px').attr('font-weight', '700')
+                .attr('pointer-events', 'none').text('PR');
+        });
+
+        // Category (depth=1)
+        node.filter(d => d.depth === 1)
+            .append('circle')
+            .attr('r', 8)
+            .attr('fill', d => CAT_COLOR[d.data.category])
+            .attr('stroke', '#fff').attr('stroke-width', 2);
+
+        // Doctype (depth=2)
+        node.filter(d => d.depth === 2)
+            .append('circle')
+            .attr('r', 5)
+            .attr('fill', d => CAT_COLOR[d.data.category] + 'bb')
+            .attr('stroke', '#fff').attr('stroke-width', 1.5);
+
+        // Leaf (depth=3)
+        node.filter(d => d.depth === 3)
+            .append('circle')
+            .attr('r', 3.5)
+            .attr('fill', d => CAT_COLOR[d.data.category])
+            .attr('stroke', '#fff').attr('stroke-width', 1.2);
+
+        // Text labels
+        node.filter(d => d.depth > 0)
+            .append('text')
+            .attr('dy', '0.32em')
+            .attr('x', d => {
+                const off = d.depth === 1 ? 13 : d.depth === 2 ? 9 : 7;
+                return d.x < Math.PI ? off : -off;
+            })
+            .attr('text-anchor', d => d.x < Math.PI ? 'start' : 'end')
+            .attr('transform', d => d.x >= Math.PI ? 'rotate(180)' : null)
+            .attr('fill', d => d.depth === 1 ? CAT_COLOR[d.data.category] : '#3f3f46')
+            .attr('font-size',   d => d.depth === 1 ? '12px' : d.depth === 2 ? '10px' : '9px')
+            .attr('font-weight', d => d.depth <= 2 ? '600' : '400')
+            .attr('pointer-events', 'none')
+            .text(d => {
+                const nm = d.data.name || '';
+                const max = d.depth === 1 ? 18 : d.depth === 2 ? 20 : 18;
+                return nm.length > max ? nm.slice(0, max - 1) + '…' : nm;
+            });
+
+        // Doctype count badge
+        node.filter(d => d.depth === 2 && d.children)
+            .append('text')
+            .attr('dy', '0.32em')
+            .attr('x', d => {
+                const nameChars = Math.min(d.data.name.length, 20);
+                const off = nameChars * 5.6 + 14;
+                return d.x < Math.PI ? off : -off;
+            })
+            .attr('text-anchor', d => d.x < Math.PI ? 'start' : 'end')
+            .attr('transform', d => d.x >= Math.PI ? 'rotate(180)' : null)
+            .attr('fill', '#a1a1aa').attr('font-size', '9px').attr('pointer-events', 'none')
+            .text(d => `(${d.children.length})`);
+
+        svg.on('click', closePanel);
+        document.getElementById('mm-zoom-controls').style.display = 'flex';
+
+        // Auto-fit
+        try {
+            const bbox = g.node().getBBox();
+            const pad = 40;
+            const scale = Math.min(0.88, Math.min(W / (bbox.width + pad), H / (bbox.height + pad)));
+            const tx = W/2 - scale * (bbox.x + bbox.width/2);
+            const ty = H/2 - scale * (bbox.y + bbox.height/2);
+            svg.call(mmSvgZoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+        } catch(e) { /* bbox unavailable before paint — fitMindmap on next tick */ }
+    }
+
+    function mmZoomBy(factor) {
+        d3.select('#mindmap-svg').transition().duration(250).call(mmSvgZoom.scaleBy, factor);
+    }
+    function mmFit() {
+        if (!mmSvgZoom) return;
+        const svgEl = document.getElementById('mindmap-svg');
+        const W = svgEl.clientWidth, H = svgEl.clientHeight;
+        const g = d3.select('#mindmap-svg g');
+        try {
+            const bbox = g.node().getBBox();
+            const pad = 40;
+            const scale = Math.min(0.88, Math.min(W / (bbox.width + pad), H / (bbox.height + pad)));
+            const tx = W/2 - scale * (bbox.x + bbox.width/2);
+            const ty = H/2 - scale * (bbox.y + bbox.height/2);
+            d3.select('#mindmap-svg').transition().duration(500)
+                .call(mmSvgZoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+        } catch(e) {}
+    }
+
+    // ── URL param support (?pr=...) ───────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        const p = new URLSearchParams(window.location.search);
+        const prParam = p.get('pr') || p.get('docname') || '';
+        if (prParam) {
+            document.getElementById('pr-input').value = prParam;
+            loadGraph();
+        } else {
+            document.getElementById('pr-input').focus();
+        }
+    });
+    </script>
+</body>
+</html>

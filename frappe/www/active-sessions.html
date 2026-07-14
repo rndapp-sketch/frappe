@@ -1,0 +1,760 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Active Sessions{% endblock %}
+
+{% block page_content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ── Design Tokens ───────────────────────────────────────── */
+:root {
+	--ds-page-bg:        #FAFAF9;
+	--ds-card-bg:        #FFFFFF;
+	--ds-border:         #E4E4E7;
+	--ds-divider:        #F4F4F5;
+	--ds-text-primary:   #3F3F46;
+	--ds-text-secondary: #71717A;
+	--ds-text-muted:     #A1A1AA;
+	--ds-accent-blue:    #2563EB;
+	--ds-accent-indigo:  #4A6CF7;
+	--ds-accent-orange:  #D97757;
+	--ds-table-head-bg:  #EEF2FF;
+	--ds-table-head-txt: #1E3A8A;
+	--ds-table-head-bdr: rgba(199,210,254,0.7);
+	--ds-row-hover:      #F4F4F5;
+}
+
+/* ── Page Scaffold ───────────────────────────────────────── */
+.ds-page {
+	font-family: 'Outfit', sans-serif;
+	background: var(--ds-page-bg);
+	min-height: 100vh;
+	margin: -2rem -15px 0;
+	padding: 2rem 2rem 5rem;
+}
+
+.ds-page-inner {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+/* ── Header Card ─────────────────────────────────────────── */
+.ds-header-card {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 1rem;
+	overflow: hidden;
+	margin-bottom: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ds-header-accent {
+	height: 3px;
+	background: linear-gradient(to right, #4A6CF7, #2563EB, #D97757);
+}
+
+.ds-header-body {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding: 1.25rem 1.5rem;
+	flex-wrap: wrap;
+}
+
+.ds-header-left {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.ds-eyebrow {
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ds-accent-orange);
+}
+
+.ds-page-title {
+	font-size: 22px;
+	font-weight: 800;
+	color: var(--ds-text-primary);
+	margin: 0;
+	line-height: 1.2;
+}
+
+.ds-page-subtitle {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--ds-text-secondary);
+	margin-top: 0.1rem;
+}
+
+.ds-header-right {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	flex-wrap: wrap;
+}
+
+/* ── Live Badge ──────────────────────────────────────────── */
+.ds-live-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	background: #ECFDF5;
+	border: 1px solid #A7F3D0;
+	color: #065F46;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	padding: 0.375rem 0.75rem;
+	border-radius: 9999px;
+}
+
+.ds-live-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #10B981;
+	animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── Clock Chip ──────────────────────────────────────────── */
+.ds-clock {
+	display: inline-flex;
+	align-items: center;
+	background: var(--ds-page-bg);
+	border: 1px solid var(--ds-border);
+	color: var(--ds-text-secondary);
+	font-size: 11px;
+	font-weight: 600;
+	padding: 0.375rem 0.75rem;
+	border-radius: 9999px;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+}
+
+/* ── KPI Strip ───────────────────────────────────────────── */
+.ds-kpi-strip {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+
+.ds-kpi-card {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 1rem;
+	padding: 1.25rem 1.5rem;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+	transition: transform 0.15s, box-shadow 0.15s;
+	cursor: default;
+}
+
+.ds-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.ds-kpi-circle {
+	position: absolute;
+	bottom: -10px;
+	right: -10px;
+	width: 80px;
+	height: 80px;
+	border-radius: 50%;
+	pointer-events: none;
+	opacity: 0.07;
+}
+
+.ds-kpi-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 1rem;
+	font-size: 16px;
+}
+
+.ds-kpi-label {
+	font-size: 11px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--ds-text-secondary);
+	margin-bottom: 0.2rem;
+}
+
+.ds-kpi-value {
+	font-size: 32px;
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	line-height: 1;
+	margin-bottom: 0.5rem;
+}
+
+.ds-kpi-sub {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--ds-text-secondary);
+}
+
+/* ── Section Separator ───────────────────────────────────── */
+.ds-section-sep {
+	border-top: 2px solid rgba(74,108,247,0.2);
+	padding-top: 1.25rem;
+	margin-bottom: 1rem;
+}
+
+/* ── Toolbar Card ────────────────────────────────────────── */
+.ds-toolbar {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 0.75rem;
+	padding: 0.75rem;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+	flex-wrap: wrap;
+}
+
+.ds-search-wrap {
+	position: relative;
+	flex: 1;
+	min-width: 220px;
+}
+
+.ds-search-icon {
+	position: absolute;
+	left: 0.75rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--ds-text-secondary);
+	pointer-events: none;
+	display: flex;
+}
+
+.ds-search-icon svg {
+	width: 15px;
+	height: 15px;
+}
+
+#search-input {
+	width: 100%;
+	height: 36px;
+	background: var(--ds-page-bg);
+	border: 1.5px solid var(--ds-border);
+	border-radius: 7px;
+	color: var(--ds-text-primary);
+	font-family: 'Outfit', sans-serif;
+	font-size: 13px;
+	font-weight: 500;
+	padding: 0 0.75rem 0 2.25rem;
+	outline: none;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#search-input::placeholder { color: var(--ds-text-muted); }
+
+#search-input:focus {
+	border-color: var(--ds-accent-indigo);
+	box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+}
+
+.ds-search-count {
+	position: absolute;
+	right: 0.75rem;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--ds-text-muted);
+}
+
+.ds-refresh-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	height: 36px;
+	padding: 0 0.875rem;
+	border: 1px solid var(--ds-border);
+	border-radius: 7px;
+	background: var(--ds-card-bg);
+	color: var(--ds-text-secondary);
+	font-family: 'Outfit', sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s;
+	white-space: nowrap;
+}
+
+.ds-refresh-btn:hover {
+	background: var(--ds-page-bg);
+	color: var(--ds-text-primary);
+	border-color: #C7D2FE;
+}
+
+/* ── Table Shell ─────────────────────────────────────────── */
+.ds-table-shell {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 0.75rem;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ds-table-shell table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+/* ── Table Head ──────────────────────────────────────────── */
+.ds-table-shell thead tr {
+	background: var(--ds-table-head-bg);
+	border-bottom: 1px solid rgba(199,210,254,0.8);
+}
+
+.ds-table-shell thead th {
+	padding: 0.75rem 1rem;
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ds-table-head-txt);
+	text-align: left;
+	border-right: 1px solid var(--ds-table-head-bdr);
+	white-space: nowrap;
+}
+
+.ds-table-shell thead th:last-child {
+	border-right: none;
+	text-align: right;
+}
+
+.ds-table-shell thead th:first-child { width: 52px; }
+
+/* ── Table Rows ──────────────────────────────────────────── */
+.ds-table-shell tbody tr {
+	border-bottom: 1px solid var(--ds-border);
+	transition: background 0.12s;
+	animation: row-in 0.35s ease both;
+}
+
+@keyframes row-in {
+	from { opacity: 0; transform: translateY(4px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.ds-table-shell tbody tr:last-child { border-bottom: none; }
+
+.ds-table-shell tbody tr:hover { background: var(--ds-row-hover); }
+
+.ds-table-shell tbody td {
+	padding: 0.75rem 1rem;
+	vertical-align: middle;
+	font-size: 13px;
+	color: var(--ds-text-primary);
+	border-right: 1px solid var(--ds-divider);
+}
+
+.ds-table-shell tbody td:last-child { border-right: none; }
+
+/* ── Index Cell ──────────────────────────────────────────── */
+.cell-idx {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--ds-text-muted);
+	text-align: center;
+}
+
+/* ── User Cell ───────────────────────────────────────────── */
+.cell-user-wrap {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.user-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 700;
+	flex-shrink: 0;
+	position: relative;
+}
+
+.user-avatar-dot {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #10B981;
+	border: 1.5px solid #fff;
+}
+
+.user-name-text {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ds-text-primary);
+}
+
+.user-domain-text {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--ds-text-muted);
+}
+
+/* ── Status Cell ─────────────────────────────────────────── */
+.ds-badge-online {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	background: #ECFDF5;
+	color: #065F46;
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 0.2rem 0.5rem;
+	border-radius: 9999px;
+	white-space: nowrap;
+}
+
+.ds-badge-online-dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: #10B981;
+	flex-shrink: 0;
+}
+
+/* ── Time Cell ───────────────────────────────────────────── */
+.cell-time-wrap { text-align: right; }
+
+.time-ago-text {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ds-text-primary);
+}
+
+.time-raw-text {
+	display: block;
+	font-size: 10px;
+	font-weight: 500;
+	color: var(--ds-text-muted);
+	margin-top: 1px;
+}
+
+/* ── Table Footer ────────────────────────────────────────── */
+.ds-table-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.625rem 1rem;
+	border-top: 1px solid var(--ds-divider);
+	background: var(--ds-page-bg);
+}
+
+.ds-table-footer-text {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--ds-text-muted);
+}
+
+/* ── No-match Row ────────────────────────────────────────── */
+.no-match-row td {
+	text-align: center;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--ds-text-muted);
+	padding: 2rem !important;
+	letter-spacing: 0.05em;
+	border-right: none !important;
+}
+
+/* ── Empty State ─────────────────────────────────────────── */
+.ds-empty {
+	background: var(--ds-card-bg);
+	border: 1px solid var(--ds-border);
+	border-radius: 0.75rem;
+	padding: 4rem 2rem;
+	text-align: center;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ds-empty-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	background: var(--ds-table-head-bg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto 1rem;
+}
+
+.ds-empty p {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ds-text-secondary);
+	margin: 0;
+}
+</style>
+
+<div class="ds-page">
+<div class="ds-page-inner">
+
+	<!-- ── Header Card ─────────────────────────────────── -->
+	<div class="ds-header-card">
+		<div class="ds-header-accent"></div>
+		<div class="ds-header-body">
+			<div class="ds-header-left">
+				<div class="ds-eyebrow">System Monitor</div>
+				<h1 class="ds-page-title">Active Sessions</h1>
+				<p class="ds-page-subtitle">Real-time view of all logged-in users across the system.</p>
+			</div>
+			<div class="ds-header-right">
+				<div class="ds-live-badge">
+					<span class="ds-live-dot"></span>
+					Live Data
+				</div>
+				<div class="ds-clock" id="live-clock">00:00:00</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ── KPI Strip ───────────────────────────────────── -->
+	<div class="ds-kpi-strip">
+		<!-- Total Online -->
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#2563EB;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563EB;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+			</div>
+			<div class="ds-kpi-label">Users Online</div>
+			<div class="ds-kpi-value" style="color:#2563EB;">{{ total }}</div>
+			<div class="ds-kpi-sub">Active right now</div>
+		</div>
+		<!-- Session DB -->
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#D97757;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(217,119,87,0.1); color:#D97757;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+			</div>
+			<div class="ds-kpi-label">Session Source</div>
+			<div class="ds-kpi-value" style="color:#D97757; font-size:18px; padding-top:8px;">tabSessions</div>
+			<div class="ds-kpi-sub">Frappe session store</div>
+		</div>
+		<!-- Status -->
+		<div class="ds-kpi-card">
+			<div class="ds-kpi-circle" style="background:#10B981;"></div>
+			<div class="ds-kpi-icon" style="background:rgba(16,185,129,0.1); color:#10B981;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+			</div>
+			<div class="ds-kpi-label">System Status</div>
+			<div class="ds-kpi-value" style="color:#10B981; font-size:18px; padding-top:8px;">Operational</div>
+			<div class="ds-kpi-sub">All services running</div>
+		</div>
+	</div>
+
+	<!-- ── Section Separator ───────────────────────────── -->
+	<div class="ds-section-sep">
+		<div style="display:flex;align-items:center;gap:0.625rem;margin-bottom:0.875rem;">
+			<span style="font-size:12px;font-weight:700;color:#71717A;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;">Session Directory</span>
+			<div style="flex:1;height:1px;background:#E4E4E7;"></div>
+		</div>
+	</div>
+
+	<!-- ── Toolbar ─────────────────────────────────────── -->
+	<div class="ds-toolbar">
+		<div class="ds-search-wrap">
+			<span class="ds-search-icon">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+			</span>
+			<input type="text" id="search-input" placeholder="Search by username or domain…" autocomplete="off">
+			<span class="ds-search-count" id="search-count"></span>
+		</div>
+		<button class="ds-refresh-btn" onclick="location.reload()">
+			<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.33"/></svg>
+			Refresh
+		</button>
+	</div>
+
+	<!-- ── Table ───────────────────────────────────────── -->
+	{% if sessions %}
+	<div class="ds-table-shell">
+		<table id="sessions-table">
+			<thead>
+				<tr>
+					<th style="text-align:center;">#</th>
+					<th>User</th>
+					<th>Status</th>
+					<th style="text-align:right;">Last Active</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for s in sessions %}
+				<tr data-delay="{{ loop.index0 * 25 }}">
+					<td class="cell-idx">{{ loop.index }}</td>
+					<td>
+						<div class="cell-user-wrap">
+							<div class="user-avatar" data-user="{{ s.user }}">
+								<span class="user-avatar-dot"></span>
+							</div>
+							<div>
+								<div class="user-name-text">{{ s.user.split('@')[0] if '@' in s.user else s.user }}</div>
+								{% if '@' in s.user %}
+								<div class="user-domain-text">{{ s.user }}</div>
+								{% endif %}
+							</div>
+						</div>
+					</td>
+					<td>
+						<span class="ds-badge-online">
+							<span class="ds-badge-online-dot"></span>
+							Online
+						</span>
+					</td>
+					<td class="cell-time-wrap">
+						<span class="time-ago-text" data-ts="{{ s.lastupdate }}">—</span>
+						<span class="time-raw-text">{{ s.lastupdate }}</span>
+					</td>
+				</tr>
+				{% endfor %}
+				<tr class="no-match-row" id="no-match" style="display:none;">
+					<td colspan="4">No users match your search.</td>
+				</tr>
+			</tbody>
+		</table>
+		<div class="ds-table-footer">
+			<span class="ds-table-footer-text" id="footer-count">{{ total }} session(s) loaded</span>
+			<span class="ds-table-footer-text">Guest sessions excluded</span>
+		</div>
+	</div>
+	{% else %}
+	<div class="ds-empty">
+		<div class="ds-empty-icon">
+			<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+		</div>
+		<p>No active sessions found.</p>
+	</div>
+	{% endif %}
+
+</div>
+</div>
+
+<script>
+(function () {
+	/* ── Avatar palette ── */
+	var palette = [
+		{ bg: 'rgba(37,99,235,0.12)',   color: '#1D4ED8' },
+		{ bg: 'rgba(217,119,87,0.12)',  color: '#B45309' },
+		{ bg: 'rgba(74,108,247,0.12)',  color: '#4338CA' },
+		{ bg: 'rgba(16,185,129,0.12)',  color: '#047857' },
+		{ bg: 'rgba(139,92,246,0.12)',  color: '#6D28D9' },
+		{ bg: 'rgba(236,72,153,0.12)',  color: '#BE185D' },
+	];
+
+	function hashStr(s) {
+		var h = 0;
+		for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+		return Math.abs(h);
+	}
+
+	/* ── Apply avatar styles ── */
+	document.querySelectorAll('.user-avatar[data-user]').forEach(function (el) {
+		var user = el.dataset.user || '';
+		var local = user.split('@')[0];
+		var initials = local.length >= 2
+			? (local[0] + local[local.length - 1]).toUpperCase()
+			: local.slice(0, 2).toUpperCase();
+		var p = palette[hashStr(user) % palette.length];
+		el.style.background = p.bg;
+		el.style.color = p.color;
+		el.style.fontFamily = 'Outfit, sans-serif';
+		el.style.fontWeight = '700';
+		/* Insert initials before the dot span */
+		var dot = el.querySelector('.user-avatar-dot');
+		el.insertBefore(document.createTextNode(initials), dot);
+	});
+
+	/* ── Row stagger ── */
+	document.querySelectorAll('#sessions-table tbody tr[data-delay]').forEach(function (row) {
+		row.style.animationDelay = row.dataset.delay + 'ms';
+	});
+
+	/* ── Relative time ── */
+	function timeAgo(ts) {
+		if (!ts) return '—';
+		var d = new Date(ts.replace(' ', 'T'));
+		var diff = Math.floor((Date.now() - d.getTime()) / 1000);
+		if (isNaN(diff) || diff < 0) return 'Just now';
+		if (diff < 60)   return diff + 's ago';
+		if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+		if (diff < 86400)return Math.floor(diff / 3600) + 'h ago';
+		return Math.floor(diff / 86400) + 'd ago';
+	}
+
+	document.querySelectorAll('.time-ago-text').forEach(function (el) {
+		el.textContent = timeAgo(el.dataset.ts);
+	});
+
+	/* ── Live clock ── */
+	function tick() {
+		var el = document.getElementById('live-clock');
+		if (el) el.textContent = new Date().toLocaleTimeString('en-GB', { hour12: false });
+	}
+	tick();
+	setInterval(tick, 1000);
+
+	/* ── Search ── */
+	var input   = document.getElementById('search-input');
+	var rows    = Array.from(document.querySelectorAll('#sessions-table tbody tr:not(#no-match)'));
+	var noMatch = document.getElementById('no-match');
+	var countEl = document.getElementById('search-count');
+	var footEl  = document.getElementById('footer-count');
+
+	if (input) {
+		input.addEventListener('input', function () {
+			var q = this.value.trim().toLowerCase();
+			var vis = 0;
+			rows.forEach(function (row) {
+				var name   = (row.querySelector('.user-name-text') || {}).textContent || '';
+				var domain = (row.querySelector('.user-domain-text') || {}).textContent || '';
+				var show = !q || (name + domain).toLowerCase().includes(q);
+				row.style.display = show ? '' : 'none';
+				if (show) vis++;
+			});
+			if (noMatch) noMatch.style.display = (vis === 0 && q) ? '' : 'none';
+			if (countEl) countEl.textContent = q ? vis + ' match' + (vis !== 1 ? 'es' : '') : '';
+			if (footEl)  footEl.textContent = (q ? vis + ' of ' : '') + rows.length + ' session(s) loaded';
+		});
+	}
+})();
+</script>
+{% endblock %}

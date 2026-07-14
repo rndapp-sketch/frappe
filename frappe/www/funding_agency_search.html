@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Agency Search — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page: #f9f7f2;
+            --bg-sidebar: #f0ede4;
+            --bg-card: #ffffff;
+            --text-main: #3f3f46;
+            --text-muted: #71717a;
+            --text-accent: #9a7d5a;
+            --accent: #d97757;
+            --accent-light: #e8e2d4;
+            --border: #e4e4e7;
+            --border-subtle: #f0ede4;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+            --radius: 10px;
+            --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --status-draft-bg: #f4f4f5;
+            --status-draft-text: #71717a;
+            --status-approved-bg: #e6f4ea;
+            --status-approved-text: #1e8e3e;
+            --status-pending-bg: #fef7e0;
+            --status-pending-text: #b45309;
+            --status-rejected-bg: #fce8e6;
+            --status-rejected-text: #d93025;
+        }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+        }
+
+        /* ── Sidebar ── */
+        nav {
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            overflow-y: auto;
+            padding: 2.5rem 1.5rem;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-header {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-links li { margin-bottom: 0.5rem; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* ── Top bar ── */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            height: 60px;
+            background: rgba(249, 247, 242, 0.95);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 90;
+            transition: left 0.3s ease;
+            backdrop-filter: blur(8px);
+            justify-content: space-between;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0.4rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .sidebar-toggle:hover { background-color: var(--bg-page); color: var(--accent); }
+
+        body.sidebar-collapsed nav { transform: translateX(-100%); }
+        body.sidebar-collapsed main { margin-left: 0; }
+        body.sidebar-collapsed .top-nav { left: 0; }
+
+        .user-profile { display: flex; align-items: center; gap: 1rem; }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Main content ── */
+        main {
+            margin-left: 280px;
+            padding: 2rem 2rem;
+            margin-top: 60px;
+            width: 100%;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* ── Page header ── */
+        .page-header { margin-bottom: 2.5rem; }
+        .page-title {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin: 0 0 0.35rem 0;
+        }
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* ── Search card ── */
+        .search-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .field-input {
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-page);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            padding: 0 0.85rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        .field-input:focus {
+            border-color: #a1a1aa;
+            box-shadow: 0 0 0 3px rgba(228,228,231,0.5);
+        }
+        .field-input::placeholder { color: #a1a1aa; }
+
+        .search-input-wrap { flex: 1; min-width: 300px; }
+        .search-input-wrap .field-input { width: 100%; }
+
+        .page-size-wrap { min-width: 100px; }
+        .page-size-wrap .field-input { width: 100%; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            height: 40px;
+            padding: 0 1.1rem;
+            border-radius: 8px;
+            font-family: var(--font-sans);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background: #18181b;
+            color: #ffffff;
+        }
+        .btn-primary:not(:disabled):hover { opacity: 0.85; }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .btn-outline:not(:disabled):hover { background: var(--bg-page); border-color: #a1a1aa; }
+
+        /* ── Note banner ── */
+        .note-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            background: var(--accent-light);
+            border: 1px solid rgba(217,119,87,0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+            color: var(--text-accent);
+            margin-top: 1rem;
+        }
+        .note-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Results table ── */
+        .results-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .results-title {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .result-count-badge {
+            background: var(--bg-sidebar);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        thead tr { border-bottom: 1px solid var(--border); }
+
+        th {
+            padding: 0.7rem 1rem;
+            text-align: left;
+            font-family: var(--font-sans);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-muted);
+            white-space: nowrap;
+            background: #fafaf9;
+        }
+
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #fafaf9; }
+
+        .proj-name {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .proj-title { font-weight: 500; color: var(--text-main); }
+        .proj-pi { white-space: nowrap; }
+        .proj-email { font-size: 0.8rem; color: var(--text-muted); }
+
+        .wf-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .wf-draft    { background: var(--status-draft-bg);    color: var(--status-draft-text); }
+        .wf-approved { background: var(--status-approved-bg); color: var(--status-approved-text); }
+        .wf-pending  { background: var(--status-pending-bg);  color: var(--status-pending-text); }
+        .wf-rejected { background: var(--status-rejected-bg); color: var(--status-rejected-text); }
+        .wf-default  { background: var(--status-draft-bg);    color: var(--text-muted); }
+
+        .date-cell { white-space: nowrap; }
+        .date-fallback-tag {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-light);
+            border-radius: 4px;
+            padding: 1px 5px;
+            vertical-align: middle;
+        }
+
+        /* ── Pagination ── */
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: #fafaf9;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .pagination-info { font-size: 0.82rem; color: var(--text-muted); }
+
+        .pagination-controls { display: flex; align-items: center; gap: 0.4rem; }
+
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-main);
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: var(--font-sans);
+        }
+        .page-btn:hover:not(:disabled) { background: var(--bg-sidebar); border-color: #a1a1aa; }
+        .page-btn.active { background: #18181b; color: white; border-color: #18181b; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Empty / loading states ── */
+        .state-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+            gap: 0.75rem;
+            text-align: center;
+        }
+        .state-box svg { opacity: 0.35; }
+        .state-title {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+        }
+        .state-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 340px;
+        }
+
+        /* ── Spinner ── */
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Error banner ── */
+        .error-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            background: #fce8e6;
+            border: 1px solid #ffd5d1;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-size: 0.88rem;
+            color: #c62828;
+            margin-bottom: 1.5rem;
+        }
+        .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Open in Desk link ── */
+        .desk-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 3px 8px;
+            transition: all 0.15s;
+        }
+        .desk-link:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+        /* ── Highlight match ── */
+        mark {
+            background: rgba(217, 119, 87, 0.15);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+
+        /* ── Print button ── */
+        .btn-print {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .btn-print:not(:disabled):hover { background: var(--bg-page); border-color: #a1a1aa; }
+
+        /* ── Print-only header (hidden on screen) ── */
+        .print-header { display: none; }
+
+        /* ── Print stylesheet ── */
+        @media print {
+            nav, .top-nav, .search-card, .error-banner, .no-print { display: none !important; }
+            body { display: block; background: #fff; }
+            main { margin-left: 0; margin-top: 0; padding: 0.5rem 0; max-width: 100%; }
+            .page-header { margin-bottom: 1rem; }
+            .results-card { border: none; box-shadow: none; border-radius: 0; }
+            .results-header { padding: 0 0 0.5rem 0; border-bottom: 2px solid #000; }
+            .print-header {
+                display: block;
+                margin-bottom: 0.75rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid #000;
+            }
+            .print-header h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 0 0 0.25rem 0; }
+            .print-header p { font-size: 0.8rem; color: #444; margin: 0; }
+            table { font-size: 0.78rem; }
+            th { background: #fff !important; color: #000 !important; }
+            td { color: #000 !important; }
+            .wf-badge { border: 1px solid #999; background: #fff !important; color: #000 !important; }
+            mark { background: none !important; font-weight: 700; }
+            a[href]:after { content: none !important; }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+    </script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/funding_agency_search';</script>
+    {% endif %}
+
+    <!-- ── Sidebar ── -->
+    <nav>
+        <div class="nav-header">
+            <span>rndopsapp</span>
+            <span style="font-size:0.7rem;background:var(--accent);color:white;padding:2px 6px;border-radius:4px;">ADMIN</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/documentation">Documentation</a></li>
+            <li><a href="/kafka_control">Kafka Control</a></li>
+            <li><a href="/project_search">Search Projects</a></li>
+            <li><a href="/funding_agency_search" class="active">Search by Funding Agency</a></li>
+            <li><a href="/app">Desk</a></li>
+        </ul>
+    </nav>
+
+    <!-- ── Top bar ── -->
+    <header class="top-nav">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+        <div class="user-profile">
+            <span style="font-size:0.9rem;color:var(--text-muted);">{{ frappe.session.user }}</span>
+            <button onclick="frappe.app.logout()" class="logout-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- ── Main ── -->
+    <main>
+        <div class="page-header">
+            <h1 class="page-title">Search by Funding Agency</h1>
+            <p class="page-subtitle">Find every Project Registration funded by a given agency or PFMS Scheme, e.g. <em>ANRF - (Anusandhan National Research Foundation)</em> or <em>ARG Matrics General</em>.</p>
+        </div>
+
+        <!-- Search controls -->
+        <div class="search-card">
+            <div class="search-row">
+                <div class="field-group search-input-wrap">
+                    <span class="field-label">Funding Agency or Scheme Name</span>
+                    <input
+                        id="search-agency"
+                        type="text"
+                        class="field-input"
+                        placeholder="e.g. ANRF, SERB, DBT - Department of Biotechnology, ARG Matrics General…"
+                        autocomplete="off"
+                        onkeydown="if(event.key==='Enter') doSearch(1)">
+                </div>
+
+                <div class="field-group page-size-wrap">
+                    <span class="field-label">Per page</span>
+                    <select id="search-page-size" class="field-input" onchange="doSearch(1)">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <div class="field-group" style="justify-content:flex-end;">
+                    <span class="field-label">&nbsp;</span>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-primary" onclick="doSearch(1)" id="search-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            Search
+                        </button>
+                        <button class="btn btn-outline" onclick="clearSearch()" id="clear-btn" title="Clear filters">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="note-banner">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span>Also matches PFMS Account Details &mdash; Scheme Name (e.g. <em>ARG Matrics General</em>). Shows Account Type, Scheme Name, Project Start Date, End Date, and the earliest Fund Sanction Date for each project. When a project has no recorded Start Date, its Fund Sanction Date is shown in the Start Date column instead, tagged <strong>from sanction</strong>.</span>
+            </div>
+        </div>
+
+        <!-- Error banner (hidden by default) -->
+        <div id="error-banner" class="error-banner" style="display:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span id="error-msg"></span>
+        </div>
+
+        <!-- Results area -->
+        <div id="results-area"></div>
+    </main>
+
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/js/frappe-web.min.js"></script>
+
+    <script>
+        // ── State ──────────────────────────────────────────────
+        let currentAgency   = '';
+        let currentPage     = 1;
+        let currentPageSize = 20;
+        let searching       = false;
+
+        // ── Sidebar toggle ─────────────────────────────────────
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('fundingAgencySearchSidebar',
+                document.body.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded');
+        }
+        if (localStorage.getItem('fundingAgencySearchSidebar') === 'collapsed') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        // ── Helpers ────────────────────────────────────────────
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function highlightMatch(text, query) {
+            if (!query || !text) return escHtml(text);
+            const safe = escHtml(text);
+            const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
+        }
+
+        function wfBadgeClass(state) {
+            if (!state) return 'wf-default';
+            const s = state.toLowerCase();
+            if (s.includes('approved') || s.includes('sanctioned') || s.includes('completed')) return 'wf-approved';
+            if (s.includes('pending') || s.includes('review') || s.includes('submitted')) return 'wf-pending';
+            if (s.includes('rejected') || s.includes('cancelled')) return 'wf-rejected';
+            if (s === 'draft') return 'wf-draft';
+            return 'wf-default';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch { return dateStr; }
+        }
+
+        // ── Error handling ─────────────────────────────────────
+        function showError(msg) {
+            const banner = document.getElementById('error-banner');
+            document.getElementById('error-msg').textContent = msg;
+            banner.style.display = 'flex';
+        }
+        function hideError() {
+            document.getElementById('error-banner').style.display = 'none';
+        }
+
+        // ── Render loading state ───────────────────────────────
+        function renderLoading() {
+            document.getElementById('results-area').innerHTML = `
+                <div class="results-card">
+                    <div class="state-box">
+                        <div class="spinner"></div>
+                        <p class="state-desc">Searching projects…</p>
+                    </div>
+                </div>`;
+        }
+
+        // ── Render empty state ─────────────────────────────────
+        function renderEmpty(agency) {
+            document.getElementById('results-area').innerHTML = `
+                <div class="results-card">
+                    <div class="state-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <p class="state-title">No projects found</p>
+                        <p class="state-desc">No results for funding agency <strong>&ldquo;${escHtml(agency)}&rdquo;</strong>. Try a shorter keyword, e.g. just the agency's initials.</p>
+                    </div>
+                </div>`;
+        }
+
+        // ── Render idle state (on page load) ──────────────────
+        function renderIdle() {
+            document.getElementById('results-area').innerHTML = `
+                <div class="results-card">
+                    <div class="state-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <p class="state-title">Start searching</p>
+                        <p class="state-desc">Enter a funding agency name or its initials (e.g. ANRF, SERB, DBT) to find all projects it funds.</p>
+                    </div>
+                </div>`;
+        }
+
+        // ── Pagination renderer ────────────────────────────────
+        function renderPagination(page, totalPgs, total, pageSize) {
+            const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+            const to   = Math.min(page * pageSize, total);
+
+            let pageButtons = '';
+            pageButtons += `<button class="page-btn" onclick="doSearch(${page - 1})" ${page <= 1 ? 'disabled' : ''}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>`;
+
+            const pageNums = [];
+            if (totalPgs <= 7) {
+                for (let i = 1; i <= totalPgs; i++) pageNums.push(i);
+            } else {
+                pageNums.push(1);
+                if (page > 3) pageNums.push('…');
+                for (let i = Math.max(2, page - 1); i <= Math.min(totalPgs - 1, page + 1); i++) pageNums.push(i);
+                if (page < totalPgs - 2) pageNums.push('…');
+                pageNums.push(totalPgs);
+            }
+
+            pageNums.forEach(p => {
+                if (p === '…') {
+                    pageButtons += `<span style="padding:0 4px;color:var(--text-muted);font-size:0.82rem;line-height:32px;">…</span>`;
+                } else {
+                    pageButtons += `<button class="page-btn${p === page ? ' active' : ''}" onclick="doSearch(${p})" ${p === page ? 'disabled' : ''}>${p}</button>`;
+                }
+            });
+
+            pageButtons += `<button class="page-btn" onclick="doSearch(${page + 1})" ${page >= totalPgs ? 'disabled' : ''}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </button>`;
+
+            return `
+                <div class="pagination-bar no-print">
+                    <span class="pagination-info">Showing <strong>${from}–${to}</strong> of <strong>${total}</strong> results</span>
+                    <div class="pagination-controls">${pageButtons}</div>
+                </div>`;
+        }
+
+        // ── Render results table ───────────────────────────────
+        function renderResults(data, agency) {
+            const { results, total, page, page_size } = data;
+            const totalPgs = Math.ceil(total / page_size);
+
+            const headerRight = `<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;" class="no-print">
+                <span class="result-count-badge">${total.toLocaleString()} result${total !== 1 ? 's' : ''}</span>
+                <button class="btn btn-print" style="height:32px;padding:0 0.85rem;font-size:0.8rem;" onclick="window.print()" title="Print this page of results">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"/>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                        <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Print
+                </button>
+                <button class="btn btn-print" id="export-btn" style="height:32px;padding:0 0.85rem;font-size:0.8rem;" onclick="exportToExcel()" title="Export all matching results to a spreadsheet">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    Export
+                </button>
+            </div>`;
+
+            let rows = results.map(r => {
+                const wfClass  = wfBadgeClass(r.workflow_state);
+                const projLink = `/app/project-registration/${encodeURIComponent(r.name)}`;
+                const usedSanctionAsStart = !r.start_date && !!r.fund_sanction_date;
+                const startCell = usedSanctionAsStart
+                    ? `${formatDate(r.effective_start_date)}<span class="date-fallback-tag" title="No Project Start Date recorded — showing Fund Sanction Date instead">from sanction</span>`
+                    : formatDate(r.start_date);
+
+                return `<tr>
+                    <td>
+                        <div class="proj-name">${highlightMatch(r.name, agency)}</div>
+                        ${r.project_no ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${escHtml(r.project_no)}</div>` : ''}
+                    </td>
+                    <td>
+                        <div class="proj-title">${escHtml(r.project_title || '—')}</div>
+                    </td>
+                    <td>
+                        <div class="proj-pi">${escHtml(r.pi_name || '—')}</div>
+                        ${r.pi_email ? `<div class="proj-email">${escHtml(r.pi_email)}</div>` : ''}
+                    </td>
+                    <td>${highlightMatch(r.funding_agency || '—', agency)}</td>
+                    <td>
+                        ${r.scheme_name ? highlightMatch(r.scheme_name, agency) : '<span style="color:var(--text-muted);">—</span>'}
+                        ${r.account_type ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${escHtml(r.account_type)}</div>` : ''}
+                    </td>
+                    <td class="date-cell">${startCell}</td>
+                    <td class="date-cell">${formatDate(r.end_date)}</td>
+                    <td class="date-cell">${formatDate(r.fund_sanction_date)}</td>
+                    <td>
+                        <span class="wf-badge ${wfClass}">${escHtml(r.workflow_state) || 'Draft'}</span>
+                    </td>
+                    <td class="no-print">
+                        <a class="desk-link" href="${projLink}" target="_blank" rel="noopener" title="Open in Desk">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Open
+                        </a>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('results-area').innerHTML = `
+                <div class="results-card">
+                    <div class="results-header">
+                        <h2 class="results-title">Results</h2>
+                        ${headerRight}
+                    </div>
+                    <div class="print-header">
+                        <h2>Funding Agency / Scheme Name Search — rndopsapp</h2>
+                        <p>Search term: <strong>${escHtml(agency)}</strong> &nbsp;|&nbsp; ${total.toLocaleString()} result${total !== 1 ? 's' : ''} total, showing page ${page} of ${totalPgs || 1} &nbsp;|&nbsp; Generated ${new Date().toLocaleString('en-IN')}</p>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Project No / Name</th>
+                                    <th>Title</th>
+                                    <th>Principal Investigator</th>
+                                    <th>Funding Agency</th>
+                                    <th>Scheme Name / Account Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Fund Sanction Date</th>
+                                    <th>Workflow State</th>
+                                    <th class="no-print"></th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                    ${totalPgs > 1 ? renderPagination(page, totalPgs, total, page_size) : `
+                    <div class="pagination-bar no-print">
+                        <span class="pagination-info">${total} result${total !== 1 ? 's' : ''}</span>
+                    </div>`}
+                </div>`;
+        }
+
+        // ── Main search function ───────────────────────────────
+        async function doSearch(page) {
+            if (searching) return;
+
+            const agency   = document.getElementById('search-agency').value.trim();
+            const pageSize = parseInt(document.getElementById('search-page-size').value, 10) || 20;
+
+            if (!agency) {
+                renderIdle();
+                hideError();
+                return;
+            }
+
+            searching = true;
+            currentAgency   = agency;
+            currentPage     = page || 1;
+            currentPageSize = pageSize;
+
+            const searchBtn = document.getElementById('search-btn');
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = `<div class="spinner" style="width:15px;height:15px;border-width:2px;border-top-color:white;"></div> Searching…`;
+
+            hideError();
+            renderLoading();
+
+            try {
+                const params = new URLSearchParams({
+                    agency_name: agency,
+                    page:        currentPage,
+                    page_size:   pageSize
+                });
+
+                const url = `/api/method/rndopsapp.rndopsapp.doctype.project_registration.project_registration.search_projects_by_funding_agency?${params.toString()}`;
+
+                const resp = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Frappe-CSRF-Token': window.csrf_token || ''
+                    }
+                });
+
+                const json = await resp.json();
+
+                if (!resp.ok) {
+                    const errMsg = (json.message && typeof json.message === 'string')
+                        ? json.message
+                        : (json.exc_type ? json.exc_type + ': check server logs' : resp.statusText);
+                    throw new Error(errMsg);
+                }
+
+                const data = json.message || json;
+
+                if (data.status === 'error') {
+                    throw new Error(data.message || 'Server returned an error.');
+                }
+
+                if (!data.results || data.results.length === 0) {
+                    renderEmpty(agency);
+                } else {
+                    renderResults(data, agency);
+                }
+
+            } catch (err) {
+                showError('Search failed: ' + err.message);
+                renderIdle();
+            } finally {
+                searching = false;
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Search`;
+            }
+        }
+
+        // ── Export to Excel (CSV) ──────────────────────────────
+        function csvEscape(value) {
+            const s = (value === null || value === undefined) ? '' : String(value);
+            if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+        }
+
+        async function fetchAllFundingAgencyResults(agency) {
+            const pageSize = 100;
+            let page = 1;
+            let total = Infinity;
+            let all = [];
+
+            while (all.length < total) {
+                const params = new URLSearchParams({ agency_name: agency, page, page_size: pageSize });
+                const url = `/api/method/rndopsapp.rndopsapp.doctype.project_registration.project_registration.search_projects_by_funding_agency?${params.toString()}`;
+                const resp = await fetch(url, {
+                    headers: { 'Accept': 'application/json', 'X-Frappe-CSRF-Token': window.csrf_token || '' }
+                });
+                const json = await resp.json();
+                if (!resp.ok) {
+                    const errMsg = (json.message && typeof json.message === 'string')
+                        ? json.message
+                        : (json.exc_type ? json.exc_type + ': check server logs' : resp.statusText);
+                    throw new Error(errMsg);
+                }
+                const data = json.message || json;
+                if (data.status === 'error') throw new Error(data.message || 'Server returned an error.');
+
+                total = data.total || 0;
+                all = all.concat(data.results || []);
+                if (!data.results || data.results.length === 0) break;
+                page++;
+            }
+
+            return { total, results: all };
+        }
+
+        async function exportToExcel() {
+            if (!currentAgency) return;
+
+            const btn = document.getElementById('export-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'Exporting…';
+
+            try {
+                const { results } = await fetchAllFundingAgencyResults(currentAgency);
+
+                if (!results.length) {
+                    alert('No results to export.');
+                    return;
+                }
+
+                const headers = [
+                    'Project No', 'Project Name', 'Title', 'Principal Investigator', 'PI Email',
+                    'Funding Agency', 'Scheme Name', 'Account Type',
+                    'Start Date', 'End Date', 'Fund Sanction Date', 'Workflow State'
+                ];
+
+                const lines = [headers.map(csvEscape).join(',')];
+                results.forEach(r => {
+                    const usedSanctionAsStart = !r.start_date && !!r.fund_sanction_date;
+                    lines.push([
+                        r.project_no || '',
+                        r.name || '',
+                        r.project_title || '',
+                        r.pi_name || '',
+                        r.pi_email || '',
+                        r.funding_agency || '',
+                        r.scheme_name || '',
+                        r.account_type || '',
+                        usedSanctionAsStart ? `${r.effective_start_date} (from sanction)` : (r.start_date || ''),
+                        r.end_date || '',
+                        r.fund_sanction_date || '',
+                        r.workflow_state || ''
+                    ].map(csvEscape).join(','));
+                });
+
+                // Prefix with UTF-8 BOM so Excel opens special characters correctly
+                const csvContent = '﻿' + lines.join('\r\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const safeAgency = currentAgency.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'search';
+                const stamp = new Date().toISOString().slice(0, 10);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `funding_agency_search_${safeAgency}_${stamp}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Export failed: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        // ── Clear helpers ──────────────────────────────────────
+        function clearSearch() {
+            document.getElementById('search-agency').value = '';
+            currentAgency = '';
+            hideError();
+            renderIdle();
+        }
+
+        // ── Keyboard shortcut: / to focus search ──────────────
+        document.addEventListener('keydown', e => {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                document.getElementById('search-agency').focus();
+            }
+        });
+
+        // ── Init ───────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            renderIdle();
+
+            // Support URL param ?agency=... for direct links
+            const params = new URLSearchParams(window.location.search);
+            const a = params.get('agency') || params.get('agency_name') || '';
+            if (a) {
+                document.getElementById('search-agency').value = a;
+                doSearch(1);
+            } else {
+                document.getElementById('search-agency').focus();
+            }
+        });
+    </script>
+</body>
+</html>

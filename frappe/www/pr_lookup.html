@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR Lookup — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page: #f9f7f2;
+            --bg-sidebar: #f0ede4;
+            --text-main: #1d1c16;
+            --text-muted: #605e54;
+            --accent: #d97757;
+            --accent-light: #e8e2d4;
+            --border: #e2dfd2;
+            --code-bg: #1e1e1b;
+            --code-text: #e6e1cf;
+            --table-header: #ebe7dd;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --status-running-bg: #e6f4ea;
+            --status-running-text: #1e8e3e;
+            --status-stopped-bg: #fce8e6;
+            --status-stopped-text: #d93025;
+            --status-warning-bg: #fef7e0;
+            --status-warning-text: #f9ab00;
+        }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+        }
+
+        nav {
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            overflow-y: auto;
+            padding: 2.5rem 1.5rem;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-header {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links { list-style: none; padding: 0; margin: 0; }
+        .nav-links li { margin-bottom: 0.5rem; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--accent-light);
+            color: var(--accent);
+        }
+
+        main {
+            margin-left: 280px;
+            padding: 2rem 4rem;
+            margin-top: 60px;
+            max-width: 1100px;
+            width: 100%;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            height: 60px;
+            background: rgba(249, 247, 242, 0.95);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 90;
+            transition: left 0.3s ease;
+            backdrop-filter: blur(8px);
+            justify-content: space-between;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0.4rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .sidebar-toggle:hover { background-color: var(--bg-page); color: var(--accent); }
+
+        body.sidebar-collapsed nav { transform: translateX(-100%); }
+        body.sidebar-collapsed main { margin-left: 0; }
+        body.sidebar-collapsed .top-nav { left: 0; }
+
+        .user-profile { display: flex; align-items: center; gap: 1rem; }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+        .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: 1.05rem; }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .card-title { font-weight: 600; font-size: 1.05rem; color: var(--text-main); margin: 0; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.95rem;
+            gap: 0.5rem;
+        }
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .btn-secondary:hover { background-color: var(--bg-page); border-color: var(--accent); color: var(--accent); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .form-input {
+            padding: 0.7rem 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            background: var(--bg-page);
+            color: var(--text-main);
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { outline: none; border-color: var(--accent); }
+
+        /* Mode tabs */
+        .mode-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .mode-tab {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-tab:hover { color: var(--accent); }
+        .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+        .mode-pane { display: none; }
+        .mode-pane.active { display: block; }
+
+        /* PR result card */
+        .pr-result-card {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .pr-result-header {
+            background: linear-gradient(135deg, #fff8f5 0%, #fdf2ec 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .pr-id-block { display: flex; flex-direction: column; gap: 0.2rem; }
+        .pr-id-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600; }
+        .pr-id-value { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+        .pr-project-no { font-size: 1.4rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.01em; }
+
+        .pr-wf-badge {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .pr-body { padding: 1.5rem; }
+
+        .pr-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem; line-height: 1.4; }
+
+        .pr-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .pr-meta-item { display: flex; flex-direction: column; gap: 0.15rem; }
+        .pr-meta-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+        .pr-meta-value { font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
+
+        .pr-budget-strip {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            background: var(--bg-sidebar);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            margin-bottom: 1.25rem;
+        }
+        .pr-budget-item { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 140px; }
+        .pr-budget-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+        .pr-budget-value { font-size: 1rem; font-weight: 700; color: var(--text-main); font-family: 'JetBrains Mono', monospace; }
+
+        .pr-footer {
+            border-top: 1px solid var(--border);
+            padding: 0.9rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            background: var(--bg-page);
+        }
+        .pr-footer-meta { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Source trace */
+        .source-trace {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.87rem;
+        }
+        .source-chip {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .source-arrow { color: var(--accent); font-size: 1rem; font-weight: 700; }
+        .source-field-hint { color: var(--text-muted); font-size: 0.8rem; }
+
+        /* Error / status */
+        .result-error {
+            background: #fff5f5;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        .result-loading {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.9rem;
+            padding: 0.75rem 0;
+        }
+
+        /* Supported doctypes table */
+        .doctype-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .doctype-table th {
+            background: var(--table-header);
+            padding: 0.5rem 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .doctype-table td { padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--border); }
+        .doctype-table tr:last-child td { border-bottom: none; }
+        .doctype-table tr:hover td { background: var(--bg-page); }
+        .kind-badge-link {
+            background: #e6f4ea; color: #1e8e3e;
+            padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+        }
+        .kind-badge-pno {
+            background: #fef7e0; color: #b45309;
+            padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+        }
+
+        /* PR Link in Frappe desk */
+        .desk-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.35rem 0.8rem;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .desk-link:hover { background: var(--accent); color: white; }
+    </style>
+</head>
+
+<body>
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+    </script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/pr_lookup';</script>
+    {% endif %}
+
+    <nav>
+        <div class="nav-header">
+            <span>rndopsapp</span>
+            <span style="font-size: 0.7rem; background: var(--accent); color: white; padding: 2px 6px; border-radius: 4px;">ADMIN</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/documentation">Documentation</a></li>
+            <li><a href="/kafka_control">Kafka Control</a></li>
+            <li><a href="/project_search">Search Projects</a></li>
+            <li><a href="/pr_lookup" class="active">PR Lookup</a></li>
+            <li><a href="/kafka_control#pr-edit-section">Edit Project Reg.</a></li>
+            <li><a href="/kafka_control#budget-head-section">Budget Head</a></li>
+            <li><a href="/app">Desk</a></li>
+            <li><a href="http://172.16.131.206:8000/pr_link_graph" target="_blank">PR Link Graph ↗</a></li>
+            <li><a href="http://172.16.131.206:8000/project_search" target="_blank">Project Search ↗</a></li>
+            <li><a href="/rndops-leaderboard">RnDOps Leaderboard</a></li>
+        </ul>
+    </nav>
+
+    <header class="top-nav">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div class="user-profile">
+            <span style="font-size: 0.9rem; color: var(--text-muted);">{{ frappe.session.user }}</span>
+            <button onclick="frappe.app.logout()" class="logout-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <h1>PR Lookup</h1>
+        <p class="subtitle">Resolve a Project Registration and its <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-sidebar);padding:2px 6px;border-radius:4px;">project_no</code> from any application document name, or look up a PR directly.</p>
+
+        <!-- Search Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Search</h3>
+                <span id="map-loading-hint" style="font-size:0.8rem;color:var(--text-muted);">Loading supported doctypes…</span>
+            </div>
+
+            <div class="mode-tabs">
+                <button class="mode-tab active" onclick="switchMode('app')">By Application Document</button>
+                <button class="mode-tab" onclick="switchMode('direct')">By PR Name / Project No.</button>
+            </div>
+
+            <!-- Mode: Application Doctype + Docname -->
+            <div class="mode-pane active" id="pane-app">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; min-width: 240px;">
+                        <label>Application DocType</label>
+                        <select id="app-doctype" class="form-input" onchange="onDoctypeChange()">
+                            <option value="">— Select DocType —</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 240px;">
+                        <label>Document Name</label>
+                        <input type="text" id="app-docname" class="form-input" placeholder="e.g. REIMB-2026-00001"
+                            onkeydown="if(event.key==='Enter') lookupFromApp()">
+                    </div>
+                    <button class="btn btn-primary" onclick="lookupFromApp()" id="app-lookup-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Find Project
+                    </button>
+                </div>
+                <div id="app-field-hint" style="margin-top: 0.6rem; font-size: 0.8rem; color: var(--text-muted); min-height: 1.2em;"></div>
+                <div id="app-result"></div>
+            </div>
+
+            <!-- Mode: Direct PR lookup -->
+            <div class="mode-pane" id="pane-direct">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; min-width: 300px;">
+                        <label>PR Document Name or Project No.</label>
+                        <input type="text" id="direct-identifier" class="form-input"
+                            placeholder="e.g. 2026060801ANRF001009  or  IIT/RnD/2026/001009"
+                            onkeydown="if(event.key==='Enter') lookupDirect()">
+                    </div>
+                    <button class="btn btn-primary" onclick="lookupDirect()" id="direct-lookup-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Lookup PR
+                    </button>
+                </div>
+                <div id="direct-result" style="margin-top: 0.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- Supported DocTypes reference -->
+        <div class="card" id="map-card">
+            <div class="card-header" onclick="toggleMapCard()" style="cursor:pointer;user-select:none;">
+                <h3 class="card-title" style="display:flex;align-items:center;gap:0.6rem;">
+                    <svg id="map-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    Supported DocTypes &amp; Link Fields
+                </h3>
+                <span id="map-count" style="font-size:0.85rem;color:var(--text-muted);">loading…</span>
+            </div>
+            <div id="map-body">
+                <p style="color:var(--text-muted);font-style:italic;font-size:0.9rem;">Loading…</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/js/frappe-web.min.js"></script>
+
+    <script>
+        // ---- Sidebar toggle ----
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('prLookupSidebar', document.body.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded');
+        }
+        if (localStorage.getItem('prLookupSidebar') === 'collapsed') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        // ---- API helper ----
+        async function callMethod(method, args = {}) {
+            const r = await fetch(`/api/method/${method}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Frappe-CSRF-Token': window.csrf_token || ''
+                },
+                body: JSON.stringify(args)
+            });
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.message || data.exc || r.statusText);
+            return data;
+        }
+
+        // ---- Mode tabs ----
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mode-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById('pane-' + mode).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // ---- PR Map ----
+        let prLinkMap = {};
+        let mapOpen = true;
+
+        function toggleMapCard() {
+            mapOpen = !mapOpen;
+            document.getElementById('map-body').style.display = mapOpen ? '' : 'none';
+            document.getElementById('map-chevron').style.transform = mapOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+        }
+
+        async function loadPrLinkMap() {
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.get_pr_link_map');
+                prLinkMap = r.message || {};
+                document.getElementById('map-loading-hint').style.display = 'none';
+
+                // Populate doctype select
+                const sel = document.getElementById('app-doctype');
+                const sorted = Object.keys(prLinkMap).sort();
+                sorted.forEach(dt => {
+                    const opt = document.createElement('option');
+                    opt.value = dt;
+                    opt.textContent = dt;
+                    sel.appendChild(opt);
+                });
+
+                // Render table
+                const count = sorted.length;
+                document.getElementById('map-count').textContent = `${count} supported DocTypes`;
+                let html = `<div style="overflow-x:auto;"><table class="doctype-table">
+                    <thead><tr>
+                        <th>#</th>
+                        <th>DocType</th>
+                        <th>Link Field</th>
+                        <th>Kind</th>
+                    </tr></thead><tbody>`;
+                sorted.forEach((dt, i) => {
+                    const info = prLinkMap[dt];
+                    const kindBadge = info.kind === 'link'
+                        ? '<span class="kind-badge-link">Direct Link → PR name</span>'
+                        : '<span class="kind-badge-pno">Data → project_no</span>';
+                    html += `<tr>
+                        <td style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${i + 1}</td>
+                        <td style="font-weight:500;">${escHtml(dt)}</td>
+                        <td><code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;background:var(--bg-sidebar);padding:2px 6px;border-radius:4px;">${escHtml(info.field)}</code></td>
+                        <td>${kindBadge}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                document.getElementById('map-body').innerHTML = html;
+            } catch (e) {
+                document.getElementById('map-loading-hint').textContent = 'Failed to load map.';
+                console.error(e);
+            }
+        }
+
+        function onDoctypeChange() {
+            const dt = document.getElementById('app-doctype').value;
+            const hint = document.getElementById('app-field-hint');
+            if (!dt || !prLinkMap[dt]) { hint.textContent = ''; return; }
+            const info = prLinkMap[dt];
+            const kindLabel = info.kind === 'link'
+                ? 'stores PR document name directly'
+                : 'stores project_no — will resolve via secondary lookup';
+            hint.innerHTML = `Link field: <strong style="font-family:'JetBrains Mono',monospace;">${escHtml(info.field)}</strong> — ${kindLabel}`;
+        }
+
+        // ---- Lookup: by application ----
+        async function lookupFromApp() {
+            const doctype = document.getElementById('app-doctype').value;
+            const docname = document.getElementById('app-docname').value.trim();
+            const resultEl = document.getElementById('app-result');
+
+            if (!doctype) { alert('Please select a DocType.'); return; }
+            if (!docname) { alert('Please enter a document name.'); return; }
+
+            resultEl.innerHTML = '<div class="result-loading">Searching…</div>';
+            document.getElementById('app-lookup-btn').disabled = true;
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.lookup_project_from_application', { doctype, docname });
+                const res = r.message;
+                if (res.status === 'error') {
+                    resultEl.innerHTML = `<div class="result-error">❌ ${escHtml(res.message)}</div>`;
+                } else {
+                    resultEl.innerHTML = renderSourceTrace(res.source) + renderPrCard(res.pr);
+                }
+            } catch (e) {
+                resultEl.innerHTML = `<div class="result-error">❌ ${escHtml(e.message)}</div>`;
+            } finally {
+                document.getElementById('app-lookup-btn').disabled = false;
+            }
+        }
+
+        // ---- Lookup: direct ----
+        async function lookupDirect() {
+            const identifier = document.getElementById('direct-identifier').value.trim();
+            const resultEl = document.getElementById('direct-result');
+
+            if (!identifier) { alert('Please enter a PR name or project_no.'); return; }
+
+            resultEl.innerHTML = '<div class="result-loading">Searching…</div>';
+            document.getElementById('direct-lookup-btn').disabled = true;
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.lookup_project_direct', { identifier });
+                const res = r.message;
+                if (res.status === 'error') {
+                    resultEl.innerHTML = `<div class="result-error">❌ ${escHtml(res.message)}</div>`;
+                } else {
+                    resultEl.innerHTML = renderPrCard(res.pr);
+                }
+            } catch (e) {
+                resultEl.innerHTML = `<div class="result-error">❌ ${escHtml(e.message)}</div>`;
+            } finally {
+                document.getElementById('direct-lookup-btn').disabled = false;
+            }
+        }
+
+        // ---- Renderers ----
+        function renderSourceTrace(source) {
+            const kindLabel = source.link_kind === 'link' ? 'Direct Link' : 'project_no Data field';
+            return `<div class="source-trace">
+                <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Source</span>
+                <span class="source-chip">${escHtml(source.doctype)}</span>
+                <span class="source-chip">${escHtml(source.docname)}</span>
+                <span class="source-arrow">→</span>
+                <span class="source-field-hint" title="Field used for the link">
+                    via <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">${escHtml(source.link_field)}</code>
+                    = <strong>${escHtml(source.link_value)}</strong>
+                    <em>(${escHtml(kindLabel)})</em>
+                </span>
+                <span class="source-arrow">→</span>
+                <span style="font-weight:600;color:var(--accent);">Project Registration</span>
+                <a class="desk-link" href="/app/${encodeURIComponent(source.doctype.toLowerCase().replace(/ /g,'-'))}/${encodeURIComponent(source.docname)}" target="_blank">
+                    Open in Desk ↗
+                </a>
+            </div>`;
+        }
+
+        function renderPrCard(pr) {
+            const wfBg = wfBadgeStyle(pr.workflow_state);
+            const budgetFmt = v => v != null ? '₹ ' + Number(v).toLocaleString('en-IN', {maximumFractionDigits: 2}) : '—';
+            const dateFmt = v => v ? v : '—';
+            const val = v => (v != null && v !== '') ? escHtml(String(v)) : '<span style="color:var(--text-muted);">—</span>';
+
+            return `<div class="pr-result-card">
+                <div class="pr-result-header">
+                    <div>
+                        <div class="pr-id-block">
+                            <span class="pr-id-label">Document ID</span>
+                            <span class="pr-id-value">${val(pr.name)}</span>
+                        </div>
+                        <div class="pr-project-no" style="margin-top:0.4rem;">${val(pr.project_no) || '<span style="color:var(--text-muted);font-size:0.9rem;">project_no not set</span>'}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.6rem;">
+                        <span class="pr-wf-badge" style="${wfBg}">${val(pr.workflow_state)}</span>
+                        <a class="desk-link" href="/app/project-registration/${encodeURIComponent(pr.name)}" target="_blank">
+                            Open PR in Desk ↗
+                        </a>
+                    </div>
+                </div>
+
+                <div class="pr-body">
+                    <div class="pr-title">${val(pr.project_title)}</div>
+
+                    <div class="pr-meta-grid">
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Project Type</span>
+                            <span class="pr-meta-value">${val(pr.project_type)}${pr.other_project_type_name ? ' — ' + escHtml(pr.other_project_type_name) : ''}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Principal Investigator</span>
+                            <span class="pr-meta-value">${val(pr.principal_investigator_name)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">PI Webmail</span>
+                            <span class="pr-meta-value">${pr.pi_webmail ? `<a href="mailto:${escHtml(pr.pi_webmail)}" style="color:var(--accent);">${escHtml(pr.pi_webmail)}</a>` : '—'}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Department</span>
+                            <span class="pr-meta-value">${val(pr.implementation_department)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Funding Agency</span>
+                            <span class="pr-meta-value">${val(pr.funding_agen)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Scheme</span>
+                            <span class="pr-meta-value">${val(pr.funding_agency_schemes)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Start Date</span>
+                            <span class="pr-meta-value">${val(pr.prj_start_date)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">End Date</span>
+                            <span class="pr-meta-value">${val(pr.prj_end_date)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Duration</span>
+                            <span class="pr-meta-value">${pr.project_duration_months ? escHtml(String(pr.project_duration_months)) + ' months' : '—'}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Sanction Letter No.</span>
+                            <span class="pr-meta-value">${val(pr.sanctioned_letter_no)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Sanction Letter Date</span>
+                            <span class="pr-meta-value">${val(pr.sanctioned_letter_date)}</span>
+                        </div>
+                        <div class="pr-meta-item">
+                            <span class="pr-meta-label">Doc Status</span>
+                            <span class="pr-meta-value">${docstatusLabel(pr.docstatus)}</span>
+                        </div>
+                    </div>
+
+                    <div class="pr-budget-strip">
+                        <div class="pr-budget-item">
+                            <span class="pr-budget-label">Proposed Budget</span>
+                            <span class="pr-budget-value">${budgetFmt(pr.total_budget_amount)}</span>
+                        </div>
+                        <div class="pr-budget-item">
+                            <span class="pr-budget-label">Sanctioned Amount</span>
+                            <span class="pr-budget-value">${budgetFmt(pr.total_sanctioned_amount)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pr-footer">
+                    <span class="pr-footer-meta">Created: ${val(pr.creation)}</span>
+                    <span class="pr-footer-meta">Modified: ${val(pr.modified)}</span>
+                    <span class="pr-footer-meta">By: ${val(pr.modified_by)}</span>
+                    <span class="pr-footer-meta">Owner: ${val(pr.owner)}</span>
+                </div>
+            </div>`;
+        }
+
+        function wfBadgeStyle(state) {
+            if (!state) return 'background:#f4f4f5;color:#71717a;';
+            const s = state.toLowerCase();
+            if (s.includes('approved') || s.includes('active') || s.includes('sanctioned')) return 'background:var(--status-running-bg);color:var(--status-running-text);';
+            if (s.includes('reject') || s.includes('cancel')) return 'background:var(--status-stopped-bg);color:var(--status-stopped-text);';
+            if (s.includes('pending') || s.includes('draft') || s.includes('review')) return 'background:var(--status-warning-bg);color:var(--status-warning-text);';
+            return 'background:#f0ede4;color:#605e54;';
+        }
+
+        function docstatusLabel(ds) {
+            if (ds === 0 || ds === '0') return '<span style="background:#f4f4f5;color:#71717a;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Draft</span>';
+            if (ds === 1 || ds === '1') return '<span style="background:var(--status-running-bg);color:var(--status-running-text);padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Submitted</span>';
+            if (ds === 2 || ds === '2') return '<span style="background:var(--status-stopped-bg);color:var(--status-stopped-text);padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Cancelled</span>';
+            return `<span>${ds ?? '—'}</span>`;
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ---- Init ----
+        $(document).ready(function () {
+            loadPrLinkMap();
+        });
+    </script>
+</body>
+
+</html>

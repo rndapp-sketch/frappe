@@ -236,7 +236,7 @@ def get_import_logs(data_import: str):
 		"Data Import Log",
 		fields=["success", "docname", "messages", "exception", "row_indexes"],
 		filters={"data_import": data_import},
-		limit_page_length=5000,
+		limit_page_length=00,
 		order_by="log_index",
 	)
 
