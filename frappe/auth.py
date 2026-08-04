@@ -65,8 +65,14 @@ class HTTPRequest:
 		if frappe.get_request_header("X-Forwarded-For"):
 			frappe.local.request_ip = (frappe.get_request_header("X-Forwarded-For").split(",", 1)[0]).strip()
 
-		elif frappe.get_request_header("REMOTE_ADDR"):
-			frappe.local.request_ip = frappe.get_request_header("REMOTE_ADDR")
+		elif getattr(frappe.local.request, "remote_addr", None):
+			# REMOTE_ADDR is a WSGI environ value set from the socket connection, not
+			# an HTTP header — frappe.get_request_header("REMOTE_ADDR") only reads
+			# request.headers and always returns None, so this branch previously
+			# never fired and every direct (non-proxied) request fell through to
+			# the "127.0.0.1" default below, even though the real client IP was
+			# available on the request object all along.
+			frappe.local.request_ip = frappe.local.request.remote_addr
 
 		else:
 			frappe.local.request_ip = "127.0.0.1"

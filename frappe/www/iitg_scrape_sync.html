@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IITG Scrape Sync — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page: #f9f7f2;
+            --bg-sidebar: #f0ede4;
+            --bg-card: #ffffff;
+            --text-main: #3f3f46;
+            --text-muted: #71717a;
+            --text-accent: #9a7d5a;
+            --accent: #d97757;
+            --accent-light: #e8e2d4;
+            --border: #e4e4e7;
+            --border-subtle: #f0ede4;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+            --radius: 10px;
+            --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        :root {
+            --surface: var(--bg-card, #FFFFFF);
+            --accent: #2563EB;
+            --accent-hover: #1D4ED8;
+            --accent-light: #EFF6FF;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+            --sidebar-width: 268px;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --surface: #111827;
+            --bg-sidebar: #0F172A;
+            --bg-card: #111827;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+            --border-subtle: #1E293B;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.6);
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+        }
+        :root[data-theme="dark"] body { color-scheme: dark; }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+        }
+
+        /* ── App shell ── */
+        .app-shell { display: flex; min-height: 100vh; width: 100%; }
+
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.4rem 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 100;
+            transition: transform .25s ease, background-color .2s ease, border-color .2s ease;
+        }
+
+        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; }
+        .brand-logo {
+            width: 30px; height: 30px; border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; flex-shrink: 0; box-shadow: var(--shadow-sm);
+        }
+        .brand-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; }
+        .brand-text small { display: block; font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; }
+        .nav-group-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 700; padding: 0 .6rem; margin-bottom: .45rem; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .62rem .75rem; border-radius: var(--radius-sm);
+            color: var(--text-muted); font-size: .89rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none; background: transparent;
+            width: 100%; text-align: left; font-family: inherit;
+            transition: background .15s ease, color .15s ease;
+        }
+        .nav-item svg { flex-shrink: 0; }
+        .nav-item:hover { background: var(--accent-light); color: var(--accent); }
+        .nav-item.active { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+        .nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+        .nav-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
+
+        .app-main { margin-left: var(--sidebar-width); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+        .app-topbar {
+            position: sticky; top: 0; z-index: 90;
+            height: 66px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0 1.75rem;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+        .topbar-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
+        .topbar-title span { display: block; font-size: .74rem; font-weight: 500; color: var(--text-muted); }
+        .topbar-actions { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; position: relative;
+            transition: color .15s, border-color .15s, transform .15s;
+        }
+        .icon-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+        .avatar-chip { display: flex; align-items: center; gap: .6rem; padding: .3rem .5rem .3rem .3rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: .78rem; flex-shrink: 0;
+        }
+        .avatar-chip .who { font-size: .8rem; font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .app-content { padding: 2rem 2.25rem 3.5rem; flex: 1; width: 100%; }
+
+        /* ── Page header ── */
+        .page-header { margin-bottom: 1.75rem; }
+        .page-title {
+            font-family: var(--font-serif);
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin: 0 0 0.35rem 0;
+        }
+        .page-subtitle { color: var(--text-muted); font-size: 0.95rem; margin: 0; max-width: 760px; }
+
+        /* ── Tabs ── */
+        .tabs { display: flex; gap: 0.4rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab-btn {
+            background: transparent; border: none; cursor: pointer;
+            padding: 0.7rem 1rem; font-family: var(--font-sans); font-size: 0.9rem;
+            font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent;
+            margin-bottom: -1px; transition: color .15s, border-color .15s;
+        }
+        .tab-btn:hover { color: var(--accent); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .card-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem; }
+        .card-title { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; margin: 0 0 0.2rem 0; }
+        .card-desc { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+            height: 38px; padding: 0 1.05rem; border-radius: 8px;
+            font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.2s; white-space: nowrap;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:not(:disabled):hover { background: var(--accent-hover); }
+        .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:not(:disabled):hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+        .btn-sm { height: 30px; padding: 0 0.7rem; font-size: 0.78rem; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:not(:disabled):hover { opacity: 0.88; }
+
+        /* ── Status pill ── */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 3px 10px; border-radius: 20px; font-size: 0.76rem; font-weight: 600;
+        }
+        .status-idle    { background: var(--bg-sidebar); color: var(--text-muted); }
+        .status-running { background: var(--warning-soft); color: var(--warning); }
+        .status-done    { background: var(--success-soft); color: var(--success); }
+        .status-error   { background: var(--danger-soft); color: var(--danger); }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .status-dot.spin { animation: pulse 1s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        /* ── Badges (comparison status) ── */
+        .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+        .badge-match    { background: var(--success-soft); color: var(--success); }
+        .badge-changed  { background: var(--warning-soft); color: var(--warning); }
+        .badge-no-account { background: var(--danger-soft); color: var(--danger); }
+        .badge-neutral  { background: var(--bg-sidebar); color: var(--text-muted); }
+        .badge-permanent { background: var(--accent-light); color: var(--accent); }
+
+        /* ── Table ── */
+        .table-wrap { overflow-x: hidden; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
+        table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.82rem; }
+        thead tr { border-bottom: 1px solid var(--border); }
+        th {
+            padding: 0.6rem 0.6rem; text-align: left; font-family: var(--font-sans);
+            font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-muted); background: var(--bg-sidebar);
+        }
+        td { padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; overflow-wrap: break-word; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: var(--accent-light); }
+        .muted { color: var(--text-muted); }
+        .mono { font-family: var(--font-mono); font-size: 0.76rem; word-break: break-all; }
+        .cell-stack { display: flex; flex-direction: column; gap: 0.3rem; }
+        .cell-row { display: flex; gap: 0.3rem; }
+        .cell-row .field-input { min-width: 0; flex: 1; }
+        table .field-input { width: 100%; min-width: 0; height: 30px; padding: 0 0.5rem; font-size: 0.8rem; }
+
+        /* ── Empty / loading states ── */
+        .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; color: var(--text-muted); gap: 0.6rem; text-align: center; }
+        .state-box svg { opacity: 0.35; }
+        .state-title { font-family: var(--font-serif); font-size: 1rem; font-weight: 600; color: var(--text-main); margin: 0; }
+        .state-desc { font-size: 0.85rem; color: var(--text-muted); margin: 0; max-width: 420px; }
+
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Progress bar ── */
+        .progress-wrap { display: none; margin-top: 0.85rem; }
+        .progress-wrap.visible { display: block; }
+        .progress-track {
+            width: 100%; height: 8px; border-radius: 999px;
+            background: var(--bg-sidebar); overflow: hidden; position: relative;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 999px; background: var(--accent);
+            transition: width 0.35s ease; min-width: 6px;
+        }
+        .progress-fill.indeterminate {
+            width: 35% !important; position: absolute; top: 0; bottom: 0;
+            animation: progress-slide 1.1s ease-in-out infinite;
+        }
+        @keyframes progress-slide {
+            0% { left: -35%; }
+            100% { left: 100%; }
+        }
+        .progress-label { display: flex; justify-content: space-between; margin-top: 0.4rem; font-size: 0.76rem; color: var(--text-muted); }
+        .progress-label .pct { font-weight: 600; color: var(--text-main); font-family: var(--font-mono); }
+
+        .error-banner {
+            display: flex; align-items: flex-start; gap: 0.7rem;
+            background: var(--danger-soft); border: 1px solid var(--danger);
+            border-radius: 8px; padding: 0.85rem 1.1rem; font-size: 0.85rem; color: var(--danger);
+            margin-bottom: 1.25rem;
+        }
+        .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+        .toast-banner {
+            display: flex; align-items: flex-start; gap: 0.7rem;
+            background: var(--success-soft); border: 1px solid var(--success);
+            border-radius: 8px; padding: 0.85rem 1.1rem; font-size: 0.85rem; color: var(--success);
+            margin-bottom: 1.25rem;
+        }
+        .toast-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+        .section-heading { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem; }
+        .section-heading .result-count { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: 20px; padding: 2px 9px; }
+
+        .field-input {
+            height: 36px; border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-page); color: var(--text-main); font-family: var(--font-sans);
+            font-size: 0.85rem; padding: 0 0.75rem; outline: none;
+        }
+        .field-input:focus { border-color: var(--accent); }
+
+        .sidebar-backdrop { display: none; }
+        #sidebar-toggle { display: none; }
+        @media (max-width: 1080px) {
+            #sidebar-toggle { display: flex; }
+            .app-sidebar { transform: translateX(-100%); }
+            body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
+            .app-main { margin-left: 0; }
+            body.sidebar-open .sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 99; }
+        }
+        @media (max-width: 720px) {
+            .app-content { padding: 1.25rem 1rem 2.5rem; }
+            .topbar-title span { display: none; }
+            .avatar-chip .who { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+    </script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/iitg_scrape_sync';</script>
+    {% endif %}
+
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="brand-row">
+                <div class="brand-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <div class="brand-text">rndopsapp<small>DevOps Control Center</small></div>
+            </div>
+
+            <div class="nav-scroll">
+                <div>
+                    <div class="nav-group-label">Tools</div>
+                    <ul class="nav-list">
+                        <li><a class="nav-item" href="/kafka_control">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                            Dashboard
+                        </a></li>
+                        <li><a class="nav-item active" href="/iitg_scrape_sync">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                            IITG Scrape Sync
+                        </a></li>
+                        <li><a class="nav-item" href="/project_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Project Search
+                        </a></li>
+                        <li><a class="nav-item" href="/funding_agency_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
+                            Funding Agencies
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-footer">
+                <div class="nav-group-label">Quick Links</div>
+                <ul class="nav-list">
+                    <li><a class="nav-item" href="/app/department_prornd">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        Department_prornd List
+                    </a></li>
+                    <li><a class="nav-item" href="/app/user">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        User List
+                    </a></li>
+                    <li><a class="nav-item" href="/app">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        Frappe Desk
+                    </a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar">
+                <button id="sidebar-toggle" class="icon-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="topbar-title">IITG Scrape Sync<span>Faculty &amp; department head sync from iitg.ac.in</span></div>
+
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                        <svg id="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg id="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="avatar-chip">
+                        <div class="avatar">{{ (frappe.session.user or 'U')[0]|upper }}</div>
+                        <span class="who">{{ frappe.session.user }}</span>
+                        <button onclick="frappe.app.logout()" class="icon-btn" style="border:none;background:transparent;width:26px;height:26px;" aria-label="Logout">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="app-content">
+                <div class="page-header">
+                    <h1 class="page-title">IITG Scrape Sync</h1>
+                    <p class="page-subtitle">Scrape faculty and department-head details from iitg.ac.in, compare against the current
+                        <span class="mono">User</span> and <span class="mono">Department_prornd</span> records (matched by email), and
+                        manually push updates. Manual updates are restricted to users holding the <strong>Permanent Employee</strong> role.</p>
+                </div>
+
+                <div id="global-msg-area"></div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="faculty" onclick="switchTab('faculty')">Faculty</button>
+                    <button class="tab-btn" data-tab="department_heads" onclick="switchTab('department_heads')">Department Heads</button>
+                </div>
+
+                <!-- ── Faculty tab ── -->
+                <div class="tab-panel active" id="panel-faculty">
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">Faculty Scrape</p>
+                                <p class="card-desc">Crawls every department/school/centre listing on iitg.ac.in and each faculty member's profile page. This can take a few minutes and runs as a background job.</p>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                                <span id="status-pill-faculty" class="status-pill status-idle"><span class="status-dot"></span>Idle</span>
+                                <button class="btn btn-primary" id="btn-scrape-faculty" onclick="startScrape('faculty')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                                    Run Faculty Scrape
+                                </button>
+                            </div>
+                        </div>
+                        <div id="meta-faculty" class="card-desc" style="margin-top:0.75rem;"></div>
+                        <div id="progress-wrap-faculty" class="progress-wrap">
+                            <div class="progress-track"><div id="progress-fill-faculty" class="progress-fill" style="width:0%;"></div></div>
+                            <div class="progress-label"><span id="progress-stage-faculty">—</span><span class="pct" id="progress-pct-faculty">0%</span></div>
+                        </div>
+                    </div>
+
+                    <div class="section-heading">Comparison vs. System Users <span class="result-count" id="count-faculty-cmp">0</span></div>
+                    <input type="text" class="field-input" id="search-faculty" placeholder="Search by name, email, or department…" style="width:100%; margin-bottom:0.85rem;" oninput="renderFacultyComparison()">
+                    <div id="table-faculty-cmp" class="table-wrap" style="margin-bottom:1.75rem;"></div>
+
+                    <div class="section-heading">Permanent Employees Not Found in Scrape <span class="result-count" id="count-faculty-missing">0</span></div>
+                    <p class="card-desc" style="margin:-0.4rem 0 0.85rem;">System Users with the <strong>Permanent Employee</strong> role that the last faculty scrape did not turn up at all (the table above only covers rows the scrape did find).</p>
+                    <input type="text" class="field-input" id="search-faculty-missing" placeholder="Search by name or email…" style="width:100%; margin-bottom:0.85rem;" oninput="renderMissingPermanentEmployees()">
+                    <div id="table-faculty-missing" class="table-wrap"></div>
+                </div>
+
+                <!-- ── Department heads tab ── -->
+                <div class="tab-panel" id="panel-department_heads">
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">Department Head Scrape</p>
+                                <p class="card-desc">Visits every department/school/centre listing on iitg.ac.in and pulls the "Head of the Department" card.</p>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                                <span id="status-pill-department_heads" class="status-pill status-idle"><span class="status-dot"></span>Idle</span>
+                                <button class="btn btn-primary" id="btn-scrape-department_heads" onclick="startScrape('department_heads')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                                    Run Department Heads Scrape
+                                </button>
+                            </div>
+                        </div>
+                        <div id="meta-department_heads" class="card-desc" style="margin-top:0.75rem;"></div>
+                        <div id="progress-wrap-department_heads" class="progress-wrap">
+                            <div class="progress-track"><div id="progress-fill-department_heads" class="progress-fill" style="width:0%;"></div></div>
+                            <div class="progress-label"><span id="progress-stage-department_heads">—</span><span class="pct" id="progress-pct-department_heads">0%</span></div>
+                        </div>
+                    </div>
+
+                    <div class="section-heading">Comparison vs. Department_prornd <span class="result-count" id="count-department_heads-cmp">0</span></div>
+                    <input type="text" class="field-input" id="search-department_heads" placeholder="Search by department, name, or email…" style="width:100%; margin-bottom:0.85rem;" oninput="renderDeptHeadsComparison()">
+                    <div id="table-department_heads-cmp" class="table-wrap"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/js/frappe-web.min.js"></script>
+
+    <script>
+        // ── Sidebar / theme ─────────────────────────────────────
+        function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const sun = document.getElementById('theme-icon-sun');
+            const moon = document.getElementById('theme-icon-moon');
+            if (sun && moon) {
+                sun.style.display = theme === 'dark' ? 'none' : 'block';
+                moon.style.display = theme === 'dark' ? 'block' : 'none';
+            }
+        }
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('kafkaControlTheme', next);
+            applyTheme(next);
+        }
+        (function initTheme() {
+            const saved = localStorage.getItem('kafkaControlTheme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+        })();
+
+        // ── Helpers ────────────────────────────────────────────
+        function escHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function apiCall(method, args) {
+            const url = `/api/method/frappe.www.iitg_scrape_sync.${method}`;
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Frappe-CSRF-Token': window.csrf_token || ''
+                },
+                body: JSON.stringify(args || {})
+            });
+            const json = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+                const msg = (json.exception || json._server_messages || json.message || resp.statusText);
+                throw new Error(typeof msg === 'string' ? msg.replace(/^.*?:\s*/, '') : resp.statusText);
+            }
+            return json.message;
+        }
+
+        function showGlobalMsg(kind, text) {
+            const area = document.getElementById('global-msg-area');
+            const cls = kind === 'error' ? 'error-banner' : 'toast-banner';
+            const icon = kind === 'error'
+                ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+                : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+            area.innerHTML = `<div class="${cls}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg><span>${escHtml(text)}</span></div>`;
+            setTimeout(() => { if (area.innerHTML.includes(escHtml(text))) area.innerHTML = ''; }, 8000);
+        }
+
+        function emptyState(title, desc) {
+            return `<div class="state-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+                <p class="state-title">${escHtml(title)}</p>
+                <p class="state-desc">${escHtml(desc)}</p>
+            </div>`;
+        }
+        function loadingState(text) {
+            return `<div class="state-box"><div class="spinner"></div><p class="state-desc">${escHtml(text)}</p></div>`;
+        }
+
+        // ── Tabs ───────────────────────────────────────────────
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+        }
+
+        // ── Status polling ─────────────────────────────────────
+        const pollers = {};
+
+        function renderStatus(scrapeType, status) {
+            const pill = document.getElementById(`status-pill-${scrapeType}`);
+            const meta = document.getElementById(`meta-${scrapeType}`);
+            const btn = document.getElementById(`btn-scrape-${scrapeType}`);
+            const state = status.state || 'idle';
+
+            const stateMap = {
+                idle:    { cls: 'status-idle',    label: 'Idle',    spin: false },
+                running: { cls: 'status-running', label: 'Running…', spin: true },
+                done:    { cls: 'status-done',    label: 'Done',    spin: false },
+                error:   { cls: 'status-error',   label: 'Error',   spin: false }
+            };
+            const s = stateMap[state] || stateMap.idle;
+            pill.className = `status-pill ${s.cls}`;
+            pill.innerHTML = `<span class="status-dot${s.spin ? ' spin' : ''}"></span>${s.label}`;
+
+            btn.disabled = state === 'running';
+
+            let metaText = '';
+            if (state === 'running') {
+                metaText = `Started by ${escHtml(status.started_by || '')} at ${escHtml(status.started_at || '')}…`;
+            } else if (state === 'done') {
+                metaText = `Last run finished ${escHtml(status.finished_at || '')} — ${status.count || 0} record(s) by ${escHtml(status.started_by || '')}.`;
+            } else if (state === 'error') {
+                metaText = `Last run failed at ${escHtml(status.finished_at || '')}. Check Error Log for details.`;
+            } else {
+                metaText = 'No scrape has been run yet in this session.';
+            }
+            meta.textContent = metaText;
+
+            renderProgress(scrapeType, state, status.progress);
+
+            return state;
+        }
+
+        function renderProgress(scrapeType, state, progress) {
+            const wrap = document.getElementById(`progress-wrap-${scrapeType}`);
+            const fill = document.getElementById(`progress-fill-${scrapeType}`);
+            const stageEl = document.getElementById(`progress-stage-${scrapeType}`);
+            const pctEl = document.getElementById(`progress-pct-${scrapeType}`);
+
+            if (state !== 'running') {
+                wrap.classList.remove('visible');
+                fill.classList.remove('indeterminate');
+                fill.style.width = '0%';
+                return;
+            }
+
+            wrap.classList.add('visible');
+            const done = (progress && progress.done) || 0;
+            const total = (progress && progress.total) || 0;
+            const stage = (progress && progress.stage) || 'Working…';
+            stageEl.textContent = stage;
+
+            if (total > 0) {
+                const pct = Math.min(100, Math.round((done / total) * 100));
+                fill.classList.remove('indeterminate');
+                fill.style.width = `${pct}%`;
+                pctEl.textContent = `${pct}% (${done}/${total})`;
+            } else {
+                fill.classList.add('indeterminate');
+                pctEl.textContent = '…';
+            }
+        }
+
+        function stopPolling(scrapeType) {
+            if (pollers[scrapeType]) {
+                clearInterval(pollers[scrapeType]);
+                pollers[scrapeType] = null;
+            }
+        }
+
+        async function refreshStatus(scrapeType, opts) {
+            opts = opts || {};
+            try {
+                const status = await apiCall('get_scrape_status', { scrape_type: scrapeType });
+                const state = renderStatus(scrapeType, status);
+                if (state === 'running') {
+                    if (!pollers[scrapeType]) {
+                        pollers[scrapeType] = setInterval(() => refreshStatus(scrapeType), 1200);
+                    }
+                } else {
+                    stopPolling(scrapeType);
+                    if (state === 'done' && (opts.loadOnDone || opts.wasRunning)) {
+                        await loadScrapeType(scrapeType);
+                    } else if (state === 'error' && status.error) {
+                        showGlobalMsg('error', 'Scrape failed — check the Error Log (Desk) for the full traceback.');
+                    }
+                }
+            } catch (e) {
+                stopPolling(scrapeType);
+                showGlobalMsg('error', e.message || String(e));
+            }
+        }
+
+        async function startScrape(scrapeType) {
+            const btn = document.getElementById(`btn-scrape-${scrapeType}`);
+            btn.disabled = true;
+            try {
+                await apiCall('start_scrape', { scrape_type: scrapeType });
+                showGlobalMsg('ok', `${scrapeType === 'faculty' ? 'Faculty' : 'Department head'} scrape started in the background.`);
+                pollers[scrapeType] = setInterval(() => refreshStatus(scrapeType, { loadOnDone: true }), 1200);
+                refreshStatus(scrapeType, { loadOnDone: true });
+            } catch (e) {
+                btn.disabled = false;
+                showGlobalMsg('error', e.message || String(e));
+            }
+        }
+
+        // ── Comparison tables ────────────────────────────────────
+        function safeId(str) {
+            return 'f_' + String(str).replace(/[^a-zA-Z0-9_-]/g, '_');
+        }
+
+        let facultyComparisonRows = [];
+        let deptHeadsComparisonRows = [];
+        let missingPermanentEmployeeRows = [];
+
+        function matchesSearch(searchTerm, ...fields) {
+            if (!searchTerm) return true;
+            const haystack = fields.filter(Boolean).join(' ').toLowerCase();
+            return haystack.includes(searchTerm);
+        }
+
+        function facultyStatusBadge(row) {
+            if (row.status === 'match') return '<span class="badge badge-match">Matches</span>';
+            if (row.status === 'name_changed') return '<span class="badge badge-changed">Name changed</span>';
+            if (row.status === 'no_account') return '<span class="badge badge-no-account">No User account</span>';
+            return '<span class="badge badge-neutral">No scraped email</span>';
+        }
+
+        function renderFacultyComparison(rows) {
+            if (rows !== undefined) facultyComparisonRows = rows;
+            const searchTerm = (document.getElementById('search-faculty').value || '').trim().toLowerCase();
+            const filtered = facultyComparisonRows.filter(r => matchesSearch(searchTerm, r.scraped_name, r.scraped_email, r.system_email, r.department));
+
+            document.getElementById('count-faculty-cmp').textContent = filtered.length;
+            if (!facultyComparisonRows.length) {
+                document.getElementById('table-faculty-cmp').innerHTML = emptyState('Nothing to compare yet', 'Run the faculty scrape first, then this table will show scraped vs. system names.');
+                return;
+            }
+            if (!filtered.length) {
+                document.getElementById('table-faculty-cmp').innerHTML = emptyState('No matches', 'No rows match your search.');
+                return;
+            }
+            const body = filtered.map((r, i) => {
+                const permBadge = r.system_full_name != null
+                    ? (r.is_permanent_employee ? '<span class="badge badge-permanent">Permanent Employee</span>' : '<span class="badge badge-neutral">Not Permanent Employee</span>')
+                    : '<span class="muted">—</span>';
+                const idBase = safeId(`${i}_${r.scraped_email || 'noemail'}`);
+                const emailId = `${idBase}_email`;
+                const firstId = `${idBase}_first`;
+                const middleId = `${idBase}_middle`;
+                const lastId = `${idBase}_last`;
+                const systemEmailValue = r.system_email != null ? r.system_email : (r.scraped_email || '');
+                const editCell = `<div class="cell-stack">
+                    <input type="text" class="field-input mono" id="${emailId}" value="${escHtml(systemEmailValue)}" placeholder="user@iitg.ac.in">
+                    <div class="cell-row">
+                        <input type="text" class="field-input" id="${firstId}" value="${escHtml(r.system_first_name)}" placeholder="First">
+                        <input type="text" class="field-input" id="${middleId}" value="${escHtml(r.system_middle_name)}" placeholder="Middle">
+                        <input type="text" class="field-input" id="${lastId}" value="${escHtml(r.system_last_name)}" placeholder="Last">
+                    </div>
+                </div>`;
+                const actionCell = `<button class="btn btn-success btn-sm" onclick="doUpdateFaculty(this, '${emailId}', '${firstId}', '${middleId}', '${lastId}')">Update</button>`;
+                return `<tr>
+                    <td>${escHtml(r.scraped_name) || '<span class="muted">—</span>'}<div class="mono muted" style="font-size:0.72rem;">${escHtml(r.scraped_email) || '—'}</div></td>
+                    <td>${escHtml(r.department) || '<span class="muted">—</span>'}</td>
+                    <td>${editCell}</td>
+                    <td>${permBadge}<div style="margin-top:0.3rem;">${facultyStatusBadge(r)}</div></td>
+                    <td>${actionCell}</td>
+                </tr>`;
+            }).join('');
+            document.getElementById('table-faculty-cmp').innerHTML = `<table>
+                <colgroup><col style="width:18%"><col style="width:14%"><col style="width:38%"><col style="width:16%"><col style="width:14%"></colgroup>
+                <thead><tr><th>Scraped Name / Email</th><th>Department</th><th>System Email / First / Middle / Last Name</th><th>Role &amp; Status</th><th>Action</th></tr></thead>
+                <tbody>${body}</tbody></table>`;
+        }
+
+        function renderMissingPermanentEmployees(rows) {
+            if (rows !== undefined) missingPermanentEmployeeRows = rows;
+            const searchTerm = (document.getElementById('search-faculty-missing').value || '').trim().toLowerCase();
+            const filtered = missingPermanentEmployeeRows.filter(u => matchesSearch(searchTerm, u.full_name, u.name));
+
+            document.getElementById('count-faculty-missing').textContent = filtered.length;
+            if (!missingPermanentEmployeeRows.length) {
+                document.getElementById('table-faculty-missing').innerHTML = emptyState('None missing', 'Every Permanent Employee User was found somewhere in the last faculty scrape (or no scrape has been run yet).');
+                return;
+            }
+            if (!filtered.length) {
+                document.getElementById('table-faculty-missing').innerHTML = emptyState('No matches', 'No rows match your search.');
+                return;
+            }
+            const body = filtered.map(u => `<tr>
+                <td class="mono">${escHtml(u.name)}</td>
+                <td>${escHtml(u.full_name) || '<span class="muted">—</span>'}</td>
+                <td>${escHtml(u.first_name) || '<span class="muted">—</span>'}</td>
+                <td>${escHtml(u.middle_name) || '<span class="muted">—</span>'}</td>
+                <td>${escHtml(u.last_name) || '<span class="muted">—</span>'}</td>
+                <td>${u.enabled ? '<span class="badge badge-match">Enabled</span>' : '<span class="badge badge-neutral">Disabled</span>'}</td>
+            </tr>`).join('');
+            document.getElementById('table-faculty-missing').innerHTML = `<table>
+                <thead><tr><th>Email</th><th>Full Name</th><th>First Name</th><th>Middle Name</th><th>Last Name</th><th>Status</th></tr></thead>
+                <tbody>${body}</tbody></table>`;
+        }
+
+        function deptStatusBadge(row) {
+            if (row.status === 'match') return '<span class="badge badge-match">Matches</span>';
+            if (row.status === 'changed') return '<span class="badge badge-changed">Changed</span>';
+            if (row.status === 'no_department_record') return '<span class="badge badge-no-account">No Department_prornd match</span>';
+            return '<span class="badge badge-neutral">No scraped email</span>';
+        }
+
+        function renderDeptHeadsComparison(rows) {
+            if (rows !== undefined) deptHeadsComparisonRows = rows;
+            const searchTerm = (document.getElementById('search-department_heads').value || '').trim().toLowerCase();
+            const filtered = deptHeadsComparisonRows.filter(r => matchesSearch(searchTerm, r.department, r.scraped_name, r.scraped_email, r.current_head_email));
+
+            document.getElementById('count-department_heads-cmp').textContent = filtered.length;
+            if (!deptHeadsComparisonRows.length) {
+                document.getElementById('table-department_heads-cmp').innerHTML = emptyState('Nothing to compare yet', 'Run the department heads scrape first, then this table will show scraped vs. Department_prornd data.');
+                return;
+            }
+            if (!filtered.length) {
+                document.getElementById('table-department_heads-cmp').innerHTML = emptyState('No matches', 'No rows match your search.');
+                return;
+            }
+            const body = filtered.map((r, i) => {
+                const idBase = safeId(`${i}_${r.dept_record || 'nodept'}`);
+                const emailId = `${idBase}_email`;
+                const firstId = `${idBase}_first`;
+                const middleId = `${idBase}_middle`;
+                const lastId = `${idBase}_last`;
+                const editCell = `<div class="cell-stack">
+                    <input type="text" class="field-input mono" id="${emailId}" value="${escHtml(r.scraped_email)}" placeholder="Head email">
+                    <div class="cell-row">
+                        <input type="text" class="field-input" id="${firstId}" value="${escHtml(r.new_head_first_name)}" placeholder="First">
+                        <input type="text" class="field-input" id="${middleId}" value="${escHtml(r.new_head_middle_name)}" placeholder="Middle">
+                        <input type="text" class="field-input" id="${lastId}" value="${escHtml(r.new_head_last_name)}" placeholder="Last">
+                    </div>
+                </div>`;
+                let actionCell = `<button class="btn btn-success btn-sm" onclick="doUpdateDeptHead(this, '${encodeURIComponent(r.dept_record || '')}', '${emailId}', '${firstId}', '${middleId}', '${lastId}')">Update</button>`;
+                if (!r.dept_record) {
+                    actionCell = '<span class="muted" title="No Department_prornd record matched this scraped row">No department match</span>';
+                }
+                return `<tr>
+                    <td>${escHtml(r.department) || '<span class="muted">—</span>'}</td>
+                    <td>${escHtml(r.current_head_name) || '<span class="muted">—</span>'}<div class="mono muted" style="font-size:0.72rem;">${escHtml(r.current_head_email) || '—'}</div></td>
+                    <td>${escHtml(r.scraped_name) || '<span class="muted">—</span>'}</td>
+                    <td>${editCell}</td>
+                    <td>${deptStatusBadge(r)}</td>
+                    <td>${actionCell}</td>
+                </tr>`;
+            }).join('');
+            document.getElementById('table-department_heads-cmp').innerHTML = `<table>
+                <colgroup><col style="width:17%"><col style="width:17%"><col style="width:14%"><col style="width:34%"><col style="width:9%"><col style="width:9%"></colgroup>
+                <thead><tr><th>Department</th><th>Current Head (System)</th><th>Scraped Name</th><th>Head Email / First / Middle / Last</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>${body}</tbody></table>`;
+        }
+
+        // ── Update actions ───────────────────────────────────────
+        async function doUpdateFaculty(btn, emailInputId, firstInputId, middleInputId, lastInputId) {
+            const email = document.getElementById(emailInputId).value.trim();
+            const firstName = document.getElementById(firstInputId).value.trim();
+            const middleName = document.getElementById(middleInputId).value.trim();
+            const lastName = document.getElementById(lastInputId).value.trim();
+            if (!email) {
+                showGlobalMsg('error', 'Email cannot be empty.');
+                return;
+            }
+            if (!firstName) {
+                showGlobalMsg('error', 'First name cannot be empty.');
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = 'Updating…';
+            try {
+                const res = await apiCall('update_faculty_user', { email, first_name: firstName, middle_name: middleName, last_name: lastName });
+                if (res.old_full_name === res.new_full_name) {
+                    showGlobalMsg('ok', `No change: ${email} already has the name "${res.new_full_name}".`);
+                } else {
+                    showGlobalMsg('ok', `Updated ${email}: "${res.old_full_name}" → "${res.new_full_name}".`);
+                }
+                await loadFacultyComparison();
+            } catch (e) {
+                showGlobalMsg('error', e.message || String(e));
+                btn.disabled = false;
+                btn.textContent = 'Update';
+            }
+        }
+
+        async function doUpdateDeptHead(btn, encodedDeptRecord, emailInputId, firstInputId, middleInputId, lastInputId) {
+            const deptRecord = decodeURIComponent(encodedDeptRecord);
+            const headEmail = document.getElementById(emailInputId).value.trim();
+            const firstName = document.getElementById(firstInputId).value.trim();
+            const middleName = document.getElementById(middleInputId).value.trim();
+            const lastName = document.getElementById(lastInputId).value.trim();
+            if (!headEmail) {
+                showGlobalMsg('error', 'Head email cannot be empty.');
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = 'Updating…';
+            try {
+                const res = await apiCall('update_department_head', {
+                    dept_record: deptRecord,
+                    head_email: headEmail,
+                    head_first_name: firstName,
+                    head_middle_name: middleName,
+                    head_last_name: lastName,
+                });
+                if (res.old_head === res.new_head && !res.name_updated) {
+                    showGlobalMsg('ok', `No change: ${res.new_head} is already the head and the name matches.`);
+                } else if (res.old_head === res.new_head) {
+                    showGlobalMsg('ok', `Name updated for ${res.new_head} (head unchanged).`);
+                } else {
+                    showGlobalMsg('ok', `Department head updated: ${res.old_head || '(none)'} → ${res.new_head}.`);
+                }
+                await loadDeptHeadsComparison();
+            } catch (e) {
+                showGlobalMsg('error', e.message || String(e));
+                btn.disabled = false;
+                btn.textContent = 'Update';
+            }
+        }
+
+        // ── Data loading ─────────────────────────────────────────
+        async function loadFacultyComparison() {
+            document.getElementById('table-faculty-cmp').innerHTML = loadingState('Loading comparison…');
+            try {
+                renderFacultyComparison(await apiCall('get_faculty_comparison', {}));
+            } catch (e) {
+                showGlobalMsg('error', e.message || String(e));
+            }
+        }
+
+        async function loadDeptHeadsComparison() {
+            document.getElementById('table-department_heads-cmp').innerHTML = loadingState('Loading comparison…');
+            try {
+                renderDeptHeadsComparison(await apiCall('get_department_head_comparison', {}));
+            } catch (e) {
+                showGlobalMsg('error', e.message || String(e));
+            }
+        }
+
+        async function loadMissingPermanentEmployees() {
+            document.getElementById('table-faculty-missing').innerHTML = loadingState('Loading…');
+            try {
+                renderMissingPermanentEmployees(await apiCall('get_permanent_employees_not_in_scrape', {}));
+            } catch (e) {
+                showGlobalMsg('error', e.message || String(e));
+            }
+        }
+
+        async function loadScrapeType(scrapeType) {
+            if (scrapeType === 'faculty') {
+                await loadFacultyComparison();
+                await loadMissingPermanentEmployees();
+            } else {
+                await loadDeptHeadsComparison();
+            }
+        }
+
+        // ── Init ───────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFacultyComparison([]);
+            renderDeptHeadsComparison([]);
+            renderMissingPermanentEmployees([]);
+            refreshStatus('faculty', { loadOnDone: true });
+            refreshStatus('department_heads', { loadOnDone: true });
+            loadMissingPermanentEmployees();
+        });
+    </script>
+</body>
+</html>

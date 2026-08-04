@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Project — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page:    #f9f7f2;
+            --bg-sidebar: #f0ede4;
+            --bg-card:    #ffffff;
+            --text-main:  #3f3f46;
+            --text-muted: #71717a;
+            --text-accent:#9a7d5a;
+            --accent:     #2563EB;
+            --accent-light:#e8e2d4;
+            --border:     #e4e4e7;
+            --border-sub: #f0ede4;
+            --shadow-sm:  0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.03);
+            --shadow-md:  0 4px 12px rgba(0,0,0,.06);
+            --shadow-lg:  0 20px 48px rgba(15, 23, 42, 0.16);
+            --radius:     10px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --font-serif: 'Lora', Georgia, serif;
+            --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono:  'JetBrains Mono', monospace;
+
+            --c-finance:  #3b82f6;
+            --c-purchase: #f59e0b;
+            --c-hr:       #10b981;
+            --c-project:  #8b5cf6;
+
+            --surface: var(--bg-card, #ffffff);
+            --accent-hover: #1D4ED8;
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+            --sidebar-width: 268px;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --bg-sidebar: #0F172A;
+            --bg-card: #111827;
+            --surface: #111827;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+            --border-sub: #1E293B;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.6);
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+        }
+        :root[data-theme="dark"] body { color-scheme: dark; }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        /* ── App shell (sidebar + topbar) ── */
+        .app-shell { display: flex; min-height: 100vh; }
+
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.4rem 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 100;
+            transition: transform .25s ease, background-color .2s ease, border-color .2s ease;
+        }
+
+        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; }
+        .brand-logo {
+            width: 30px; height: 30px; border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; flex-shrink: 0; box-shadow: var(--shadow-sm);
+        }
+        .brand-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; color: var(--text-main); }
+        .brand-text small { display: block; font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; }
+        .nav-group-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 700; padding: 0 .6rem; margin-bottom: .45rem; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .62rem .75rem; border-radius: var(--radius-sm);
+            color: var(--text-muted); font-size: .89rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none; background: transparent;
+            width: 100%; text-align: left; font-family: inherit;
+            transition: background .15s ease, color .15s ease;
+        }
+        .nav-item svg { flex-shrink: 0; }
+        .nav-item:hover { background: var(--accent-light); color: var(--accent); }
+        .nav-item.active { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+        .nav-item.danger:not(.active) { color: var(--danger); }
+        .nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+        .nav-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
+
+        .app-main { margin-left: var(--sidebar-width); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+        .app-topbar {
+            position: sticky; top: 0; z-index: 90;
+            height: 66px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0 1.75rem;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+        .topbar-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; color: var(--text-main); }
+        .topbar-title span { display: block; font-size: .74rem; font-weight: 500; color: var(--text-muted); }
+        .topbar-actions { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; position: relative;
+            transition: color .15s, border-color .15s, transform .15s;
+        }
+        .icon-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+        .avatar-chip { display: flex; align-items: center; gap: .6rem; padding: .3rem .5rem .3rem .3rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: .78rem; flex-shrink: 0;
+        }
+        .avatar-chip .who { font-size: .8rem; font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .app-content { padding: 1.75rem 2.25rem 3.5rem; flex: 1; max-width: 980px; }
+
+        /* ── Search bar ── */
+        .search-bar {
+            padding: .9rem 1.1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.25rem;
+        }
+        .search-label {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 220px;
+            max-width: 460px;
+            height: 38px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-page);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: .85rem;
+            padding: 0 .85rem;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .search-input::placeholder { color: #a1a1aa; font-family: var(--font-sans); }
+
+        .btn {
+            height: 38px;
+            padding: 0 1.1rem;
+            border-radius: 7px;
+            font-family: var(--font-sans);
+            font-size: .84rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            white-space: nowrap;
+            transition: all .15s;
+        }
+        .btn:disabled { opacity: .45; cursor: not-allowed; }
+        .btn-primary  { background: var(--accent); color: #fff; }
+        .btn-primary:not(:disabled):hover { opacity: .88; }
+        .btn-outline  { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:not(:disabled):hover { background: var(--bg-page); border-color: var(--accent); color: var(--accent); }
+        .btn-danger   { background: var(--danger-soft); border: 1px solid var(--danger); color: var(--danger); }
+        .btn-danger:not(:disabled):hover { opacity: .85; }
+
+        .error-banner {
+            background: var(--danger-soft);
+            border: 1px solid var(--danger);
+            border-radius: 8px;
+            padding: .7rem 1rem;
+            font-size: .84rem;
+            color: var(--danger);
+            margin-bottom: 1rem;
+            display: none;
+            align-items: flex-start;
+            gap: .6rem;
+        }
+        .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+        .banner {
+            display: flex; gap: .75rem; align-items: flex-start;
+            padding: 1rem 1.25rem; border-radius: var(--radius-md);
+            font-size: .87rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.55;
+            background: var(--danger-soft); border: 1px solid var(--danger); color: #991B1B;
+        }
+        :root[data-theme="dark"] .banner { color: var(--danger); }
+        .banner svg { flex-shrink: 0; margin-top: 1px; }
+        .banner p { margin: .35rem 0 0; font-weight: 400; color: var(--text-muted); }
+        .banner a { color: inherit; }
+
+        /* ── PR summary card ── */
+        .pr-card {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--danger);
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1.35rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .pr-card-row { display: flex; gap: 2rem; flex-wrap: wrap; align-items: center; }
+        .pr-field-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+        .pr-field-value { font-size: .92rem; font-weight: 600; color: var(--text-main); margin-top: 2px; }
+        .pr-field-value.mono { font-family: var(--font-mono); color: var(--danger); }
+        .pr-impact-line { font-weight: 700; margin-top: .9rem; color: var(--danger); font-size: .92rem; }
+        .wf-badge { background: var(--warning-soft); color: var(--warning); padding: 2px 9px; border-radius: 20px; font-size: .78rem; font-weight: 600; display: inline-block; }
+
+        /* ── Doctype breakdown table ── */
+        .list-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .83rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: .85rem;
+        }
+        .list-table th {
+            padding: .5rem .85rem;
+            text-align: left;
+            background: var(--bg-page);
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .list-table td {
+            padding: .5rem .85rem;
+            border-bottom: 1px solid var(--border-sub);
+        }
+        .list-table tr:last-child td { border-bottom: none; }
+        .list-table td.count { text-align: right; font-weight: 700; color: var(--danger); }
+
+        .action-row { display: flex; gap: .75rem; align-items: center; margin-top: 1.1rem; flex-wrap: wrap; }
+
+        .result-box {
+            display: none;
+            margin-top: 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: var(--font-mono);
+            font-size: .82rem;
+            padding: 1.1rem 1.25rem;
+            border-radius: var(--radius-md);
+            white-space: pre-wrap;
+            max-height: 420px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .idle-hint {
+            color: var(--text-muted);
+            font-size: .88rem;
+            padding: 2.5rem 0;
+            text-align: center;
+        }
+
+        /* ── Password modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 1.25rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .modal-header h4 { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--danger); }
+        .modal-body { padding: 1.25rem 1.5rem; }
+        .modal-body p { margin: 0 0 1rem; font-size: .88rem; color: var(--text-muted); }
+        .form-group { display: flex; flex-direction: column; gap: .4rem; }
+        .form-group label { font-size: .85rem; color: var(--text-muted); font-weight: 500; }
+        .form-input {
+            padding: .7rem .9rem; border: 1px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: .9rem; background: var(--bg-page); color: var(--text-main);
+        }
+        .form-input:focus { outline: none; border-color: var(--danger); }
+        .modal-error { color: var(--danger); font-size: .82rem; min-height: 1.1rem; margin-top: .5rem; }
+        .modal-footer { padding: 1rem 1.5rem 1.5rem; display: flex; justify-content: flex-end; gap: .75rem; }
+
+        .btn:focus-visible, .nav-item:focus-visible, .icon-btn:focus-visible, .search-input:focus-visible, .form-input:focus-visible {
+            outline: 2px solid var(--accent); outline-offset: 2px;
+        }
+
+        .sidebar-backdrop { display: none; }
+        #sidebar-toggle { display: none; }
+        @media (max-width: 1080px) {
+            #sidebar-toggle { display: flex; }
+            .app-sidebar { transform: translateX(-100%); }
+            body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
+            .app-main { margin-left: 0; }
+            body.sidebar-open .sidebar-backdrop {
+                display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 99;
+            }
+        }
+        @media (max-width: 720px) {
+            .topbar-title span { display: none; }
+            .avatar-chip .who { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <script>window.csrf_token = "{{ frappe.session.csrf_token }}";</script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/project_delete';</script>
+    {% endif %}
+
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="brand-row">
+                <div class="brand-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <div class="brand-text">rndopsapp<small>DevOps Control Center</small></div>
+            </div>
+
+            <div class="nav-scroll">
+                <div>
+                    <div class="nav-group-label">Tools</div>
+                    <ul class="nav-list">
+                        <li><a class="nav-item" href="/kafka_control">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                            Dashboard
+                        </a></li>
+                        <li><a class="nav-item" href="/project_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Project Search
+                        </a></li>
+                        <li><a class="nav-item" href="/funding_agency_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
+                            Funding Agencies
+                        </a></li>
+                        <li><a class="nav-item" href="/pr_lookup">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            PR Lookup
+                        </a></li>
+                        <li><a class="nav-item" href="/pr_link_graph">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="12" cy="18" r="3"></circle><line x1="7.5" y1="7.5" x2="10" y2="16"></line><line x1="16.5" y1="7.5" x2="14" y2="16"></line></svg>
+                            PR Link Graph
+                        </a></li>
+                        <li><a class="nav-item danger active" href="/project_delete">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                            Delete Project
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-footer">
+                <div class="nav-group-label">Quick Links</div>
+                <ul class="nav-list">
+                    <li><a class="nav-item" href="/documentation">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        Documentation
+                    </a></li>
+                    <li><a class="nav-item" href="/app">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        Frappe Desk
+                    </a></li>
+                    <li><a class="nav-item" href="/rndops-leaderboard">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+                        Leaderboard
+                    </a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar">
+                <button id="sidebar-toggle" class="icon-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="topbar-title">Delete Project<span>Permanently remove a project and every linked application</span></div>
+
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                        <svg id="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg id="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="avatar-chip">
+                        <div class="avatar">{{ (frappe.session.user or 'U')[0]|upper }}</div>
+                        <span class="who">{{ frappe.session.user }}</span>
+                        <button onclick="frappe.app.logout()" class="icon-btn" style="border:none;background:transparent;width:26px;height:26px;" aria-label="Logout">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="app-content">
+
+                <div class="banner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <div>
+                        Irreversible action.
+                        <p>Enter a Project Registration docname or project number, review every direct, indirect, and
+                        chained document it would take with it (same map as the <a href="/pr_link_graph">PR Link Graph</a>),
+                        then confirm with the admin password. This deletes the Project Registration, every associated
+                        record, and sends <code>DELETE /api/projects/&lt;project_no&gt;</code> to the external project
+                        tracking service. None of this can be undone.</p>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <span class="search-label">Project</span>
+                    <input id="pr-input" class="search-input" type="text"
+                        placeholder="Docname or project_no…"
+                        autocomplete="off"
+                        onkeydown="if(event.key==='Enter') previewDelete()">
+                    <button class="btn btn-primary" id="preview-btn" onclick="previewDelete()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Preview Impact
+                    </button>
+                    <button class="btn btn-outline" id="reset-btn" onclick="resetAll()" style="display:none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/>
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+
+                <div id="error-banner" class="error-banner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span id="error-msg"></span>
+                </div>
+
+                <div id="pr-card" class="pr-card">
+                    <div class="pr-card-row">
+                        <div>
+                            <div class="pr-field-label">Project Registration</div>
+                            <div class="pr-field-value mono" id="pr-name">—</div>
+                        </div>
+                        <div>
+                            <div class="pr-field-label">Project No.</div>
+                            <div class="pr-field-value" id="pr-project-no">—</div>
+                        </div>
+                        <div style="flex:1;min-width:200px;">
+                            <div class="pr-field-label">Title</div>
+                            <div class="pr-field-value" id="pr-title">—</div>
+                        </div>
+                        <div>
+                            <span class="wf-badge" id="pr-wf">—</span>
+                        </div>
+                    </div>
+                    <div class="pr-impact-line" id="pr-impact-line"></div>
+                    <div id="pr-doctype-table"></div>
+
+                    <div class="action-row">
+                        <button class="btn btn-danger" id="delete-btn" onclick="confirmDeleteEverything()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                            </svg>
+                            Delete Project &amp; All Applications
+                        </button>
+                    </div>
+                </div>
+
+                <div id="idle-hint" class="idle-hint">Enter a project number or docname above and click Preview Impact.</div>
+
+                <div id="result-box" class="result-box"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Gate Modal -->
+    <div id="pw-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h4>Confirm Deletion</h4>
+            </div>
+            <div class="modal-body">
+                <p id="pw-desc">Enter the admin override password to permanently delete this project and all associated documents.</p>
+                <div class="form-group">
+                    <label for="pw-input">Password</label>
+                    <input type="password" id="pw-input" class="form-input" placeholder="Enter password" autocomplete="off">
+                </div>
+                <div id="pw-error" class="modal-error"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closePwModal()">Cancel</button>
+                <button type="button" id="pw-confirm-btn" class="btn btn-danger" onclick="confirmPassword()">Delete Permanently</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/js/frappe-web.min.js"></script>
+
+    <script>
+    // ── Sidebar toggle (mobile drawer) ─────────────────────────
+    function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+
+    // ── Theme (light/dark) ──────────────────────────────────────
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const sun = document.getElementById('theme-icon-sun');
+        const moon = document.getElementById('theme-icon-moon');
+        if (sun && moon) {
+            sun.style.display = theme === 'dark' ? 'none' : 'block';
+            moon.style.display = theme === 'dark' ? 'block' : 'none';
+        }
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('kafkaControlTheme', next);
+        applyTheme(next);
+    }
+    (function initTheme() {
+        const saved = localStorage.getItem('kafkaControlTheme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+    })();
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function escHtml(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function showError(msg) {
+        document.getElementById('error-msg').textContent = msg;
+        document.getElementById('error-banner').style.display = 'flex';
+    }
+    function hideError() {
+        document.getElementById('error-banner').style.display = 'none';
+    }
+    async function callMethod(method, args = {}) {
+        const resp = await fetch(`/api/method/${method}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Frappe-CSRF-Token': window.csrf_token || '',
+            },
+            body: JSON.stringify(args),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.message || data.exc || resp.statusText);
+        return data;
+    }
+
+    // ── State ────────────────────────────────────────────────────
+    let currentPreview = null; // { pr, total_associated, by_doctype }
+
+    // ── Preview ──────────────────────────────────────────────────
+    async function previewDelete() {
+        const identifier = document.getElementById('pr-input').value.trim();
+        if (!identifier) return;
+
+        hideError();
+        currentPreview = null;
+        document.getElementById('pr-card').style.display = 'none';
+        document.getElementById('result-box').style.display = 'none';
+        document.getElementById('idle-hint').textContent = 'Scanning direct, indirect, and chained links…';
+        document.getElementById('idle-hint').style.display = 'block';
+
+        const previewBtn = document.getElementById('preview-btn');
+        previewBtn.disabled = true;
+
+        try {
+            const r = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_registration.project_registration.preview_pr_cascade_delete',
+                { identifier }
+            );
+            const res = r.message;
+            if (!res || res.status !== 'success') {
+                showError(res ? res.message : 'Unknown error');
+                document.getElementById('idle-hint').style.display = 'block';
+                document.getElementById('idle-hint').textContent = 'Enter a project number or docname above and click Preview Impact.';
+                return;
+            }
+
+            currentPreview = res;
+            renderPreview(res);
+            document.getElementById('idle-hint').style.display = 'none';
+            document.getElementById('reset-btn').style.display = '';
+        } catch (e) {
+            showError('Failed to load preview: ' + e.message);
+            document.getElementById('idle-hint').style.display = 'block';
+            document.getElementById('idle-hint').textContent = 'Enter a project number or docname above and click Preview Impact.';
+        } finally {
+            previewBtn.disabled = false;
+        }
+    }
+
+    function renderPreview(res) {
+        const pr = res.pr;
+        document.getElementById('pr-name').textContent = pr.name;
+        document.getElementById('pr-project-no').textContent = pr.project_no || '—';
+        document.getElementById('pr-title').textContent = pr.project_title || '—';
+        document.getElementById('pr-wf').textContent = pr.workflow_state || '—';
+
+        const rows = (res.by_doctype || []).filter(d => d.count > 0);
+        document.getElementById('pr-impact-line').textContent =
+            `${res.total_associated} associated document(s) across ${rows.length} doctype(s) will be permanently ` +
+            `deleted, plus the Project Registration itself.`;
+
+        const tableWrap = document.getElementById('pr-doctype-table');
+        tableWrap.innerHTML = rows.length
+            ? `<table class="list-table">
+                <thead><tr><th>DocType</th><th style="text-align:right">Records to Delete</th></tr></thead>
+                <tbody>${rows.map(d => `<tr><td>${escHtml(d.doctype)}</td><td class="count">${d.count}</td></tr>`).join('')}</tbody>
+               </table>`
+            : '<div style="color:var(--text-muted);font-style:italic;margin-top:.6rem;">No associated documents found — only the Project Registration itself would be deleted.</div>';
+
+        document.getElementById('pr-card').style.display = 'block';
+    }
+
+    function resetAll() {
+        currentPreview = null;
+        document.getElementById('pr-input').value = '';
+        document.getElementById('pr-card').style.display = 'none';
+        document.getElementById('result-box').style.display = 'none';
+        document.getElementById('reset-btn').style.display = 'none';
+        document.getElementById('idle-hint').style.display = 'block';
+        document.getElementById('idle-hint').textContent = 'Enter a project number or docname above and click Preview Impact.';
+        hideError();
+    }
+
+    // ── Delete flow ─────────────────────────────────────────────
+    function confirmDeleteEverything() {
+        if (!currentPreview) return;
+        const pr = currentPreview.pr;
+        const total = currentPreview.total_associated;
+
+        const confirmed = confirm(
+            `PERMANENTLY DELETE ${pr.name} (${pr.project_no || 'no project no.'}) AND ${total} associated document(s)?\n\n` +
+            `This also sends a DELETE request for this project to the external project tracking service ` +
+            `(172.16.134.81:18080). This action cannot be undone. Proceed?`
+        );
+        if (!confirmed) return;
+
+        openPwModal(`Confirm permanent deletion of ${pr.name} and ${total} associated document(s). Enter the admin password to continue.`);
+    }
+
+    let pwPending = false;
+
+    function openPwModal(description) {
+        const modal = document.getElementById('pw-modal');
+        const input = document.getElementById('pw-input');
+        const errorEl = document.getElementById('pw-error');
+        document.getElementById('pw-desc').textContent = description;
+        input.value = '';
+        errorEl.textContent = '';
+        modal.classList.add('open');
+        setTimeout(() => input.focus(), 50);
+    }
+    function closePwModal() {
+        document.getElementById('pw-modal').classList.remove('open');
+    }
+    async function confirmPassword() {
+        const input = document.getElementById('pw-input');
+        const errorEl = document.getElementById('pw-error');
+        const confirmBtn = document.getElementById('pw-confirm-btn');
+        const password = input.value;
+        if (!password) { errorEl.textContent = 'Please enter the password.'; return; }
+        if (pwPending) return;
+
+        pwPending = true;
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Deleting…';
+        errorEl.textContent = '';
+
+        try {
+            const result = await doDelete(currentPreview.pr.name, password);
+            if (result && result.ok === false) {
+                errorEl.textContent = result.message || 'Incorrect password.';
+                return;
+            }
+            closePwModal();
+        } finally {
+            pwPending = false;
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Delete Permanently';
+        }
+    }
+
+    async function doDelete(identifier, password) {
+        const resultEl = document.getElementById('result-box');
+        const deleteBtn = document.getElementById('delete-btn');
+        resultEl.style.display = 'block';
+        resultEl.textContent = 'Deleting associated documents, then the Project Registration, then notifying the external project service…';
+        deleteBtn.disabled = true;
+
+        try {
+            const r = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_registration.project_registration.delete_pr_cascade',
+                { identifier, override_password: password }
+            );
+            const res = r.message || {};
+            if (res.status === 'error') {
+                resultEl.textContent = `FAILED: ${res.message}`;
+                deleteBtn.disabled = false;
+                return { ok: false, message: res.message };
+            }
+
+            const deleted = res.deleted || [];
+            const errors = res.errors || [];
+            const prDeletion = res.pr_deletion || {};
+            const prDeleted = (prDeletion.deleted || []).length > 0;
+            const ext = res.external_api_delete || {};
+
+            let out = '';
+            out += `Deleted ${deleted.length} associated document(s).\n`;
+            out += prDeleted
+                ? `Project Registration ${res.pr_name} deleted.\n`
+                : `WARNING: Project Registration ${res.pr_name} was NOT deleted — check details below.\n`;
+
+            out += '\nExternal project API:\n';
+            if (!ext.attempted) {
+                out += `  skipped — ${ext.message || 'no project_no on record'}\n`;
+            } else if (ext.ok) {
+                out += `  DELETE ${ext.url} -> ${ext.status_code}\n`;
+            } else {
+                out += `  DELETE ${ext.url || ''} -> FAILED (${ext.error || ext.status_code})\n`;
+            }
+
+            if (deleted.length) out += '\nAssociated documents deleted:\n' + deleted.map(d => `  - ${d}`).join('\n') + '\n';
+            if (errors.length) out += `\nErrors (${errors.length}):\n` + errors.map(d => `  - ${d}`).join('\n') + '\n';
+            if ((prDeletion.errors || []).length) out += '\nPR deletion errors:\n' + prDeletion.errors.map(d => `  - ${d}`).join('\n') + '\n';
+
+            resultEl.textContent = out;
+
+            currentPreview = null;
+            document.getElementById('pr-input').value = '';
+            document.getElementById('pr-card').style.display = 'none';
+            document.getElementById('reset-btn').style.display = 'none';
+            return { ok: true };
+        } catch (e) {
+            resultEl.textContent = 'Exception: ' + e.message;
+            deleteBtn.disabled = false;
+            return { ok: false, message: e.message };
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pwInput = document.getElementById('pw-input');
+        if (pwInput) {
+            pwInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); confirmPassword(); }
+                if (e.key === 'Escape') { e.preventDefault(); closePwModal(); }
+            });
+        }
+        const overlay = document.getElementById('pw-modal');
+        if (overlay) {
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) closePwModal(); });
+        }
+
+        const p = new URLSearchParams(window.location.search);
+        const prParam = p.get('pr') || p.get('project_no') || p.get('docname') || '';
+        if (prParam) {
+            document.getElementById('pr-input').value = prParam;
+            previewDelete();
+        } else {
+            document.getElementById('pr-input').focus();
+        }
+    });
+    </script>
+</body>
+</html>

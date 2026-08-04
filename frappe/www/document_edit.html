@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Editor — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Enterprise DevOps Control Center — light theme (matches kafka_control.html) */
+            --bg-page: #F8FAFC;
+            --surface: #FFFFFF;
+            --bg-sidebar: #F1F5F9;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #2563EB;
+            --accent-hover: #1D4ED8;
+            --accent-light: #EFF6FF;
+            --border: #E2E8F0;
+            --table-header: #F1F5F9;
+
+            --code-bg: #0B1120;
+            --code-text: #E2E8F0;
+
+            --shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+
+            --sidebar-width: 268px;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --surface: #111827;
+            --bg-sidebar: #0F172A;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+            --table-header: #1E293B;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.6);
+
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+        }
+        :root[data-theme="dark"] body { color-scheme: dark; }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+
+        body.shell {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+        .app-shell { display: flex; min-height: 100vh; }
+
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.4rem 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 100;
+            transition: transform .25s ease, background-color .2s ease, border-color .2s ease;
+        }
+
+        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; }
+        .brand-logo {
+            width: 30px; height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+        .brand-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; }
+        .brand-text small { display: block; font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; }
+
+        .nav-group-label {
+            font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+            color: var(--text-muted); font-weight: 700; padding: 0 .6rem; margin-bottom: .45rem;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .62rem .75rem; border-radius: var(--radius-sm);
+            color: var(--text-muted); font-size: .89rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none; background: transparent;
+            width: 100%; text-align: left; font-family: inherit;
+            transition: background .15s ease, color .15s ease;
+        }
+        .nav-item svg { flex-shrink: 0; }
+        .nav-item:hover { background: var(--accent-light); color: var(--accent); }
+        .nav-item.active { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+        .nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+
+        .app-main {
+            margin-left: var(--sidebar-width);
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column;
+        }
+
+        .app-topbar {
+            position: sticky; top: 0; z-index: 90;
+            height: 66px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0 1.75rem;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+        .topbar-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
+        .topbar-title span { display: block; font-size: .74rem; font-weight: 500; color: var(--text-muted); }
+
+        .topbar-actions { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; position: relative;
+            transition: color .15s, border-color .15s, transform .15s;
+        }
+        .icon-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+        .avatar-chip { display: flex; align-items: center; gap: .6rem; padding: .3rem .5rem .3rem .3rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: .78rem; flex-shrink: 0;
+        }
+        .avatar-chip .who { font-size: .8rem; font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .app-content { padding: 1.75rem 2.25rem 3.5rem; flex: 1; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+        .card-title { font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin: 0; }
+
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.65rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-size: 0.88rem; gap: 0.5rem; font-family: inherit; }
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background-color: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-secondary:hover { background-color: var(--bg-page); border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background-color: var(--danger-soft); border: 1px solid var(--danger); color: var(--danger); }
+        .btn-danger:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .form-input, select.form-input, textarea.form-input {
+            padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: 0.86rem; background: var(--bg-page); color: var(--text-main);
+            width: 100%;
+        }
+        .form-input:focus, select.form-input:focus, textarea.form-input:focus { outline: none; border-color: var(--accent); }
+        textarea.form-input { resize: vertical; min-height: 60px; }
+
+        /* ---- Doctype Explorer list (verbatim pattern from kafka_control.html) ---- */
+        .doctype-explorer-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 1.5rem; align-items: start; margin-top: 0.5rem; }
+        .doctype-explorer-list-panel { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-sidebar); padding: 1rem; }
+        .doctype-explorer-list { max-height: 640px; overflow-y: auto; margin-top: 0.75rem; }
+        .doctype-item {
+            padding: .5rem .6rem; border-radius: var(--radius-sm); font-size: .83rem; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center; gap: .4rem;
+            font-family: 'JetBrains Mono', monospace; color: var(--text-main);
+            transition: background .15s, color .15s;
+        }
+        .doctype-item:hover { background: var(--accent-light); color: var(--accent); }
+        .doctype-item.active { background: var(--accent); color: #fff; font-weight: 600; }
+        .doctype-item .badge-mini { font-size: .65rem; padding: 1px 6px; border-radius: 4px; background: var(--border); color: var(--text-muted); font-family: 'Inter', sans-serif; flex-shrink: 0; }
+        .doctype-item.active .badge-mini { background: rgba(255,255,255,0.25); color: #fff; }
+        .doctype-explorer-detail-panel { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); padding: 1.25rem; min-height: 200px; }
+        @media (max-width: 1080px) { .doctype-explorer-layout { grid-template-columns: 1fr; } }
+
+        /* ---- Document Editor specific ---- */
+        .docname-bar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
+        .docname-bar .form-input { max-width: 340px; font-family: 'JetBrains Mono', monospace; }
+
+        /* ---- List / Document tabs ---- */
+        .de-tab-bar { display: flex; gap: .4rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .de-tab-btn {
+            padding: .55rem 1rem; border: none; background: transparent; cursor: pointer;
+            font-family: inherit; font-size: .85rem; font-weight: 600; color: var(--text-muted);
+            border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s;
+            display: inline-flex; align-items: center; gap: .4rem;
+        }
+        .de-tab-btn:hover { color: var(--text-main); }
+        .de-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .de-tab-btn .tab-badge {
+            font-size: .68rem; font-weight: 700; padding: 1px 7px; border-radius: 10px;
+            background: var(--accent-light); color: var(--accent);
+        }
+
+        /* ---- Document list: styled like Frappe's native Desk list view ---- */
+        .de-doc-list-panel { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); padding: 0; margin-bottom: 1.25rem; overflow: hidden; }
+        .de-doc-list-header { display: flex; justify-content: space-between; align-items: center; padding: .6rem .9rem; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); }
+        .de-doc-list-header span { font-size: .75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+        .de-doc-list { max-height: 560px; overflow-y: auto; }
+        .de-doc-item {
+            display: flex; align-items: center; gap: .6rem;
+            padding: .55rem .9rem; cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            font-size: .83rem; color: var(--text-main);
+            transition: background .12s;
+        }
+        .de-doc-item:last-child { border-bottom: none; }
+        .de-doc-item:hover { background: var(--bg-page); }
+        .de-doc-item.active { background: var(--accent-light); }
+        .de-doc-item .de-doc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--text-muted); }
+        .de-doc-item .de-doc-name { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-main); }
+        .de-doc-item.active .de-doc-name { color: var(--accent); }
+        .de-doc-item .de-doc-right { margin-left: auto; display: flex; align-items: center; gap: .6rem; }
+        .de-doc-item .de-doc-time { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
+
+        /* Frappe-style status indicator pill (indicator dot + label) */
+        .indicator-pill {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: 2px 9px 2px 7px; border-radius: 10px;
+            font-size: .7rem; font-weight: 600; white-space: nowrap;
+        }
+        .indicator-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; flex-shrink: 0; }
+        .indicator-pill.gray     { background: rgba(100,116,139,.14); color: #64748B; }
+        .indicator-pill.blue     { background: rgba(37,99,235,.14);   color: #2563EB; }
+        .indicator-pill.orange   { background: rgba(245,158,11,.16);  color: #B45309; }
+        .indicator-pill.green    { background: rgba(34,197,94,.16);   color: #16A34A; }
+        .indicator-pill.red      { background: rgba(239,68,68,.16);   color: #DC2626; }
+
+        .force-readonly-check { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--text-muted); cursor: pointer; }
+        .force-readonly-check input { accent-color: var(--danger); }
+
+        .doc-banner { padding: .75rem 1rem; border-radius: var(--radius-sm); font-size: .85rem; margin-bottom: 1.1rem; display: none; }
+        .doc-banner.success { display: block; background: var(--success-soft); color: var(--success); }
+        .doc-banner.error { display: block; background: var(--danger-soft); color: var(--danger); }
+        .doc-banner.info { display: block; background: var(--accent-light); color: var(--accent); }
+
+        .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .9rem 1.1rem; }
+        .field-group { display: flex; flex-direction: column; gap: .3rem; }
+        .field-group label { font-size: .78rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: .35rem; }
+        .field-group label .req-dot { color: var(--danger); }
+        .field-group label .field-type-hint { font-weight: 400; color: var(--text-muted); opacity: .7; font-size: .72rem; }
+        .field-group .field-desc { font-size: .72rem; color: var(--text-muted); opacity: .85; margin: -.15rem 0 0; }
+        .field-group.field-changed label { color: var(--accent); }
+        .field-group.field-changed .form-input { border-color: var(--accent); background: var(--accent-light); }
+        .field-group.field-missing label { color: var(--danger); }
+        .field-group.field-missing .form-input { border-color: var(--danger); background: var(--danger-soft); }
+        .field-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+        /* ---- Form sections (grouped by the doctype's real Section Breaks) ---- */
+        .form-section { border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 1.1rem; overflow: hidden; }
+        .form-section-header {
+            display: flex; align-items: center; gap: .5rem; padding: .7rem 1rem; cursor: pointer;
+            background: var(--bg-sidebar); font-size: .85rem; font-weight: 700; user-select: none;
+        }
+        .form-section-header .chevron { transition: transform .15s; flex-shrink: 0; color: var(--text-muted); }
+        .form-section.collapsed .chevron { transform: rotate(-90deg); }
+        .form-section-header .section-count { margin-left: auto; font-size: .7rem; font-weight: 600; color: var(--text-muted); }
+        .form-section-body { padding: 1rem; }
+        .form-section.collapsed .form-section-body { display: none; }
+
+        .child-table-block { margin-top: 1.75rem; }
+        .child-table-title { font-size: .92rem; font-weight: 700; margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+        .child-table-title .badge-mini { font-size: .68rem; padding: 2px 8px; border-radius: 10px; background: var(--accent-light); color: var(--accent); font-weight: 600; }
+        .child-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+        table.child-edit-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+        table.child-edit-table th {
+            text-align: left; padding: .5rem .6rem; background: var(--table-header);
+            border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0;
+        }
+        table.child-edit-table td { padding: .4rem .5rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        table.child-edit-table td .form-input { min-width: 110px; padding: .4rem .5rem; font-size: .8rem; }
+        table.child-edit-table tr.row-changed td { background: var(--accent-light); }
+        .row-remove-btn {
+            width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface);
+            color: var(--danger); cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .row-remove-btn:hover { background: var(--danger-soft); border-color: var(--danger); }
+        .add-row-btn { margin-top: .6rem; }
+        .child-empty-row td { text-align: center; color: var(--text-muted); font-style: italic; font-size: .8rem; padding: .8rem; }
+
+        .save-bar {
+            position: sticky; bottom: 0; margin-top: 1.75rem; padding: 1rem 1.25rem;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+        }
+        .save-summary { font-size: .82rem; color: var(--text-muted); }
+        .save-summary.has-changes { color: var(--accent); font-weight: 600; }
+
+        .spinner {
+            width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; vertical-align: -2px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .sidebar-backdrop { display: none; }
+        #sidebar-toggle { display: none; }
+        @media (max-width: 1080px) {
+            #sidebar-toggle { display: flex; }
+            .app-sidebar { transform: translateX(-100%); }
+            body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
+            .app-main { margin-left: 0; }
+            body.sidebar-open .sidebar-backdrop {
+                display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 99;
+            }
+        }
+        @media (max-width: 720px) {
+            .topbar-title span { display: none; }
+            .avatar-chip .who { display: none; }
+        }
+    </style>
+</head>
+
+<body class="shell">
+    <script>window.csrf_token = "{{ frappe.session.csrf_token }}";</script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/document_edit';</script>
+    {% endif %}
+
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="brand-row">
+                <div class="brand-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <div class="brand-text">rndopsapp<small>DevOps Control Center</small></div>
+            </div>
+
+            <div class="nav-scroll">
+                <div>
+                    <div class="nav-group-label">Tools</div>
+                    <ul class="nav-list">
+                        <li><a class="nav-item" href="/kafka_control">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                            Dashboard
+                        </a></li>
+                        <li><a class="nav-item" href="/project_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Project Search
+                        </a></li>
+                        <li><a class="nav-item" href="/funding_agency_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
+                            Funding Agencies
+                        </a></li>
+                        <li><a class="nav-item" href="/pr_lookup">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            PR Lookup
+                        </a></li>
+                        <li><a class="nav-item" href="/pr_link_graph">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="12" cy="18" r="3"></circle><line x1="7.5" y1="7.5" x2="10" y2="16"></line><line x1="16.5" y1="7.5" x2="14" y2="16"></line></svg>
+                            PR Link Graph
+                        </a></li>
+                        <li><a class="nav-item" href="/project_delete">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                            Delete Project
+                        </a></li>
+                        <li><a class="nav-item active" href="/document_edit">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Document Editor
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-footer">
+                <div class="nav-group-label">Quick Links</div>
+                <ul class="nav-list">
+                    <li><a class="nav-item" href="/documentation">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        Documentation
+                    </a></li>
+                    <li><a class="nav-item" href="/app">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        Frappe Desk
+                    </a></li>
+                    <li><a class="nav-item" href="/rndops-leaderboard">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+                        Leaderboard
+                    </a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar">
+                <button id="sidebar-toggle" class="icon-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="topbar-title">Document Editor<span>Load, edit, and save any Rndopsapp document — including child tables</span></div>
+
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                        <svg id="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg id="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="avatar-chip">
+                        <div class="avatar">{{ (frappe.session.user or 'U')[0]|upper }}</div>
+                        <span class="who">{{ frappe.session.user }}</span>
+                        <button onclick="frappe.app.logout()" class="icon-btn" style="border:none;background:transparent;width:26px;height:26px;" aria-label="Logout">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="app-content">
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">📝 Document Editor</h3>
+                        <span class="status-badge" id="doctype-count-badge" style="background:var(--accent-light);color:var(--accent);">Loading…</span>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0 0 .5rem;">
+                        Pick a Rndopsapp DocType, load any document by name, edit its fields (and its child
+                        table rows), then save. Only the fields you actually change are written — every
+                        other field on the document is left completely untouched.
+                    </p>
+
+                    <div class="doctype-explorer-layout">
+                        <div class="doctype-explorer-list-panel">
+                            <input type="text" id="de-doctype-search" class="form-input"
+                                placeholder="Filter doctypes…" oninput="filterDocEditDoctypeList(this.value)">
+                            <div id="de-doctype-list" class="doctype-explorer-list">
+                                <span style="color:var(--text-muted);font-style:italic;font-size:0.85rem;">Loading doctypes…</span>
+                            </div>
+                        </div>
+
+                        <div class="doctype-explorer-detail-panel" id="de-detail-panel">
+                            <span style="color:var(--text-muted);font-style:italic;">Select a doctype from the list to load a document.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frappe Scripts -->
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/js/frappe-web.min.js"></script>
+
+    <script>
+        // ---- Shell chrome: sidebar + theme (same pattern as kafka_control.html / pr_link_graph.html) ----
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-open');
+        }
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const sun = document.getElementById('theme-icon-sun');
+            const moon = document.getElementById('theme-icon-moon');
+            if (sun && moon) {
+                sun.style.display = theme === 'dark' ? 'none' : 'block';
+                moon.style.display = theme === 'dark' ? 'block' : 'none';
+            }
+        }
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('kafkaControlTheme', next);
+            applyTheme(next);
+        }
+        (function initTheme() {
+            const saved = localStorage.getItem('kafkaControlTheme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+        })();
+
+        // ---- API helper (same as kafka_control.html) ----
+        async function callMethod(method, args = {}) {
+            const response = await fetch(`/api/method/${method}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Frappe-CSRF-Token': window.csrf_token || ''
+                },
+                body: JSON.stringify(args)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || data.exc || response.statusText);
+            return data;
+        }
+        function escHtml(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ---- Doctype list (sidebar picker) ----
+        let deDoctypes = [];
+        let deActiveDoctype = null;
+        let deActiveDocname = null;
+        let deSchema = null;      // last get_document_for_edit / get_new_document_schema response
+        let deDeletedRows = {};   // fieldname -> [row names deleted this session]
+        let deIsNewDocMode = false; // true while filling out a brand-new (not yet created) document
+
+        async function loadDocEditDoctypeList() {
+            const listEl = document.getElementById('de-doctype-list');
+            const badge = document.getElementById('doctype-count-badge');
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.list_rndopsapp_doctypes');
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+                deDoctypes = res.doctypes;
+                renderDocEditDoctypeList(deDoctypes);
+                if (badge) badge.textContent = `${deDoctypes.length} DOCTYPES`;
+            } catch (e) {
+                listEl.innerHTML = `<span style="color:var(--danger);font-size:0.85rem;">Failed to load: ${escHtml(e.message)}</span>`;
+                if (badge) badge.textContent = 'Load failed';
+            }
+        }
+
+        function renderDocEditDoctypeList(items) {
+            const listEl = document.getElementById('de-doctype-list');
+            if (!items.length) {
+                listEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;font-size:0.85rem;">No matching doctypes.</span>';
+                return;
+            }
+            listEl.innerHTML = items.map(dt => {
+                const badge = dt.istable ? '<span class="badge-mini">Child</span>' : (dt.issingle ? '<span class="badge-mini">Single</span>' : '');
+                const active = dt.name === deActiveDoctype ? ' active' : '';
+                return `<div class="doctype-item${active}" data-doctype="${escHtml(dt.name)}">
+                    <span>${escHtml(dt.name)}</span>${badge}
+                </div>`;
+            }).join('');
+        }
+
+        function filterDocEditDoctypeList(term) {
+            const q = (term || '').trim().toLowerCase();
+            renderDocEditDoctypeList(deDoctypes.filter(dt => dt.name.toLowerCase().includes(q)));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDocEditDoctypeList();
+            const listEl = document.getElementById('de-doctype-list');
+            if (listEl) {
+                listEl.addEventListener('click', (e) => {
+                    const item = e.target.closest('.doctype-item');
+                    if (item && item.dataset.doctype) selectDocEditDoctype(item.dataset.doctype);
+                });
+            }
+        });
+
+        function selectDocEditDoctype(doctype) {
+            if (!deConfirmDiscard()) return;
+            deActiveDoctype = doctype;
+            deActiveDocname = null;
+            deSchema = null;
+            const searchTerm = document.getElementById('de-doctype-search').value.trim().toLowerCase();
+            renderDocEditDoctypeList(deDoctypes.filter(dt => dt.name.toLowerCase().includes(searchTerm)));
+
+            const panel = document.getElementById('de-detail-panel');
+            panel.innerHTML = `
+                <div class="docname-bar">
+                    <span style="font-family:'JetBrains Mono',monospace;font-weight:700;">${escHtml(doctype)}</span>
+                    <input type="text" id="de-docname-input" class="form-input" placeholder="Or type an exact document name…"
+                        onkeydown="if(event.key==='Enter') loadDocEditDocument()">
+                    <button class="btn btn-primary" onclick="loadDocEditDocument()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Load
+                    </button>
+                    <button class="btn btn-secondary" onclick="startNewDocEdit()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        New
+                    </button>
+                </div>
+
+                <div class="de-tab-bar">
+                    <button class="de-tab-btn active" id="de-tab-btn-list" data-tab="list" onclick="deSwitchTab('list')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        List <span class="tab-badge" id="de-tab-list-count">0</span>
+                    </button>
+                    <button class="de-tab-btn" id="de-tab-btn-form" data-tab="form" onclick="deSwitchTab('form')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        Document
+                    </button>
+                </div>
+
+                <div id="de-tab-list" class="de-tab-panel">
+                    <div class="de-doc-list-panel" id="de-doc-list-panel">
+                        <div class="de-doc-list-header">
+                            <span id="de-doc-list-count">Documents</span>
+                            <input type="text" id="de-doc-search" class="form-input" style="max-width:220px;padding:.35rem .6rem;font-size:.78rem;"
+                                placeholder="Search documents…" oninput="filterDocEditDocList(this.value)">
+                        </div>
+                        <div id="de-doc-list" class="de-doc-list">
+                            <span style="color:var(--text-muted);font-style:italic;font-size:0.8rem;">Loading documents…</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="de-tab-form" class="de-tab-panel" style="display:none;">
+                    <div id="de-banner" class="doc-banner"></div>
+                    <div id="de-form-container">
+                        <span style="color:var(--text-muted);font-style:italic;">Pick a document from the List tab, or click New.</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('de-docname-input').focus();
+            loadDocEditDocList();
+        }
+
+        function deSwitchTab(tab) {
+            document.querySelectorAll('.de-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            const listPanel = document.getElementById('de-tab-list');
+            const formPanel = document.getElementById('de-tab-form');
+            if (listPanel) listPanel.style.display = tab === 'list' ? '' : 'none';
+            if (formPanel) formPanel.style.display = tab === 'form' ? '' : 'none';
+        }
+
+        function deShowBanner(kind, message) {
+            const el = document.getElementById('de-banner');
+            if (!el) return;
+            el.className = `doc-banner ${kind}`;
+            el.textContent = message;
+        }
+
+        // ---- Document list (per selected doctype) ----
+        let deDocListDebounce = null;
+
+        async function loadDocEditDocList(search) {
+            const listEl = document.getElementById('de-doc-list');
+            const countEl = document.getElementById('de-doc-list-count');
+            const tabBadge = document.getElementById('de-tab-list-count');
+            if (!listEl) return;
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.list_doctype_documents', {
+                    doctype: deActiveDoctype, search: search || '', limit: 100,
+                });
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+                renderDocEditDocList(res.documents);
+                if (countEl) countEl.textContent = `Documents (${res.shown} of ${res.total})`;
+                if (tabBadge) tabBadge.textContent = res.total;
+            } catch (e) {
+                listEl.innerHTML = `<span style="color:var(--danger);font-size:0.8rem;">Failed to load: ${escHtml(e.message)}</span>`;
+            }
+        }
+
+        // Frappe-style status color for a workflow_state string
+        function deStatusColor(state) {
+            if (!state) return 'gray';
+            const s = state.toLowerCase();
+            if (s.includes('approved') || s.includes('sanctioned') || s.includes('completed')) return 'green';
+            if (s.includes('rejected') || s.includes('cancelled')) return 'red';
+            if (s.includes('pending') || s.includes('review') || s.includes('submitted')) return 'orange';
+            if (s === 'draft') return 'gray';
+            return 'blue';
+        }
+
+        // Frappe-style relative time ("2h ago", "3d ago", ...)
+        function deTimeAgo(dateStr) {
+            if (!dateStr) return '';
+            const then = new Date((dateStr || '').replace(' ', 'T'));
+            if (isNaN(then.getTime())) return dateStr;
+            const sec = Math.floor((Date.now() - then.getTime()) / 1000);
+            if (sec < 60) return 'just now';
+            const min = Math.floor(sec / 60);
+            if (min < 60) return `${min}m ago`;
+            const hr = Math.floor(min / 60);
+            if (hr < 24) return `${hr}h ago`;
+            const day = Math.floor(hr / 24);
+            if (day < 30) return `${day}d ago`;
+            const mon = Math.floor(day / 30);
+            if (mon < 12) return `${mon}mo ago`;
+            return `${Math.floor(mon / 12)}y ago`;
+        }
+
+        function renderDocEditDocList(documents) {
+            const listEl = document.getElementById('de-doc-list');
+            if (!listEl) return;
+            if (!documents.length) {
+                listEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;font-size:0.8rem;padding:.6rem .9rem;display:block;">No matching documents.</span>';
+                return;
+            }
+            listEl.innerHTML = documents.map(d => {
+                const active = d.name === deActiveDocname ? ' active' : '';
+                const color = deStatusColor(d.workflow_state);
+                const dot = d.workflow_state ? '' : '<span class="de-doc-dot"></span>';
+                const pill = d.workflow_state ? `<span class="indicator-pill ${color}">${escHtml(d.workflow_state)}</span>` : '';
+                return `<div class="de-doc-item${active}" data-name="${escHtml(d.name)}">
+                    ${dot}<span class="de-doc-name">${escHtml(d.name)}</span>
+                    <span class="de-doc-right">
+                        ${pill}
+                        <span class="de-doc-time">${escHtml(deTimeAgo(d.modified))}</span>
+                    </span>
+                </div>`;
+            }).join('');
+        }
+
+        function filterDocEditDocList(term) {
+            clearTimeout(deDocListDebounce);
+            deDocListDebounce = setTimeout(() => loadDocEditDocList(term.trim()), 300);
+        }
+
+        document.addEventListener('click', (e) => {
+            const item = e.target.closest('.de-doc-item');
+            if (item && item.dataset.name) loadDocEditDocument(item.dataset.name);
+        });
+
+        async function loadDocEditDocument(explicitName) {
+            const inputEl = document.getElementById('de-docname-input');
+            const docname = (explicitName || (inputEl ? inputEl.value : '') || '').trim();
+            if (!docname) return;
+
+            // Reloading the SAME document (Cancel button, post-save refresh) is a deliberate
+            // discard/refresh and shouldn't re-prompt — only switching to a different
+            // document (or out of new-doc mode) while there are unsaved edits should.
+            const isSwitchingDoc = deIsNewDocMode || docname !== deActiveDocname;
+            if (isSwitchingDoc && !deConfirmDiscard()) return;
+
+            if (inputEl) inputEl.value = docname;
+            deActiveDocname = docname;
+            deDeletedRows = {};
+            deIsNewDocMode = false;
+
+            document.querySelectorAll('.de-doc-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.name === docname);
+            });
+
+            deSwitchTab('form');
+            const container = document.getElementById('de-form-container');
+            deShowLoadingBanner('Loading document…');
+            container.innerHTML = '';
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.get_document_for_edit', { doctype: deActiveDoctype, docname });
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+
+                deSchema = res;
+                deShowBanner('info', `Loaded ${res.doctype} "${res.docname}". Click Edit to unlock fields, then Save Changes.`);
+                renderDocEditForm(res);
+            } catch (e) {
+                deShowBanner('error', `Failed to load: ${e.message}`);
+            }
+        }
+
+        async function startNewDocEdit() {
+            if (!deActiveDoctype) return;
+            if (!deConfirmDiscard()) return;
+            deActiveDocname = null;
+            deDeletedRows = {};
+            deIsNewDocMode = true;
+
+            const inputEl = document.getElementById('de-docname-input');
+            if (inputEl) inputEl.value = '';
+            document.querySelectorAll('.de-doc-item').forEach(el => el.classList.remove('active'));
+
+            deSwitchTab('form');
+            const container = document.getElementById('de-form-container');
+            deShowBanner('info', 'New document — fill in the fields below, then click Create.');
+            container.innerHTML = '';
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.get_new_document_schema', { doctype: deActiveDoctype });
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+
+                deSchema = res;
+                renderDocEditForm(res); // deIsNewDocMode is already true, so this renders directly editable
+            } catch (e) {
+                deShowBanner('error', `Failed to start new document: ${e.message}`);
+            }
+        }
+
+        // ---- Field rendering ----
+        function deCoerceForInput(fieldtype, value) {
+            if (value === null || value === undefined) return '';
+            if (fieldtype === 'Datetime' && typeof value === 'string') return value.replace(' ', 'T').slice(0, 16);
+            return String(value);
+        }
+
+        function deFieldInputHtml(field, value, extraAttrs, linkOptions) {
+            const ft = field.fieldtype;
+            const original = deCoerceForInput(ft, value);
+            // Always start disabled — the page loads in read-only View mode; deSetEditMode(true)
+            // (triggered by the Edit button) is what turns non-read_only inputs back on.
+            const common = `data-fieldname="${escHtml(field.fieldname)}" data-fieldtype="${escHtml(ft)}" data-original="${escHtml(original)}" data-readonly="${field.read_only ? '1' : '0'}" ${extraAttrs || ''} disabled`;
+
+            if (ft === 'Check') {
+                const checked = (value === 1 || value === '1' || value === true) ? 'checked' : '';
+                return `<input type="checkbox" class="doc-field-input" ${common} ${checked} onchange="deTrackChange(this)">`;
+            }
+            // Link fields: render as a dropdown of "label — docname" (same name+title fetch
+            // e_non_routine_deposit_slip.py already uses for its own link_options), capped at
+            // 200 rows. Falls back to a plain text input if we have no options for this field
+            // (e.g. fetch failed) so an exact docname can still be typed in.
+            if (ft === 'Link' && linkOptions && linkOptions[field.fieldname] && linkOptions[field.fieldname].length) {
+                const opts = linkOptions[field.fieldname];
+                const hasOriginal = !original || opts.some(o => o.value === original);
+                const currentOpt = (original && !hasOriginal)
+                    ? `<option value="${escHtml(original)}" selected>${escHtml(original)} (current)</option>` : '';
+                return `<select class="form-input doc-field-input" ${common} onchange="deTrackChange(this)">
+                    <option value="">— none —</option>
+                    ${currentOpt}
+                    ${opts.map(o => `<option value="${escHtml(o.value)}" ${o.value === original ? 'selected' : ''}>${escHtml(o.label || o.value)} — ${escHtml(o.value)}</option>`).join('')}
+                </select>`;
+            }
+            if (ft === 'Select') {
+                const opts = (field.options || '').split('\n').map(o => o.trim()).filter((o, i, arr) => o !== '' || i === 0);
+                return `<select class="form-input doc-field-input" ${common} onchange="deTrackChange(this)">
+                    ${opts.map(o => `<option value="${escHtml(o)}" ${o === original ? 'selected' : ''}>${escHtml(o || '—')}</option>`).join('')}
+                </select>`;
+            }
+            if (['Text', 'Small Text', 'Long Text', 'Text Editor', 'Code', 'Markdown Editor', 'HTML Editor', 'JSON'].includes(ft)) {
+                return `<textarea class="form-input doc-field-input" ${common} oninput="deTrackChange(this)">${escHtml(original)}</textarea>`;
+            }
+            if (ft === 'Int') {
+                return `<input type="number" step="1" class="form-input doc-field-input" ${common} value="${escHtml(original)}" oninput="deTrackChange(this)">`;
+            }
+            if (['Float', 'Currency', 'Percent'].includes(ft)) {
+                return `<input type="number" step="any" class="form-input doc-field-input" ${common} value="${escHtml(original)}" oninput="deTrackChange(this)">`;
+            }
+            if (ft === 'Date') {
+                return `<input type="date" class="form-input doc-field-input" ${common} value="${escHtml(original)}" oninput="deTrackChange(this)">`;
+            }
+            if (ft === 'Datetime') {
+                return `<input type="datetime-local" class="form-input doc-field-input" ${common} value="${escHtml(original)}" oninput="deTrackChange(this)">`;
+            }
+            return `<input type="text" class="form-input doc-field-input" ${common} value="${escHtml(original)}" oninput="deTrackChange(this)">`;
+        }
+
+        function deTrackChange(input) {
+            const current = input.type === 'checkbox' ? (input.checked ? '1' : '0') : input.value;
+            const changed = current !== input.dataset.original;
+            const group = input.closest('.field-group');
+            if (group) {
+                group.classList.toggle('field-changed', changed);
+                if (group.dataset.reqd === '1' && current !== '') group.classList.remove('field-missing');
+            }
+            const row = input.closest('tr');
+            if (row) {
+                const anyChanged = Array.from(row.querySelectorAll('.doc-field-input')).some(inp => {
+                    const v = inp.type === 'checkbox' ? (inp.checked ? '1' : '0') : inp.value;
+                    return v !== inp.dataset.original;
+                });
+                row.classList.toggle('row-changed', anyChanged || row.dataset.isNew === '1');
+            }
+            deUpdateSaveSummary();
+        }
+
+        function deFieldGroupHtml(f, val, linkOptions) {
+            const req = f.reqd ? '<span class="req-dot">*</span>' : '';
+            const desc = f.description ? `<div class="field-desc">${escHtml(f.description)}</div>` : '';
+            return `<div class="field-group" data-reqd="${f.reqd ? '1' : '0'}" data-label="${escHtml(f.label)}">
+                <label>${escHtml(f.label)}${req} <span class="field-type-hint">${escHtml(f.fieldtype)}${f.options ? ' → ' + escHtml(f.options) : ''}</span></label>
+                ${deFieldInputHtml(f, val, null, linkOptions)}
+                ${desc}
+            </div>`;
+        }
+
+        function deGroupFieldsIntoSections(fields) {
+            const order = [];
+            const bySection = {};
+            fields.forEach(f => {
+                const key = f.section || '__none__';
+                if (!bySection[key]) { bySection[key] = { label: f.section, fields: [] }; order.push(key); }
+                bySection[key].fields.push(f);
+            });
+            return order.map(key => bySection[key]);
+        }
+
+        function renderDocEditForm(res) {
+            const container = document.getElementById('de-form-container');
+
+            const sections = deGroupFieldsIntoSections(res.fields);
+            const linkOptions = res.link_options || {};
+            const fieldsHtml = sections.length <= 1
+                ? `<div class="field-grid">${(sections[0] ? sections[0].fields : []).map(f => deFieldGroupHtml(f, res.data ? res.data[f.fieldname] : undefined, linkOptions)).join('')}</div>`
+                : sections.map((sec, i) => `<div class="form-section" data-section-index="${i}">
+                        <div class="form-section-header" onclick="deToggleSection(this)">
+                            <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            ${escHtml(sec.label || 'Details')}
+                            <span class="section-count">${sec.fields.length} field${sec.fields.length === 1 ? '' : 's'}</span>
+                        </div>
+                        <div class="form-section-body">
+                            <div class="field-grid">${sec.fields.map(f => deFieldGroupHtml(f, res.data ? res.data[f.fieldname] : undefined, linkOptions)).join('')}</div>
+                        </div>
+                    </div>`).join('');
+
+            const childHtml = (res.child_tables || []).map(ct => {
+                const cols = ct.fields;
+                const rowsHtml = (ct.rows || []).map(row => deChildRowHtml(ct, row, cols)).join('');
+                const emptyRow = `<tr class="child-empty-row"><td colspan="${cols.length + 1}">No rows yet. Click "+ Add Row" while editing.</td></tr>`;
+                return `<div class="child-table-block" data-child-fieldname="${escHtml(ct.fieldname)}" data-child-doctype="${escHtml(ct.child_doctype)}">
+                    <div class="child-table-title">${escHtml(ct.label)} <span class="badge-mini">${escHtml(ct.child_doctype)}</span></div>
+                    <div class="child-table-wrap">
+                        <table class="child-edit-table">
+                            <thead><tr>
+                                ${cols.map(cf => `<th>${escHtml(cf.label)}</th>`).join('')}
+                                <th></th>
+                            </tr></thead>
+                            <tbody class="child-table-body">${rowsHtml || emptyRow}</tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-secondary add-row-btn" onclick="deAddChildRow(this)">+ Add Row</button>
+                </div>`;
+            }).join('');
+
+            const editToggleHtml = deIsNewDocMode
+                ? `<span style="font-size:.85rem;font-weight:700;color:var(--accent);">🆕 New ${escHtml(res.doctype)}</span>`
+                : `<button class="btn btn-secondary" id="de-edit-toggle-btn" onclick="deToggleEditMode()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Edit
+                   </button>
+                   <span style="font-size:.8rem;color:var(--text-muted);" id="de-mode-label">Viewing (read-only)</span>
+                   <button class="btn btn-secondary" onclick="duplicateDocEdit()" title="Open a new document prefilled with these values">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Duplicate
+                   </button>`;
+
+            const saveBarHtml = deIsNewDocMode
+                ? `<button class="btn btn-primary" id="de-save-btn" onclick="createNewDocEdit()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create
+                   </button>
+                   <button class="btn btn-secondary" onclick="startNewDocEdit()">Reset form</button>`
+                : `<button class="btn btn-primary" id="de-save-btn" onclick="saveDocEditChanges()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Save Changes <span style="opacity:.7;font-weight:400;">(Ctrl+S)</span>
+                   </button>
+                   <button class="btn btn-secondary" onclick="loadDocEditDocument()">Cancel (discard local edits)</button>`;
+
+            container.innerHTML = `
+                <div class="edit-mode-bar" style="display:flex;align-items:center;gap:.7rem;margin-bottom:1.1rem;flex-wrap:wrap;">
+                    ${editToggleHtml}
+                    <label class="force-readonly-check">
+                        <input type="checkbox" id="de-force-readonly" onchange="deSetEditMode(deEditMode)">
+                        Force-edit read_only fields
+                    </label>
+                </div>
+                ${fieldsHtml}
+                ${childHtml}
+                <div class="save-bar" style="display:none;">
+                    ${saveBarHtml}
+                    <span class="save-summary" id="de-save-summary"></span>
+                </div>
+            `;
+            deSetEditMode(deIsNewDocMode);
+            deSwitchTab('form');
+        }
+
+        function deToggleSection(header) {
+            header.closest('.form-section').classList.toggle('collapsed');
+        }
+
+        // ---- View / Edit mode ----
+        let deEditMode = false;
+
+        function deSetEditMode(on) {
+            deEditMode = on;
+            const forceCheck = document.getElementById('de-force-readonly');
+            const force = forceCheck && forceCheck.checked;
+            document.querySelectorAll('.doc-field-input').forEach(input => {
+                input.disabled = !on || (!force && input.dataset.readonly === '1');
+            });
+            document.querySelectorAll('.add-row-btn, .row-remove-btn').forEach(b => {
+                b.style.display = on ? '' : 'none';
+            });
+            const saveBar = document.querySelector('.save-bar');
+            if (saveBar) saveBar.style.display = on ? 'flex' : 'none';
+            const toggleBtn = document.getElementById('de-edit-toggle-btn');
+            const modeLabel = document.getElementById('de-mode-label');
+            if (toggleBtn) toggleBtn.lastChild.textContent = on ? ' Editing (click to cancel)' : ' Edit';
+            if (modeLabel) modeLabel.textContent = on ? 'Editing — remember to Save Changes' : 'Viewing (read-only)';
+            deUpdateSaveSummary();
+        }
+
+        function deToggleEditMode() {
+            if (deEditMode) {
+                loadDocEditDocument(); // cancel: discard in-progress edits, reload fresh + back to view mode
+            } else {
+                deSetEditMode(true);
+            }
+        }
+
+        function deChildRowHtml(childTable, row, cols) {
+            const rowName = row ? row.name : '';
+            const isNew = !rowName;
+            const linkOptions = childTable.link_options || {};
+            return `<tr data-row-name="${escHtml(rowName)}" data-is-new="${isNew ? '1' : '0'}">
+                ${cols.map(cf => `<td>${deFieldInputHtml(cf, row ? row[cf.fieldname] : '', null, linkOptions)}</td>`).join('')}
+                <td><button type="button" class="row-remove-btn" onclick="deRemoveChildRow(this)" title="Remove row">✕</button></td>
+            </tr>`;
+        }
+
+        function deAddChildRow(btn) {
+            const block = btn.closest('.child-table-block');
+            const fieldname = block.dataset.childFieldname;
+            const ct = (deSchema.child_tables || []).find(c => c.fieldname === fieldname);
+            if (!ct) return;
+            const tbody = block.querySelector('.child-table-body');
+            const tr = document.createElement('tr');
+            tr.innerHTML = deChildRowHtml(ct, null, ct.fields).replace(/^<tr[^>]*>/, '').replace(/<\/tr>$/, '');
+            tr.dataset.rowName = '';
+            tr.dataset.isNew = '1';
+            tr.classList.add('row-changed');
+            tbody.appendChild(tr);
+            // Add Row is only reachable while in edit mode, so unlock this row's inputs now
+            // (they render disabled by default) — still respecting per-field read_only, unless forced.
+            const forceCheck = document.getElementById('de-force-readonly');
+            const force = forceCheck && forceCheck.checked;
+            tr.querySelectorAll('.doc-field-input').forEach(inp => {
+                inp.disabled = !force && inp.dataset.readonly === '1';
+            });
+            const removeBtn = tr.querySelector('.row-remove-btn');
+            if (removeBtn) removeBtn.style.display = '';
+            deUpdateSaveSummary();
+        }
+
+        function deRemoveChildRow(btn) {
+            const row = btn.closest('tr');
+            const block = btn.closest('.child-table-block');
+            const fieldname = block.dataset.childFieldname;
+            if (row.dataset.isNew !== '1' && row.dataset.rowName) {
+                if (!deDeletedRows[fieldname]) deDeletedRows[fieldname] = [];
+                deDeletedRows[fieldname].push(row.dataset.rowName);
+            }
+            row.remove();
+            deUpdateSaveSummary();
+        }
+
+        // ---- Diff + save ----
+        function deCoerceForSend(fieldtype, rawValue) {
+            if (fieldtype === 'Check') return rawValue ? 1 : 0;
+            if (fieldtype === 'Int') return rawValue === '' ? null : parseInt(rawValue, 10);
+            if (['Float', 'Currency', 'Percent'].includes(fieldtype)) return rawValue === '' ? null : parseFloat(rawValue);
+            if (fieldtype === 'Datetime' && rawValue) return rawValue.replace('T', ' ') + (rawValue.length === 16 ? ':00' : '');
+            return rawValue === '' ? null : rawValue;
+        }
+
+        function deReadInput(input) {
+            const raw = input.type === 'checkbox' ? (input.checked ? '1' : '0') : input.value;
+            return { raw, value: deCoerceForSend(input.dataset.fieldtype, raw) };
+        }
+
+        // Diff (or, in new-doc mode, "everything filled in") for parent fields + every child table.
+        // Shared by Save/Create, the live save-summary, and the unsaved-changes guard.
+        function deComputeChanges() {
+            const changes = {};
+            document.querySelectorAll('#de-form-container .doc-field-input').forEach(input => {
+                if (input.closest('.child-table-block')) return;
+                const { raw, value } = deReadInput(input);
+                if (raw !== input.dataset.original) changes[input.dataset.fieldname] = value;
+            });
+
+            const childTableChanges = [];
+            document.querySelectorAll('#de-form-container .child-table-block').forEach(block => {
+                const fieldname = block.dataset.childFieldname;
+                const updated = [];
+                const inserted = [];
+
+                block.querySelectorAll('tbody tr').forEach(row => {
+                    if (row.classList.contains('child-empty-row')) return;
+                    const rowInputs = Array.from(row.querySelectorAll('.doc-field-input'));
+                    if (row.dataset.isNew === '1') {
+                        const rowData = {};
+                        let hasValue = false;
+                        rowInputs.forEach(input => {
+                            const { raw, value } = deReadInput(input);
+                            if (raw !== '') hasValue = true;
+                            rowData[input.dataset.fieldname] = value;
+                        });
+                        if (hasValue) inserted.push(rowData);
+                    } else {
+                        const rowChanges = {};
+                        rowInputs.forEach(input => {
+                            const { raw, value } = deReadInput(input);
+                            if (raw !== input.dataset.original) rowChanges[input.dataset.fieldname] = value;
+                        });
+                        if (Object.keys(rowChanges).length) {
+                            updated.push({ name: row.dataset.rowName, changes: rowChanges });
+                        }
+                    }
+                });
+
+                const deleted = deDeletedRows[fieldname] || [];
+                if (updated.length || inserted.length || deleted.length) {
+                    childTableChanges.push({ fieldname, updated, inserted, deleted });
+                }
+            });
+
+            return { changes, childTableChanges };
+        }
+
+        function deUpdateSaveSummary() {
+            const summaryEl = document.getElementById('de-save-summary');
+            if (!summaryEl) return;
+            const { changes, childTableChanges } = deComputeChanges();
+            const fieldCount = Object.keys(changes).length;
+            const rowCount = childTableChanges.reduce((n, c) => n + c.updated.length + c.inserted.length + c.deleted.length, 0);
+            if (!fieldCount && !rowCount) {
+                summaryEl.textContent = deIsNewDocMode ? 'Fill in fields below, then Create.' : 'No changes yet.';
+                summaryEl.classList.remove('has-changes');
+            } else if (deIsNewDocMode) {
+                summaryEl.textContent = `${fieldCount} field(s) filled in, ${rowCount} child row(s) added.`;
+                summaryEl.classList.add('has-changes');
+            } else {
+                summaryEl.textContent = `${fieldCount} field(s), ${rowCount} row change(s) pending.`;
+                summaryEl.classList.add('has-changes');
+            }
+        }
+
+        // Only counts as "dirty" while actually in Edit mode — View mode never has pending writes.
+        function deHasUnsavedChanges() {
+            if (!deEditMode) return false;
+            const { changes, childTableChanges } = deComputeChanges();
+            return Object.keys(changes).length > 0 || childTableChanges.length > 0;
+        }
+
+        function deConfirmDiscard() {
+            if (!deHasUnsavedChanges()) return true;
+            return confirm('You have unsaved changes on this document. Discard them?');
+        }
+
+        window.addEventListener('beforeunload', (e) => {
+            if (deHasUnsavedChanges()) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 's') return;
+            if (!deEditMode) return;
+            e.preventDefault();
+            if (deIsNewDocMode) createNewDocEdit();
+            else if (deActiveDocname) saveDocEditChanges();
+        });
+
+        function deShowLoadingBanner(message) {
+            const el = document.getElementById('de-banner');
+            if (!el) return;
+            el.className = 'doc-banner info';
+            el.innerHTML = `<span class="spinner"></span> ${escHtml(message)}`;
+        }
+
+        // Required-field check for the parent field grid (child-row-level reqd isn't enforced —
+        // rows are free-form line items). Only live (enabled) fields are checked, so fields
+        // still locked behind View mode or read_only never block a save.
+        function deFindMissingRequired() {
+            const missing = [];
+            document.querySelectorAll('#de-form-container .field-group[data-reqd="1"]').forEach(group => {
+                const input = group.querySelector('.doc-field-input');
+                if (!input || input.disabled) { group.classList.remove('field-missing'); return; }
+                const { raw } = deReadInput(input);
+                if (raw === '' || raw === null) {
+                    missing.push(group.dataset.label);
+                    group.classList.add('field-missing');
+                } else {
+                    group.classList.remove('field-missing');
+                }
+            });
+            return missing;
+        }
+
+        async function saveDocEditChanges() {
+            if (!deActiveDoctype || !deActiveDocname) return;
+
+            const missing = deFindMissingRequired();
+            if (missing.length) {
+                deShowBanner('error', `Fill in required field(s): ${missing.join(', ')}`);
+                return;
+            }
+
+            const { changes, childTableChanges } = deComputeChanges();
+            if (!Object.keys(changes).length && !childTableChanges.length) {
+                deShowBanner('info', 'No changes to save.');
+                return;
+            }
+
+            const saveBtn = document.getElementById('de-save-btn');
+            saveBtn.disabled = true;
+            deShowLoadingBanner('Saving…');
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.update_document_fields', {
+                    doctype: deActiveDoctype,
+                    docname: deActiveDocname,
+                    changes: JSON.stringify(changes),
+                    child_table_changes: JSON.stringify(childTableChanges),
+                });
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+
+                const childNote = res.child_tables.length
+                    ? ' · child tables: ' + res.child_tables.map(c => `${c.fieldname} (+${c.inserted}/~${c.updated}/-${c.deleted})`).join(', ')
+                    : '';
+                deShowBanner('success', `Saved. Updated fields: ${res.updated_fields.join(', ') || 'none'}${childNote}`);
+                await loadDocEditDocument(deActiveDocname); // refresh snapshot (new row names, etc.) — same doc, no discard prompt
+            } catch (e) {
+                deShowBanner('error', `Save failed: ${e.message}`);
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function createNewDocEdit() {
+            if (!deActiveDoctype || !deIsNewDocMode) return;
+
+            const missing = deFindMissingRequired();
+            if (missing.length) {
+                deShowBanner('error', `Fill in required field(s): ${missing.join(', ')}`);
+                return;
+            }
+
+            const values = {};
+            document.querySelectorAll('#de-form-container .doc-field-input').forEach(input => {
+                if (input.closest('.child-table-block')) return;
+                const { raw, value } = deReadInput(input);
+                if (raw !== '') values[input.dataset.fieldname] = value;
+            });
+
+            const childTableRows = [];
+            document.querySelectorAll('#de-form-container .child-table-block').forEach(block => {
+                const fieldname = block.dataset.childFieldname;
+                const rows = [];
+                block.querySelectorAll('tbody tr').forEach(row => {
+                    if (row.classList.contains('child-empty-row')) return;
+                    const rowData = {};
+                    let hasValue = false;
+                    row.querySelectorAll('.doc-field-input').forEach(input => {
+                        const { raw, value } = deReadInput(input);
+                        if (raw !== '') hasValue = true;
+                        rowData[input.dataset.fieldname] = value;
+                    });
+                    if (hasValue) rows.push(rowData);
+                });
+                if (rows.length) childTableRows.push({ fieldname, rows });
+            });
+
+            const saveBtn = document.getElementById('de-save-btn');
+            saveBtn.disabled = true;
+            deShowLoadingBanner('Creating…');
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.create_document', {
+                    doctype: deActiveDoctype,
+                    values: JSON.stringify(values),
+                    child_table_rows: JSON.stringify(childTableRows),
+                });
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+
+                deIsNewDocMode = false;
+                deShowBanner('success', `Created ${res.doctype} "${res.docname}".`);
+                await loadDocEditDocList();
+                await loadDocEditDocument(res.docname);
+            } catch (e) {
+                deShowBanner('error', `Create failed: ${e.message}`);
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
+        // ---- Duplicate: open a new document prefilled with the currently loaded one's values ----
+        async function duplicateDocEdit() {
+            if (!deActiveDoctype || !deSchema || deIsNewDocMode) return;
+            if (!deConfirmDiscard()) return;
+
+            const prefillData = Object.assign({}, deSchema.data);
+            const prefillChildRows = (deSchema.child_tables || []).map(ct => ({
+                fieldname: ct.fieldname,
+                rows: (ct.rows || []).map(row => {
+                    const copy = Object.assign({}, row);
+                    delete copy.name;
+                    return copy;
+                }),
+            }));
+
+            deActiveDocname = null;
+            deDeletedRows = {};
+            deIsNewDocMode = true;
+            document.querySelectorAll('.de-doc-item').forEach(el => el.classList.remove('active'));
+            const inputEl = document.getElementById('de-docname-input');
+            if (inputEl) inputEl.value = '';
+
+            deShowBanner('info', 'Duplicating — review the prefilled fields, then click Create.');
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.get_new_document_schema', { doctype: deActiveDoctype });
+                const res = r.message;
+                if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+
+                res.data = prefillData;
+                res.child_tables.forEach(ct => {
+                    const source = prefillChildRows.find(p => p.fieldname === ct.fieldname);
+                    ct.rows = source ? source.rows : [];
+                });
+
+                deSchema = res;
+                renderDocEditForm(res);
+            } catch (e) {
+                deShowBanner('error', `Failed to duplicate: ${e.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

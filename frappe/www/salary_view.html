@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Funding Agency Search — rndopsapp</title>
+    <title>Salary View — rndopsapp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -38,10 +38,8 @@
             --status-pending-text: #b45309;
             --status-rejected-bg: #fce8e6;
             --status-rejected-text: #d93025;
-        }
 
-        :root {
-            /* ---- added for app-shell parity with kafka_control.html ---- */
+            /* ---- app-shell parity with kafka_control.html ---- */
             --surface: var(--bg-card, #FFFFFF);
             --accent: #2563EB;
             --accent-hover: #1D4ED8;
@@ -59,6 +57,7 @@
             --danger: #EF4444;
             --danger-soft: #FEF2F2;
             --sidebar-width: 268px;
+            --sidebar-width-collapsed: 76px;
         }
 
         :root[data-theme="dark"] {
@@ -73,7 +72,6 @@
             --accent-light: rgba(59, 130, 246, 0.16);
             --border: #1E293B;
             --border-subtle: #1E293B;
-            --border-sub: #1E293B;
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
             --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
             --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.6);
@@ -97,98 +95,7 @@
             display: flex;
         }
 
-        /* ── Sidebar ── */
-        nav {
-            width: 280px;
-            height: 100vh;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border);
-            position: fixed;
-            overflow-y: auto;
-            padding: 2.5rem 1.5rem;
-            z-index: 100;
-            transition: transform 0.3s ease;
-        }
-
-        .nav-header {
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: var(--accent);
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
         .nav-links { list-style: none; padding: 0; margin: 0; }
-        .nav-links li { margin-bottom: 0.5rem; }
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            display: block;
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-        .nav-links a:hover, .nav-links a.active {
-            background-color: var(--accent-light);
-            color: var(--accent);
-        }
-
-        /* ── Top bar ── */
-        .top-nav {
-            position: fixed;
-            top: 0;
-            left: 280px;
-            right: 0;
-            height: 60px;
-            background: rgba(249, 247, 242, 0.95);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 2rem;
-            z-index: 90;
-            transition: left 0.3s ease;
-            backdrop-filter: blur(8px);
-            justify-content: space-between;
-        }
-
-        .sidebar-toggle {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted);
-            padding: 0.4rem;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .sidebar-toggle:hover { background-color: var(--bg-page); color: var(--accent); }
-
-        body.sidebar-collapsed nav { transform: translateX(-100%); }
-        body.sidebar-collapsed main { margin-left: 0; }
-        body.sidebar-collapsed .top-nav { left: 0; }
-
-        .user-profile { display: flex; align-items: center; gap: 1rem; }
-        .logout-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         /* ── Main content ── */
         main {
@@ -264,8 +171,11 @@
         }
         .field-input::placeholder { color: #a1a1aa; }
 
-        .search-input-wrap { flex: 1; min-width: 300px; }
+        .search-input-wrap { flex: 1; min-width: 260px; }
         .search-input-wrap .field-input { width: 100%; }
+
+        .filter-input-wrap { min-width: 150px; }
+        .filter-input-wrap .field-input { width: 100%; }
 
         .page-size-wrap { min-width: 100px; }
         .page-size-wrap .field-input { width: 100%; }
@@ -301,21 +211,6 @@
             color: var(--text-main);
         }
         .btn-outline:not(:disabled):hover { background: var(--bg-page); border-color: #a1a1aa; }
-
-        /* ── Note banner ── */
-        .note-banner {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.6rem;
-            background: var(--accent-light);
-            border: 1px solid rgba(217,119,87,0.3);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            font-size: 0.82rem;
-            color: var(--text-accent);
-            margin-top: 1rem;
-        }
-        .note-banner svg { flex-shrink: 0; margin-top: 1px; }
 
         /* ── Results table ── */
         .results-card {
@@ -354,6 +249,36 @@
             border: 1px solid var(--border);
         }
 
+        .summary-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .summary-tile {
+            flex: 1;
+            min-width: 160px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .summary-tile .tile-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        .summary-tile .tile-value {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
         .table-wrap { overflow-x: auto; }
 
         table {
@@ -362,7 +287,9 @@
             font-size: 0.875rem;
         }
 
-        thead tr { border-bottom: 1px solid var(--border); }
+        thead tr {
+            border-bottom: 1px solid var(--border);
+        }
 
         th {
             padding: 0.7rem 1rem;
@@ -386,10 +313,12 @@
 
         tr:last-child td { border-bottom: none; }
 
-        tbody tr { transition: background 0.15s; }
+        tbody tr {
+            transition: background 0.15s;
+        }
         tbody tr:hover { background: #fafaf9; }
 
-        .proj-name {
+        .emp-id {
             font-family: var(--font-mono);
             font-size: 0.8rem;
             color: var(--accent);
@@ -397,9 +326,51 @@
             white-space: nowrap;
         }
 
-        .proj-title { font-weight: 500; color: var(--text-main); }
-        .proj-pi { white-space: nowrap; }
-        .proj-email { font-size: 0.8rem; color: var(--text-muted); }
+        .emp-name {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .emp-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .year-month-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+            text-transform: capitalize;
+        }
+
+        .dept-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .amount {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .amount.net { font-weight: 700; color: var(--text-main); }
 
         .wf-badge {
             display: inline-block;
@@ -409,24 +380,12 @@
             font-weight: 600;
             white-space: nowrap;
         }
+
         .wf-draft    { background: var(--status-draft-bg);    color: var(--status-draft-text); }
         .wf-approved { background: var(--status-approved-bg); color: var(--status-approved-text); }
         .wf-pending  { background: var(--status-pending-bg);  color: var(--status-pending-text); }
         .wf-rejected { background: var(--status-rejected-bg); color: var(--status-rejected-text); }
         .wf-default  { background: var(--status-draft-bg);    color: var(--text-muted); }
-
-        .date-cell { white-space: nowrap; }
-        .date-fallback-tag {
-            display: inline-block;
-            margin-left: 4px;
-            font-size: 0.68rem;
-            font-weight: 600;
-            color: var(--accent);
-            background: var(--accent-light);
-            border-radius: 4px;
-            padding: 1px 5px;
-            vertical-align: middle;
-        }
 
         /* ── Pagination ── */
         .pagination-bar {
@@ -440,9 +399,16 @@
             gap: 0.5rem;
         }
 
-        .pagination-info { font-size: 0.82rem; color: var(--text-muted); }
+        .pagination-info {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
 
-        .pagination-controls { display: flex; align-items: center; gap: 0.4rem; }
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
 
         .page-btn {
             display: inline-flex;
@@ -476,7 +442,9 @@
             gap: 0.75rem;
             text-align: center;
         }
+
         .state-box svg { opacity: 0.35; }
+
         .state-title {
             font-family: var(--font-serif);
             font-size: 1.1rem;
@@ -484,6 +452,7 @@
             color: var(--text-main);
             margin: 0;
         }
+
         .state-desc {
             font-size: 0.88rem;
             color: var(--text-muted);
@@ -517,21 +486,6 @@
         }
         .error-banner svg { flex-shrink: 0; margin-top: 1px; }
 
-        /* ── Open in Desk link ── */
-        .desk-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            text-decoration: none;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 3px 8px;
-            transition: all 0.15s;
-        }
-        .desk-link:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-
         /* ── Highlight match ── */
         mark {
             background: rgba(217, 119, 87, 0.15);
@@ -540,43 +494,31 @@
             padding: 0 1px;
         }
 
-        /* ── Print button ── */
-        .btn-print {
-            background: white;
-            border: 1px solid var(--border);
-            color: var(--text-main);
+        /* ── Filter pill ── */
+        .active-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--accent-light);
+            border: 1px solid rgba(217,119,87,0.3);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.78rem;
+            color: var(--accent);
+            font-weight: 600;
         }
-        .btn-print:not(:disabled):hover { background: var(--bg-page); border-color: #a1a1aa; }
-
-        /* ── Print-only header (hidden on screen) ── */
-        .print-header { display: none; }
-
-        /* ── Print stylesheet ── */
-        @media print {
-            .app-sidebar, .app-topbar, .search-card, .error-banner, .no-print, .sidebar-backdrop { display: none !important; }
-            body { display: block; background: #fff; }
-            .app-main { margin-left: 0; }
-            .app-content { margin-top: 0; padding: 0.5rem 0; max-width: 100%; }
-            .page-header { margin-bottom: 1rem; }
-            .results-card { border: none; box-shadow: none; border-radius: 0; }
-            .results-header { padding: 0 0 0.5rem 0; border-bottom: 2px solid #000; }
-            .print-header {
-                display: block;
-                margin-bottom: 0.75rem;
-                padding-bottom: 0.5rem;
-                border-bottom: 2px solid #000;
-            }
-            .print-header h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 0 0 0.25rem 0; }
-            .print-header p { font-size: 0.8rem; color: #444; margin: 0; }
-            table { font-size: 0.78rem; }
-            th { background: #fff !important; color: #000 !important; }
-            td { color: #000 !important; }
-            .wf-badge { border: 1px solid #999; background: #fff !important; color: #000 !important; }
-            mark { background: none !important; font-weight: 700; }
-            a[href]:after { content: none !important; }
+        .active-filter button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent);
+            padding: 0;
+            line-height: 1;
+            font-size: 0.85rem;
+            display: flex;
         }
 
-        /* ---- App shell (sidebar / topbar) ---- */
+        /* ── App shell (sidebar + topbar) ── */
         .app-shell { display: flex; min-height: 100vh; }
 
         .app-sidebar {
@@ -587,15 +529,28 @@
             top: 0; left: 0;
             height: 100vh;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 1.4rem 1rem 1.5rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
             z-index: 100;
-            transition: transform .25s ease, background-color .2s ease, border-color .2s ease;
+            transition: transform .25s ease, width .2s ease, background-color .2s ease, border-color .2s ease;
         }
 
-        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; }
+        .sidebar-collapse-btn {
+            position: absolute; top: 1.5rem; right: -13px;
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--surface); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; z-index: 101; padding: 0;
+            transition: color .15s, border-color .15s, transform .15s;
+        }
+        .sidebar-collapse-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .sidebar-collapse-btn svg { transition: transform .2s ease; }
+        body.sidebar-collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
+
+        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; transition: padding .2s ease, justify-content .2s ease; }
         .brand-logo {
             width: 30px; height: 30px; border-radius: 9px;
             background: linear-gradient(135deg, var(--accent), var(--accent-hover));
@@ -614,15 +569,27 @@
             color: var(--text-muted); font-size: .89rem; font-weight: 600;
             cursor: pointer; text-decoration: none; border: none; background: transparent;
             width: 100%; text-align: left; font-family: inherit;
-            transition: background .15s ease, color .15s ease;
+            transition: background .15s ease, color .15s ease, justify-content .2s ease, padding .2s ease;
         }
         .nav-item svg { flex-shrink: 0; }
+        .nav-item .nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .nav-item:hover { background: var(--accent-light); color: var(--accent); }
         .nav-item.active { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
         .nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
         .nav-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
 
-        .app-main { margin-left: var(--sidebar-width); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .app-main { margin-left: var(--sidebar-width); flex: 1; min-width: 0; display: flex; flex-direction: column; transition: margin-left .2s ease; }
+
+        /* Desktop sidebar collapse (persisted) — distinct from the mobile drawer below */
+        @media (min-width: 1081px) {
+            body.sidebar-collapsed .app-sidebar { width: var(--sidebar-width-collapsed); }
+            body.sidebar-collapsed .app-main { margin-left: var(--sidebar-width-collapsed); }
+            body.sidebar-collapsed .brand-text,
+            body.sidebar-collapsed .nav-group-label,
+            body.sidebar-collapsed .nav-label { display: none; }
+            body.sidebar-collapsed .brand-row { justify-content: center; padding-left: 0; padding-right: 0; }
+            body.sidebar-collapsed .nav-item { justify-content: center; padding: .62rem; }
+        }
 
         .app-topbar {
             position: sticky; top: 0; z-index: 90;
@@ -667,6 +634,7 @@
         #sidebar-toggle { display: none; }
         @media (max-width: 1080px) {
             #sidebar-toggle { display: flex; }
+            .sidebar-collapse-btn { display: none; }
             .app-sidebar { transform: translateX(-100%); }
             body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
             .app-main { margin-left: 0; }
@@ -687,13 +655,16 @@
         window.csrf_token = "{{ frappe.session.csrf_token }}";
     </script>
     {% if frappe.session.user == 'Guest' %}
-    <script>window.location.href = '/login?redirect-to=/funding_agency_search';</script>
+    <script>window.location.href = '/login?redirect-to=/salary_view';</script>
     {% endif %}
 
     <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
     <div class="app-shell">
         <aside class="app-sidebar">
+            <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
             <div class="brand-row">
                 <div class="brand-logo">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -705,29 +676,33 @@
                 <div>
                     <div class="nav-group-label">Tools</div>
                     <ul class="nav-list">
-                        <li><a class="nav-item " href="/kafka_control">
+                        <li><a class="nav-item" href="/kafka_control" title="Dashboard">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-                            Dashboard
+                            <span class="nav-label">Dashboard</span>
                         </a></li>
-                        <li><a class="nav-item " href="/project_search">
+                        <li><a class="nav-item active" href="/salary_view" title="Salary View">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            <span class="nav-label">Salary View</span>
+                        </a></li>
+                        <li><a class="nav-item" href="/project_search" title="Project Search">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            Project Search
+                            <span class="nav-label">Project Search</span>
                         </a></li>
-                        <li><a class="nav-item active" href="/funding_agency_search">
+                        <li><a class="nav-item" href="/funding_agency_search" title="Funding Agencies">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
-                            Funding Agencies
+                            <span class="nav-label">Funding Agencies</span>
                         </a></li>
-                        <li><a class="nav-item " href="/pr_lookup">
+                        <li><a class="nav-item" href="/pr_lookup" title="PR Lookup">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                            PR Lookup
+                            <span class="nav-label">PR Lookup</span>
                         </a></li>
-                        <li><a class="nav-item " href="/pr_link_graph">
+                        <li><a class="nav-item" href="/pr_link_graph" title="PR Link Graph">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="12" cy="18" r="3"></circle><line x1="7.5" y1="7.5" x2="10" y2="16"></line><line x1="16.5" y1="7.5" x2="14" y2="16"></line></svg>
-                            PR Link Graph
+                            <span class="nav-label">PR Link Graph</span>
                         </a></li>
-                        <li><a class="nav-item " href="/project_delete">
+                        <li><a class="nav-item" href="/project_delete" title="Delete Project">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
-                            Delete Project
+                            <span class="nav-label">Delete Project</span>
                         </a></li>
                     </ul>
                 </div>
@@ -736,17 +711,17 @@
             <div class="nav-footer">
                 <div class="nav-group-label">Quick Links</div>
                 <ul class="nav-list">
-                    <li><a class="nav-item" href="/documentation">
+                    <li><a class="nav-item" href="/documentation" title="Documentation">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                        Documentation
+                        <span class="nav-label">Documentation</span>
                     </a></li>
-                    <li><a class="nav-item" href="/app">
+                    <li><a class="nav-item" href="/app" title="Frappe Desk">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                        Frappe Desk
+                        <span class="nav-label">Frappe Desk</span>
                     </a></li>
-                    <li><a class="nav-item" href="/rndops-leaderboard">
+                    <li><a class="nav-item" href="/rndops-leaderboard" title="Leaderboard">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
-                        Leaderboard
+                        <span class="nav-label">Leaderboard</span>
                     </a></li>
                 </ul>
             </div>
@@ -762,7 +737,7 @@
                     </svg>
                 </button>
 
-                <div class="topbar-title">Funding Agency Search<span>Search projects by funding agency</span></div>
+                <div class="topbar-title">Salary View<span>Year / month / employee-wise salary staging records</span></div>
 
                 <div class="topbar-actions">
                     <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">
@@ -780,23 +755,48 @@
             </header>
 
             <div class="app-content">
+
         <div class="page-header">
-            <h1 class="page-title">Search by Funding Agency</h1>
-            <p class="page-subtitle">Find every Project Registration funded by a given agency or PFMS Scheme, e.g. <em>ANRF - (Anusandhan National Research Foundation)</em> or <em>ARG Matrics General</em>.</p>
+            <h1 class="page-title">Salary View</h1>
+            <p class="page-subtitle">Browse and search all staged salary records — filter by year, month, status, or employee.</p>
         </div>
 
-        <!-- Search controls -->
+        <!-- Summary tiles -->
+        <div class="summary-row" id="summary-row" style="display:none;"></div>
+
+        <!-- Search / filter controls -->
         <div class="search-card">
             <div class="search-row">
                 <div class="field-group search-input-wrap">
-                    <span class="field-label">Funding Agency or Scheme Name</span>
+                    <span class="field-label">Search</span>
                     <input
-                        id="search-agency"
+                        id="search-query"
                         type="text"
                         class="field-input"
-                        placeholder="e.g. ANRF, SERB, DBT - Department of Biotechnology, ARG Matrics General…"
+                        placeholder="Employee id, name, email, department, designation…"
                         autocomplete="off"
                         onkeydown="if(event.key==='Enter') doSearch(1)">
+                </div>
+
+                <div class="field-group filter-input-wrap">
+                    <span class="field-label">Year</span>
+                    <select id="search-year" class="field-input" onchange="doSearch(1)">
+                        <option value="">All years</option>
+                    </select>
+                </div>
+
+                <div class="field-group filter-input-wrap">
+                    <span class="field-label">Month</span>
+                    <select id="search-month" class="field-input" onchange="doSearch(1)">
+                        <option value="">All months</option>
+                    </select>
+                </div>
+
+                <div class="field-group filter-input-wrap">
+                    <span class="field-label">Status</span>
+                    <select id="search-status" class="field-input" onchange="doSearch(1)">
+                        <option value="">All statuses</option>
+                    </select>
                 </div>
 
                 <div class="field-group page-size-wrap">
@@ -828,14 +828,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="note-banner">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                </svg>
-                <span>Also matches PFMS Account Details &mdash; Scheme Name (e.g. <em>ARG Matrics General</em>). Shows Account Type, Scheme Name, Project Start Date, End Date, and the earliest Fund Sanction Date for each project. When a project has no recorded Start Date, its Fund Sanction Date is shown in the Start Date column instead, tagged <strong>from sanction</strong>.</span>
-            </div>
         </div>
 
         <!-- Error banner (hidden by default) -->
@@ -859,16 +851,40 @@
 
     <script>
         // ── State ──────────────────────────────────────────────
-        let currentAgency   = '';
         let currentPage     = 1;
+        let currentQuery    = '';
+        let currentYear     = '';
+        let currentMonth    = '';
+        let currentStatus   = '';
         let currentPageSize = 20;
         let searching       = false;
+        let filtersLoaded   = false;
 
-        // ── Sidebar toggle ─────────────────────────────────────
+        const MONTH_ORDER = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+
         // Mobile sidebar drawer toggle
         function toggleSidebar() {
             document.body.classList.toggle('sidebar-open');
         }
+
+        // ---- Desktop sidebar collapse (persisted) ----
+        function applySidebarCollapsed(collapsed) {
+            document.body.classList.toggle('sidebar-collapsed', collapsed);
+            const btn = document.getElementById('sidebar-collapse-btn');
+            if (btn) {
+                const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+                btn.setAttribute('aria-label', label);
+                btn.setAttribute('title', label);
+            }
+        }
+        function toggleSidebarCollapse() {
+            const collapsed = !document.body.classList.contains('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+            applySidebarCollapsed(collapsed);
+        }
+        (function initSidebarCollapse() {
+            applySidebarCollapsed(localStorage.getItem('sidebarCollapsed') === '1');
+        })();
 
         // ---- Theme (light/dark) ----
         function applyTheme(theme) {
@@ -894,7 +910,7 @@
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
-            if (!str) return '';
+            if (str === null || str === undefined) return '';
             return String(str)
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
@@ -903,27 +919,37 @@
         }
 
         function highlightMatch(text, query) {
-            if (!query || !text) return escHtml(text);
+            if (text === null || text === undefined) return '';
+            if (!query) return escHtml(text);
             const safe = escHtml(text);
             const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
         }
 
-        function wfBadgeClass(state) {
-            if (!state) return 'wf-default';
-            const s = state.toLowerCase();
-            if (s.includes('approved') || s.includes('sanctioned') || s.includes('completed')) return 'wf-approved';
-            if (s.includes('pending') || s.includes('review') || s.includes('submitted')) return 'wf-pending';
-            if (s.includes('rejected') || s.includes('cancelled')) return 'wf-rejected';
-            if (s === 'draft') return 'wf-draft';
+        function fmtAmount(n) {
+            if (n === null || n === undefined || n === '') return '—';
+            const num = Number(n);
+            if (isNaN(num)) return escHtml(n);
+            return num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function fmtMonth(m) {
+            if (!m) return '';
+            return m.charAt(0).toUpperCase() + m.slice(1);
+        }
+
+        function statusBadgeClass(status) {
+            if (!status) return 'wf-default';
+            const s = status.toLowerCase();
+            if (s.includes('published') || s.includes('approved')) return 'wf-approved';
+            if (s.includes('pending')) return 'wf-pending';
+            if (s.includes('failed') || s.includes('rejected')) return 'wf-rejected';
             return 'wf-default';
         }
 
-        function formatDate(dateStr) {
-            if (!dateStr) return '—';
-            try {
-                return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-            } catch { return dateStr; }
+        function statusLabel(status) {
+            if (!status) return 'Unknown';
+            return status.replace(/_/g, ' ').replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase());
         }
 
         // ── Error handling ─────────────────────────────────────
@@ -932,6 +958,7 @@
             document.getElementById('error-msg').textContent = msg;
             banner.style.display = 'flex';
         }
+
         function hideError() {
             document.getElementById('error-banner').style.display = 'none';
         }
@@ -942,39 +969,62 @@
                 <div class="results-card">
                     <div class="state-box">
                         <div class="spinner"></div>
-                        <p class="state-desc">Searching projects…</p>
+                        <p class="state-desc">Loading salary records…</p>
                     </div>
                 </div>`;
         }
 
         // ── Render empty state ─────────────────────────────────
-        function renderEmpty(agency) {
+        function renderEmpty() {
             document.getElementById('results-area').innerHTML = `
                 <div class="results-card">
                     <div class="state-box">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            <line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
-                        <p class="state-title">No projects found</p>
-                        <p class="state-desc">No results for funding agency <strong>&ldquo;${escHtml(agency)}&rdquo;</strong>. Try a shorter keyword, e.g. just the agency's initials.</p>
+                        <p class="state-title">No salary records found</p>
+                        <p class="state-desc">Try a different keyword, or clear the year / month / status filters.</p>
                     </div>
                 </div>`;
         }
 
-        // ── Render idle state (on page load) ──────────────────
-        function renderIdle() {
-            document.getElementById('results-area').innerHTML = `
-                <div class="results-card">
-                    <div class="state-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        <p class="state-title">Start searching</p>
-                        <p class="state-desc">Enter a funding agency name or its initials (e.g. ANRF, SERB, DBT) to find all projects it funds.</p>
-                    </div>
-                </div>`;
+        // ── Populate filter dropdowns from available_year_months ──
+        function populateFilters(availableYearMonths, availableStatuses) {
+            if (filtersLoaded) return;
+            filtersLoaded = true;
+
+            const years = new Set();
+            const months = new Set();
+            (availableYearMonths || []).forEach(ym => {
+                const idx = ym.indexOf('_');
+                if (idx === -1) return;
+                years.add(ym.slice(0, idx));
+                months.add(ym.slice(idx + 1));
+            });
+
+            const yearSel = document.getElementById('search-year');
+            Array.from(years).sort((a, b) => b.localeCompare(a)).forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y; opt.textContent = y;
+                yearSel.appendChild(opt);
+            });
+
+            const monthSel = document.getElementById('search-month');
+            Array.from(months)
+                .sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b))
+                .forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m; opt.textContent = fmtMonth(m);
+                    monthSel.appendChild(opt);
+                });
+
+            const statusSel = document.getElementById('search-status');
+            (availableStatuses || []).forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s; opt.textContent = statusLabel(s);
+                statusSel.appendChild(opt);
+            });
         }
 
         // ── Pagination renderer ────────────────────────────────
@@ -983,6 +1033,7 @@
             const to   = Math.min(page * pageSize, total);
 
             let pageButtons = '';
+
             pageButtons += `<button class="page-btn" onclick="doSearch(${page - 1})" ${page <= 1 ? 'disabled' : ''}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1017,80 +1068,114 @@
             </button>`;
 
             return `
-                <div class="pagination-bar no-print">
-                    <span class="pagination-info">Showing <strong>${from}–${to}</strong> of <strong>${total}</strong> results</span>
+                <div class="pagination-bar">
+                    <span class="pagination-info">Showing <strong>${from}–${to}</strong> of <strong>${total}</strong> records</span>
                     <div class="pagination-controls">${pageButtons}</div>
                 </div>`;
         }
 
+        // ── Render summary tiles ────────────────────────────────
+        function renderSummary(results, total) {
+            const row = document.getElementById('summary-row');
+            if (!total) { row.style.display = 'none'; row.innerHTML = ''; return; }
+
+            const netTotal = results.reduce((sum, r) => sum + (Number(r.net_pay) || 0), 0);
+            const grossTotal = results.reduce((sum, r) => sum + (Number(r.gross_pay) || 0), 0);
+            const uniqueEmployees = new Set(results.map(r => r.employee_id)).size;
+
+            row.style.display = 'flex';
+            row.innerHTML = `
+                <div class="summary-tile">
+                    <div class="tile-label">Records (this page)</div>
+                    <div class="tile-value">${results.length}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="tile-label">Employees (this page)</div>
+                    <div class="tile-value">${uniqueEmployees}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="tile-label">Gross Pay (this page)</div>
+                    <div class="tile-value">₹${fmtAmount(grossTotal)}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="tile-label">Net Pay (this page)</div>
+                    <div class="tile-value">₹${fmtAmount(netTotal)}</div>
+                </div>`;
+        }
+
         // ── Render results table ───────────────────────────────
-        function renderResults(data, agency) {
+        function renderResults(data, query) {
             const { results, total, page, page_size } = data;
             const totalPgs = Math.ceil(total / page_size);
 
-            const headerRight = `<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;" class="no-print">
-                <span class="result-count-badge">${total.toLocaleString()} result${total !== 1 ? 's' : ''}</span>
-                <button class="btn btn-print" style="height:32px;padding:0 0.85rem;font-size:0.8rem;" onclick="window.print()" title="Print this page of results">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 6 2 18 2 18 9"/>
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                        <rect x="6" y="14" width="12" height="8"/>
-                    </svg>
-                    Print
-                </button>
-                <button class="btn btn-print" id="export-btn" style="height:32px;padding:0 0.85rem;font-size:0.8rem;" onclick="exportToExcel()" title="Export all matching results to a spreadsheet">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="12" y1="18" x2="12" y2="12"/>
-                        <line x1="9" y1="15" x2="15" y2="15"/>
-                    </svg>
-                    Export
-                </button>
+            renderSummary(results, total);
+
+            const filterPills = [];
+            if (currentYear) filterPills.push(`<span class="active-filter">Year: ${escHtml(currentYear)}<button onclick="clearFilter('search-year')" title="Remove filter">×</button></span>`);
+            if (currentMonth) filterPills.push(`<span class="active-filter">Month: ${escHtml(fmtMonth(currentMonth))}<button onclick="clearFilter('search-month')" title="Remove filter">×</button></span>`);
+            if (currentStatus) filterPills.push(`<span class="active-filter">Status: ${escHtml(statusLabel(currentStatus))}<button onclick="clearFilter('search-status')" title="Remove filter">×</button></span>`);
+
+            const headerRight = `<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                ${filterPills.join('')}
+                <span class="result-count-badge">${total.toLocaleString()} record${total !== 1 ? 's' : ''}</span>
             </div>`;
 
             let rows = results.map(r => {
-                const wfClass  = wfBadgeClass(r.workflow_state);
-                const projLink = `/app/project-registration/${encodeURIComponent(r.name)}`;
-                const usedSanctionAsStart = !r.start_date && !!r.fund_sanction_date;
-                const startCell = usedSanctionAsStart
-                    ? `${formatDate(r.effective_start_date)}<span class="date-fallback-tag" title="No Project Start Date recorded — showing Fund Sanction Date instead">from sanction</span>`
-                    : formatDate(r.start_date);
-
+                const wfClass = statusBadgeClass(r.status);
                 return `<tr>
+                    <td><span class="year-month-chip">${escHtml(r.year)} · ${escHtml(fmtMonth(r.month))}</span></td>
                     <td>
-                        <div class="proj-name">${highlightMatch(r.name, agency)}</div>
-                        ${r.project_no ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${escHtml(r.project_no)}</div>` : ''}
+                        <div class="emp-id">${highlightMatch(r.employee_id, query)}</div>
                     </td>
                     <td>
-                        <div class="proj-title">${escHtml(r.project_title || '—')}</div>
+                        <div class="emp-name">${highlightMatch(r.employee_name, query)}</div>
+                        ${r.email ? `<div class="emp-email">${highlightMatch(r.email, query)}</div>` : ''}
                     </td>
                     <td>
-                        <div class="proj-pi">${escHtml(r.pi_name || '—')}</div>
-                        ${r.pi_email ? `<div class="proj-email">${escHtml(r.pi_email)}</div>` : ''}
+                        ${r.department && r.department !== '—'
+                            ? `<div class="dept-chip">${highlightMatch(r.department, query)}</div>`
+                            : '<span style="color:var(--text-muted);font-size:0.8rem;">—</span>'}
                     </td>
-                    <td>${highlightMatch(r.funding_agency || '—', agency)}</td>
                     <td>
-                        ${r.scheme_name ? highlightMatch(r.scheme_name, agency) : '<span style="color:var(--text-muted);">—</span>'}
-                        ${r.account_type ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${escHtml(r.account_type)}</div>` : ''}
+                        <div style="font-size:0.82rem;color:var(--text-muted);">${highlightMatch(r.designation, query) || '—'}</div>
                     </td>
-                    <td class="date-cell">${startCell}</td>
-                    <td class="date-cell">${formatDate(r.end_date)}</td>
-                    <td class="date-cell">${formatDate(r.fund_sanction_date)}</td>
+                    <td><div style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">${escHtml(r.joining_date) || '—'}</div></td>
+                    <td><div style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">${escHtml(r.term_completion_date) || '—'}</div></td>
+                    <td><span class="amount">${fmtAmount(r.basic_salary)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.hra)}</span></td>
+                    <td><span class="amount">${r.working_days ?? '—'}</span></td>
+                    <td><span class="amount">${fmtAmount(r.pro_rata_basic)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.pro_rata_hra)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.pro_rata_medical)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.arrear)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.gross_pay)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.hra_deduction)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.medical_deduction)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.p_tax)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.ta)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.id_card_charge)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.electricity_bill)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.other_deduction)}</span></td>
+                    <td><span class="amount">${fmtAmount(r.total_deduction)}</span></td>
+                    <td><span class="amount net">${fmtAmount(r.net_pay)}</span></td>
+                    <td><div style="font-size:0.82rem;color:var(--text-muted);">${escHtml(r.project_number) || '—'}</div></td>
+                    <td><div style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">${escHtml(r.commit_date) || '—'}</div></td>
+                    <td><div style="font-size:0.82rem;color:var(--text-muted);max-width:180px;white-space:normal;">${escHtml(r.comment) || '—'}</div></td>
+                    <td><div style="font-size:0.82rem;color:var(--text-muted);max-width:220px;white-space:normal;">${escHtml(r.remarks) || '—'}</div></td>
                     <td>
-                        <span class="wf-badge ${wfClass}">${escHtml(r.workflow_state) || 'Draft'}</span>
+                        <span class="wf-badge ${wfClass}">${escHtml(statusLabel(r.status))}</span>
                     </td>
-                    <td class="no-print">
-                        <a class="desk-link" href="${projLink}" target="_blank" rel="noopener" title="Open in Desk">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                            </svg>
-                            Open
-                        </a>
+                    <td>
+                        <button
+                            class="btn btn-outline btn-delete"
+                            style="height:28px;padding:0 0.65rem;font-size:0.78rem;color:var(--danger, #d93025);border-color:var(--danger, #d93025);"
+                            data-year-month="${escHtml(r.year_month)}"
+                            data-employee-id="${escHtml(r.employee_id)}"
+                            data-employee-name="${escHtml(r.employee_name)}"
+                            data-project-number="${escHtml(r.project_number || '')}"
+                            data-commit-date="${escHtml(r.commit_date || '')}">
+                            Delete
+                        </button>
                     </td>
                 </tr>`;
             }).join('');
@@ -1098,35 +1183,51 @@
             document.getElementById('results-area').innerHTML = `
                 <div class="results-card">
                     <div class="results-header">
-                        <h2 class="results-title">Results</h2>
+                        <h2 class="results-title">Salary Records</h2>
                         ${headerRight}
-                    </div>
-                    <div class="print-header">
-                        <h2>Funding Agency / Scheme Name Search — rndopsapp</h2>
-                        <p>Search term: <strong>${escHtml(agency)}</strong> &nbsp;|&nbsp; ${total.toLocaleString()} result${total !== 1 ? 's' : ''} total, showing page ${page} of ${totalPgs || 1} &nbsp;|&nbsp; Generated ${new Date().toLocaleString('en-IN')}</p>
                     </div>
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Project No / Name</th>
-                                    <th>Title</th>
-                                    <th>Principal Investigator</th>
-                                    <th>Funding Agency</th>
-                                    <th>Scheme Name / Account Type</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Fund Sanction Date</th>
-                                    <th>Workflow State</th>
-                                    <th class="no-print"></th>
+                                    <th>Year / Month</th>
+                                    <th>Employee ID</th>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                    <th>Joining Date</th>
+                                    <th>Term Completion</th>
+                                    <th>Basic</th>
+                                    <th>HRA</th>
+                                    <th>Working Days</th>
+                                    <th>Pro-rata Basic</th>
+                                    <th>Pro-rata HRA</th>
+                                    <th>Pro-rata Medical</th>
+                                    <th>Arrear</th>
+                                    <th>Gross Pay</th>
+                                    <th>HRA Deduction</th>
+                                    <th>Medical Deduction</th>
+                                    <th>P.Tax</th>
+                                    <th>TA</th>
+                                    <th>ID Card Charge</th>
+                                    <th>Electricity Bill</th>
+                                    <th>Other Deduction</th>
+                                    <th>Total Deductions</th>
+                                    <th>Net Pay</th>
+                                    <th>Project #</th>
+                                    <th>Commit Date</th>
+                                    <th>Comment</th>
+                                    <th>Remarks</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>${rows}</tbody>
                         </table>
                     </div>
                     ${totalPgs > 1 ? renderPagination(page, totalPgs, total, page_size) : `
-                    <div class="pagination-bar no-print">
-                        <span class="pagination-info">${total} result${total !== 1 ? 's' : ''}</span>
+                    <div class="pagination-bar">
+                        <span class="pagination-info">${total} record${total !== 1 ? 's' : ''}</span>
                     </div>`}
                 </div>`;
         }
@@ -1135,17 +1236,17 @@
         async function doSearch(page) {
             if (searching) return;
 
-            const agency   = document.getElementById('search-agency').value.trim();
+            const query    = document.getElementById('search-query').value.trim();
+            const year     = document.getElementById('search-year').value;
+            const month    = document.getElementById('search-month').value;
+            const status   = document.getElementById('search-status').value;
             const pageSize = parseInt(document.getElementById('search-page-size').value, 10) || 20;
 
-            if (!agency) {
-                renderIdle();
-                hideError();
-                return;
-            }
-
             searching = true;
-            currentAgency   = agency;
+            currentQuery    = query;
+            currentYear     = year;
+            currentMonth    = month;
+            currentStatus   = status;
             currentPage     = page || 1;
             currentPageSize = pageSize;
 
@@ -1158,12 +1259,15 @@
 
             try {
                 const params = new URLSearchParams({
-                    agency_name: agency,
-                    page:        currentPage,
-                    page_size:   pageSize
+                    page:      currentPage,
+                    page_size: pageSize
                 });
+                if (query) params.set('query', query);
+                if (year) params.set('year', year);
+                if (month) params.set('month', month);
+                if (status) params.set('status', status);
 
-                const url = `/api/method/rndopsapp.rndopsapp.doctype.project_registration.project_registration.search_projects_by_funding_agency?${params.toString()}`;
+                const url = `/api/method/rndopsapp.rndopsapp.commitPayment.search_salary_records?${params.toString()}`;
 
                 const resp = await fetch(url, {
                     headers: {
@@ -1187,15 +1291,22 @@
                     throw new Error(data.message || 'Server returned an error.');
                 }
 
+                populateFilters(data.available_year_months, data.available_statuses);
+                // Re-apply selected values now that options exist (first load only)
+                if (year) document.getElementById('search-year').value = year;
+                if (month) document.getElementById('search-month').value = month;
+                if (status) document.getElementById('search-status').value = status;
+
                 if (!data.results || data.results.length === 0) {
-                    renderEmpty(agency);
+                    renderSummary([], 0);
+                    renderEmpty();
                 } else {
-                    renderResults(data, agency);
+                    renderResults(data, query);
                 }
 
             } catch (err) {
                 showError('Search failed: ' + err.message);
-                renderIdle();
+                renderEmpty();
             } finally {
                 searching = false;
                 searchBtn.disabled = false;
@@ -1208,136 +1319,88 @@
             }
         }
 
-        // ── Export to Excel (CSV) ──────────────────────────────
-        function csvEscape(value) {
-            const s = (value === null || value === undefined) ? '' : String(value);
-            if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-            return s;
-        }
+        // ── Delete a single salary record ──────────────────────
+        async function deleteRecord(ds) {
+            const label = ds.employeeName ? `${ds.employeeName} (${ds.employeeId})` : ds.employeeId;
+            if (!confirm(`Delete salary record for ${label} — ${ds.yearMonth}?\n\nThis cannot be undone.`)) return;
 
-        async function fetchAllFundingAgencyResults(agency) {
-            const pageSize = 100;
-            let page = 1;
-            let total = Infinity;
-            let all = [];
-
-            while (all.length < total) {
-                const params = new URLSearchParams({ agency_name: agency, page, page_size: pageSize });
-                const url = `/api/method/rndopsapp.rndopsapp.doctype.project_registration.project_registration.search_projects_by_funding_agency?${params.toString()}`;
-                const resp = await fetch(url, {
-                    headers: { 'Accept': 'application/json', 'X-Frappe-CSRF-Token': window.csrf_token || '' }
-                });
-                const json = await resp.json();
-                if (!resp.ok) {
-                    const errMsg = (json.message && typeof json.message === 'string')
-                        ? json.message
-                        : (json.exc_type ? json.exc_type + ': check server logs' : resp.statusText);
-                    throw new Error(errMsg);
-                }
-                const data = json.message || json;
-                if (data.status === 'error') throw new Error(data.message || 'Server returned an error.');
-
-                total = data.total || 0;
-                all = all.concat(data.results || []);
-                if (!data.results || data.results.length === 0) break;
-                page++;
-            }
-
-            return { total, results: all };
-        }
-
-        async function exportToExcel() {
-            if (!currentAgency) return;
-
-            const btn = document.getElementById('export-btn');
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = 'Exporting…';
+            const password = prompt('Enter admin password to confirm deletion:');
+            if (!password) return;
 
             try {
-                const { results } = await fetchAllFundingAgencyResults(currentAgency);
-
-                if (!results.length) {
-                    alert('No results to export.');
-                    return;
-                }
-
-                const headers = [
-                    'Project No', 'Project Name', 'Title', 'Principal Investigator', 'PI Email',
-                    'Funding Agency', 'Scheme Name', 'Account Type',
-                    'Start Date', 'End Date', 'Fund Sanction Date', 'Workflow State'
-                ];
-
-                const lines = [headers.map(csvEscape).join(',')];
-                results.forEach(r => {
-                    const usedSanctionAsStart = !r.start_date && !!r.fund_sanction_date;
-                    lines.push([
-                        r.project_no || '',
-                        r.name || '',
-                        r.project_title || '',
-                        r.pi_name || '',
-                        r.pi_email || '',
-                        r.funding_agency || '',
-                        r.scheme_name || '',
-                        r.account_type || '',
-                        usedSanctionAsStart ? `${r.effective_start_date} (from sanction)` : (r.start_date || ''),
-                        r.end_date || '',
-                        r.fund_sanction_date || '',
-                        r.workflow_state || ''
-                    ].map(csvEscape).join(','));
+                const resp = await fetch('/api/method/rndopsapp.rndopsapp.commitPayment.delete_salary_record', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Frappe-CSRF-Token': window.csrf_token || ''
+                    },
+                    body: JSON.stringify({
+                        year_month: ds.yearMonth,
+                        employee_id: ds.employeeId,
+                        project_number: ds.projectNumber || undefined,
+                        commit_date: ds.commitDate || undefined,
+                        override_password: password
+                    })
                 });
 
-                // Prefix with UTF-8 BOM so Excel opens special characters correctly
-                const csvContent = '﻿' + lines.join('\r\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const safeAgency = currentAgency.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'search';
-                const stamp = new Date().toISOString().slice(0, 10);
+                const json = await resp.json();
+                const data = json.message || json;
 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `funding_agency_search_${safeAgency}_${stamp}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (e) {
-                alert('Export failed: ' + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
+                if (!resp.ok || data.status === 'error') {
+                    throw new Error(data.message || 'Delete failed');
+                }
+
+                doSearch(currentPage);
+            } catch (err) {
+                showError('Delete failed: ' + err.message);
             }
         }
+
+        document.getElementById('results-area').addEventListener('click', e => {
+            const btn = e.target.closest('.btn-delete');
+            if (!btn) return;
+            deleteRecord(btn.dataset);
+        });
 
         // ── Clear helpers ──────────────────────────────────────
         function clearSearch() {
-            document.getElementById('search-agency').value = '';
-            currentAgency = '';
-            hideError();
-            renderIdle();
+            document.getElementById('search-query').value = '';
+            document.getElementById('search-year').value = '';
+            document.getElementById('search-month').value = '';
+            document.getElementById('search-status').value = '';
+            doSearch(1);
+        }
+
+        function clearFilter(elId) {
+            document.getElementById(elId).value = '';
+            doSearch(1);
         }
 
         // ── Keyboard shortcut: / to focus search ──────────────
         document.addEventListener('keydown', e => {
             if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                document.getElementById('search-agency').focus();
+                document.getElementById('search-query').focus();
             }
         });
 
         // ── Init ───────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
-            renderIdle();
-
-            // Support URL param ?agency=... for direct links
+            // Support URL params for direct links: ?q=&year=&month=&status=
             const params = new URLSearchParams(window.location.search);
-            const a = params.get('agency') || params.get('agency_name') || '';
-            if (a) {
-                document.getElementById('search-agency').value = a;
-                doSearch(1);
-            } else {
-                document.getElementById('search-agency').focus();
-            }
+            const q = params.get('q') || params.get('query') || '';
+            const y = params.get('year') || '';
+            const m = params.get('month') || '';
+            const s = params.get('status') || '';
+            if (q) document.getElementById('search-query').value = q;
+
+            doSearch(1).then(() => {
+                if (y) document.getElementById('search-year').value = y;
+                if (m) document.getElementById('search-month').value = m;
+                if (s) document.getElementById('search-status').value = s;
+                if (y || m || s) doSearch(1);
+            });
         });
     </script>
 </body>

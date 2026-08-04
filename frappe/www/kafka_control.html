@@ -518,6 +518,18 @@
             margin-right: 0.5rem;
         }
 
+        .term-error-sep {
+            display: block;
+            color: #ff6b6b;
+            font-weight: 700;
+            letter-spacing: 1px;
+            white-space: pre;
+            text-align: center;
+            overflow: hidden;
+            margin: 0.75rem 0;
+            text-shadow: 0 0 6px rgba(255, 107, 107, 0.5);
+        }
+
         /* Workflow Override — restructured layout */
         .wf-override-body {
             display: grid;
@@ -870,7 +882,17 @@
         .sysmon-info-tile-value { font-size: 1.05rem; font-weight: 800; margin-top: 2px; letter-spacing: -0.01em; }
 
         /* Sidebar quick-links footer group */
-        .nav-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
+        .nav-footer { border-top: 1px solid var(--border); padding-top: 1rem; flex-shrink: 0; }
+        .nav-footer-header {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; background: transparent; border: none; cursor: pointer;
+            padding: 0 .6rem; margin-bottom: .45rem; font-family: inherit;
+        }
+        .nav-footer-header .nav-group-label { margin-bottom: 0; padding: 0; }
+        .nav-footer-header svg { color: var(--text-muted); transition: transform .18s ease; flex-shrink: 0; }
+        .nav-footer.open .nav-footer-header svg { transform: rotate(90deg); }
+        .nav-footer-list { display: none; }
+        .nav-footer.open .nav-footer-list { display: flex; flex-direction: column; }
 
         /* Warning / info banners */
         .banner {
@@ -1110,12 +1132,23 @@
                 </div>
             </div>
 
-            <div class="nav-footer">
-                <div class="nav-group-label">Quick Links</div>
-                <ul class="nav-list">
+            <div class="nav-footer" id="quick-links-footer">
+                <button type="button" class="nav-footer-header" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quick-links-list">
+                    <div class="nav-group-label">Quick Links</div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+                <ul class="nav-list nav-footer-list" id="quick-links-list">
                     <li><a class="nav-item" href="/documentation">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                         Documentation
+                    </a></li>
+                    <li><a class="nav-item" href="/iitg_scrape_sync">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                        IITG Scrape Sync
+                    </a></li>
+                    <li><a class="nav-item" href="/salary_view">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Salary View
                     </a></li>
                     <li><a class="nav-item" href="/project_search">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -1128,6 +1161,14 @@
                     <li><a class="nav-item" href="http://172.16.131.206:8000/pr_link_graph" target="_blank">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="12" cy="18" r="3"></circle><line x1="7.5" y1="7.5" x2="10" y2="16"></line><line x1="16.5" y1="7.5" x2="14" y2="16"></line></svg>
                         PR Link Graph ↗
+                    </a></li>
+                    <li><a class="nav-item" href="/project_delete">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                        Delete Project
+                    </a></li>
+                    <li><a class="nav-item" href="/document_edit">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Document Editor
                     </a></li>
                     <li><a class="nav-item" href="/funding_agency_search">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
@@ -1290,9 +1331,17 @@
                 </button>
             </div>
 
-            <div class="section-heading" style="margin-bottom:1rem;">
-                <h1 style="font-size:1.05rem;">System Resources</h1>
-                <p style="margin:0;">Host CPU, memory and storage — refreshes every 5s.</p>
+            <div class="section-heading" style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                    <h1 style="font-size:1.05rem;">System Resources</h1>
+                    <p style="margin:0;">Host CPU, memory and storage — refreshes every 5s.</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <button id="btn-clear-cache" class="btn btn-secondary" onclick="clearSystemCache()" title='Runs: sudo sh -c "sync && echo 3 > /proc/sys/vm/drop_caches" and clears Frappe cache' style="padding:0.45rem 0.85rem; font-size:0.82rem; font-weight:600; background:var(--card-bg); border:1px solid var(--border);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        🧹 Clear Cache &amp; Drop OS Caches
+                    </button>
+                </div>
             </div>
             <div class="sysmon-grid" id="sysmon-grid">
                 <div class="metric-chart-card">
@@ -1335,6 +1384,53 @@
                     <div class="metric-chart-svg-wrap" id="sysmon-disk-wrap"></div>
                 </div>
             </div>
+
+            <!-- free -h Memory & Swap Breakdown -->
+            <div class="card" style="margin-bottom: 1.1rem; padding: 1rem 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                        Memory &amp; Swap Statistics (free -h)
+                    </div>
+                    <code style="font-size: 0.74rem; background: var(--code-bg); color: var(--code-text); padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">sudo sh -c "sync &amp;&amp; echo 3 &gt; /proc/sys/vm/drop_caches"</code>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 0.83rem; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border); text-align: right; color: var(--text-muted); font-size: 0.78rem;">
+                                <th style="text-align: left; padding: 0.4rem 0.6rem;">Type</th>
+                                <th style="padding: 0.4rem 0.6rem;">total</th>
+                                <th style="padding: 0.4rem 0.6rem;">used</th>
+                                <th style="padding: 0.4rem 0.6rem;">free</th>
+                                <th style="padding: 0.4rem 0.6rem;">shared</th>
+                                <th style="padding: 0.4rem 0.6rem;">buff/cache</th>
+                                <th style="padding: 0.4rem 0.6rem;">available</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-sub,#2a2a2a); text-align: right;">
+                                <td style="text-align: left; padding: 0.5rem 0.6rem; font-weight: 600; color: var(--text-main);">Mem:</td>
+                                <td style="padding: 0.5rem 0.6rem;" id="free-mem-total">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--warning);" id="free-mem-used">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--success);" id="free-mem-free">—</td>
+                                <td style="padding: 0.5rem 0.6rem;" id="free-mem-shared">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--accent);" id="free-mem-buffcache">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--success); font-weight: 600;" id="free-mem-available">—</td>
+                            </tr>
+                            <tr style="text-align: right;">
+                                <td style="text-align: left; padding: 0.5rem 0.6rem; font-weight: 600; color: var(--text-main);">Swap:</td>
+                                <td style="padding: 0.5rem 0.6rem;" id="free-swap-total">—</td>
+                                <td style="padding: 0.5rem 0.6rem;" id="free-swap-used">—</td>
+                                <td style="padding: 0.5rem 0.6rem;" id="free-swap-free">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted);">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted);">—</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted);">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="sysmon-info-grid" id="sysmon-info-grid">
                 <div class="sysmon-info-tile">
                     <div class="sysmon-info-tile-label">Uptime</div>
@@ -1477,7 +1573,9 @@
                     <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
                         Fix a wrong Project No. in one place. Find the Project Registration by its current
                         (possibly wrong) project number or document name, preview every application record that
-                        currently caches that number, then replace it everywhere in one transaction.
+                        currently caches that number, then replace it everywhere in one transaction. The change is
+                        also mirrored to the external account portal via
+                        <code>POST /api/projects/&lt;project_no&gt;/change-project-number</code> (172.16.134.81:18080).
                     </p>
 
                     <div class="wizard-steps" id="pno-wizard-steps">
@@ -1503,6 +1601,26 @@
                     </div>
 
                     <div id="pno-found-card" style="display: none;"></div>
+
+                    <!-- Reason + account-portal sync options (shared by both modes below) -->
+                    <div id="pno-sync-options" style="display: none; margin-top: 0.75rem; padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-sidebar);">
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:600;margin-bottom:0.6rem;">Account Portal Sync (172.16.134.81:18080)</div>
+                        <div style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Reason for change <span style="color:var(--danger,#dc2626);">*</span></label>
+                            <input type="text" id="pno-reason" class="form-input" placeholder="e.g. Corrected typo in category code" style="width: 100%; max-width: 520px;">
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;">
+                            <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                                <input type="checkbox" id="pno-update-archive" checked> Update Archive Tables
+                            </label>
+                            <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                                <input type="checkbox" id="pno-update-audit" checked> Update Audit Tables
+                            </label>
+                            <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                                <input type="checkbox" id="pno-update-beneficiary" checked> Update Beneficiary Project Number
+                            </label>
+                        </div>
+                    </div>
 
                     <!-- Step 2: choose Generate New vs Manual Entry (shown after a project is found) -->
                     <div id="pno-mode-tabs" style="display: none; gap: 0; border-bottom: 2px solid var(--border);">
@@ -1539,6 +1657,7 @@
 
                     <div id="pno-impact-wrap" style="display: none;"></div>
                     <div id="pno-result" class="console-output terminal-mode" style="display: none; height: auto; max-height: 260px; margin-top: 0.5rem;"></div>
+                    <div id="pno-external-ack" style="display: none; margin-top: 0.75rem;"></div>
                 </div>
             </div>
 
@@ -1636,7 +1755,9 @@
                         Enter a Project Registration document name or project number. Preview shows every linked
                         document across all doctypes (direct links, cached project numbers, and chained references —
                         the same map used by the <a href="http://172.16.131.206:8000/pr_link_graph" target="_blank" style="color:var(--accent);">PR Link Graph</a>).
-                        Deleting removes <strong>all of it, including the Project Registration itself</strong>. This cannot be undone.
+                        Deleting removes <strong>all of it, including the Project Registration itself</strong>, and sends
+                        <code>DELETE /api/projects/&lt;project_no&gt;</code> to the external project tracking service
+                        (172.16.134.81:18080). This cannot be undone.
                     </p>
 
                     <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
@@ -1693,6 +1814,7 @@
                                 <option value="Travel">Travel</option>
                                 <option value="TA DA Settlement">TA DA Settlement</option>
                                 <option value="Indent General Form">Indent General Form</option>
+                                <option value="Miscellaneous Commit">Miscellaneous Commit</option>
                             </select>
                         </div>
                         <div style="flex: 1; min-width: 250px;">
@@ -1759,6 +1881,7 @@
                                     <option value="Selection Committee Report">Selection Committee Report</option>
                                     <option value="Leave Module">Leave Module</option>
                                     <option value="Top Up Fellowship">Top Up Fellowship</option>
+                                    <option value="Miscellaneous Commit">Miscellaneous Commit</option>
                                 </select>
                             </div>
                             <div class="form-group" style="flex: 1; min-width: 220px;">
@@ -1961,6 +2084,41 @@
             </div>
         </div>
 
+        <!-- Clear Bench Log Files -->
+        <div class="card danger-card" data-section="danger" style="grid-column: 1 / -1;">
+            <div class="card-header">
+                <h3 class="card-title">🧹 Clear Bench Log Files</h3>
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);">DANGER ZONE</span>
+            </div>
+            <div class="control-group">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+                    Truncates <code>logs/terminal.log</code> and <code>logs/worker.error.log</code> on disk
+                    (both can grow unbounded over time — terminal.log especially, since it re-appends the
+                    full tmux capture on every "Terminal" tab poll). This does not stop or restart any process.
+                </p>
+                <div id="bench-log-sizes" style="display:flex; gap:1rem; font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--text-muted);">
+                    <span>terminal.log: <strong style="color:var(--text-main);">…</strong></span>
+                    <span>worker.error.log: <strong style="color:var(--text-main);">…</strong></span>
+                </div>
+                <div class="form-row" style="align-items: flex-end;">
+                    <button class="btn btn-danger" onclick="clearBenchLogFiles()" id="bench-log-clear-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                        Clear Log Files
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadBenchLogFileSizes()" title="Refresh sizes"
+                        style="padding: 0.5rem 0.7rem;">⟳</button>
+                    <span id="bench-log-clear-status" style="font-size:0.9rem;"></span>
+                </div>
+            </div>
+        </div>
+
         <!-- System Logs/Console -->
         <div class="card" data-section="logs">
             <div class="terminal-toolbar" style="justify-content: flex-start; gap: 1rem; margin-bottom:0;">
@@ -2099,6 +2257,25 @@
             document.body.classList.toggle('sidebar-open');
         }
 
+        // ---- Sidebar: collapsible Quick Links ----
+        function setQuickLinksOpen(open) {
+            const footer = document.getElementById('quick-links-footer');
+            const header = footer && footer.querySelector('.nav-footer-header');
+            if (!footer) return;
+            footer.classList.toggle('open', open);
+            if (header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
+            localStorage.setItem('kafkaControlQuickLinksOpen', open ? '1' : '0');
+        }
+        function toggleQuickLinks() {
+            const footer = document.getElementById('quick-links-footer');
+            setQuickLinksOpen(!footer.classList.contains('open'));
+        }
+        (function initQuickLinks() {
+            document.addEventListener('DOMContentLoaded', () => {
+                setQuickLinksOpen(localStorage.getItem('kafkaControlQuickLinksOpen') === '1');
+            });
+        })();
+
         // ---- Theme (light/dark) ----
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
@@ -2157,6 +2334,7 @@
             if (name === 'dashboard') { updateHeroStats(); loadSystemMonitoring(); }
             if (name === 'database') { renderSqlHistory(); loadDoctypeExplorerListOnce(); }
             if (name === 'activity_log') loadActivityLog();
+            if (name === 'danger') loadBenchLogFileSizes();
         }
 
         // ---- Global search: filters cards visible in the active section ----
@@ -2324,6 +2502,41 @@
             renderMetricChart(`sysmon-${prefix}-wrap`, sysmonHistory[prefix], colorVar);
         }
 
+        function fmtFreeBytes(bytes) {
+            if (bytes === null || bytes === undefined) return '—';
+            if (bytes === 0) return '0B';
+            const gi = 1024 * 1024 * 1024;
+            const mi = 1024 * 1024;
+            const ki = 1024;
+            if (bytes >= gi) {
+                return (bytes / gi).toFixed(1) + 'Gi';
+            } else if (bytes >= mi) {
+                return (bytes / mi).toFixed(1) + 'Mi';
+            } else if (bytes >= ki) {
+                return (bytes / ki).toFixed(1) + 'Ki';
+            }
+            return bytes + 'B';
+        }
+
+        async function clearSystemCache() {
+            const btn = document.getElementById('btn-clear-cache');
+            if (!btn) return;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '🧹 Clearing...';
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.clear_system_cache');
+                const msg = (r.message && r.message.message) ? r.message.message : (r.message || 'Cache cleared.');
+                alert('Cache Action Result:\n' + msg);
+                await loadSystemMonitoring(false);
+            } catch (e) {
+                alert('Error clearing cache: ' + (e.message || e));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
         async function loadSystemMonitoring(isAutoRefresh) {
             const grid = document.getElementById('sysmon-grid');
             if (isAutoRefresh && grid && grid.offsetParent === null) return; // dashboard not visible right now
@@ -2343,6 +2556,27 @@
                 sysmonHistory.disk.push(d.disk.percent);
                 if (sysmonHistory.disk.length > SYSMON_HISTORY_LEN) sysmonHistory.disk.shift();
                 updateMetricPanel('disk', 'var(--warning)', d.disk.percent, `${fmtBytes(d.disk.used)} / ${fmtBytes(d.disk.total)}`);
+
+                // free -h memory table
+                if (d.memory) {
+                    const mTotalEl = document.getElementById('free-mem-total');
+                    if (mTotalEl) {
+                        mTotalEl.textContent = fmtFreeBytes(d.memory.total);
+                        document.getElementById('free-mem-used').textContent = fmtFreeBytes(d.memory.used);
+                        document.getElementById('free-mem-free').textContent = fmtFreeBytes(d.memory.free);
+                        document.getElementById('free-mem-shared').textContent = fmtFreeBytes(d.memory.shared);
+                        document.getElementById('free-mem-buffcache').textContent = fmtFreeBytes(d.memory.buff_cache);
+                        document.getElementById('free-mem-available').textContent = fmtFreeBytes(d.memory.available);
+                    }
+                }
+                if (d.swap) {
+                    const sTotalEl = document.getElementById('free-swap-total');
+                    if (sTotalEl) {
+                        sTotalEl.textContent = fmtFreeBytes(d.swap.total);
+                        document.getElementById('free-swap-used').textContent = fmtFreeBytes(d.swap.used);
+                        document.getElementById('free-swap-free').textContent = fmtFreeBytes(d.swap.free);
+                    }
+                }
 
                 document.getElementById('sysmon-uptime').textContent = fmtDuration(d.uptime_seconds);
                 const la = d.load_average;
@@ -2396,6 +2630,23 @@
         };
         let currentTab = 'activity';
         let refreshInterval = null;
+        let sessionExpired = false;
+        const pollIntervalIds = [];
+
+        // The Frappe session cookie can expire while this tab stays open. When that happens every
+        // poller (fetchStatus every 10s, fetchBackendLogs every 3s, ...) starts hitting the API as
+        // Guest and gets a PermissionError ("... is not whitelisted.") — which floods the Terminal
+        // and Terminal Error tabs with the same traceback every few seconds. Stop polling on the
+        // first 403 and send the user to re-login instead of retrying forever.
+        function handleSessionExpired() {
+            if (sessionExpired) return;
+            sessionExpired = true;
+            pollIntervalIds.forEach(id => clearInterval(id));
+            log('Session expired — redirecting to login...', 'error');
+            setTimeout(() => {
+                window.location.href = '/login?redirect-to=' + encodeURIComponent(window.location.pathname);
+            }, 1500);
+        }
 
         // Logger for Activity Tab (Client-side events)
         function log(message, type = 'info') {
@@ -2457,6 +2708,9 @@
                 const data = await response.json();
 
                 if (!response.ok) {
+                    if (response.status === 403) {
+                        handleSessionExpired();
+                    }
                     throw new Error(data.message || data.exc || response.statusText);
                 }
 
@@ -2539,8 +2793,100 @@
             }
         }
 
+        // Every tmux-captured line is prefixed by honcho/Procfile as "HH:MM:SS process.N | <body>".
+        // Traceback frame lines repeat that prefix, so per-line keyword matching (the old approach)
+        // fragments a single traceback: lines like "raise exc" or blank separators don't contain
+        // "error"/"exception" and were silently dropped, splitting one traceback across two tabs.
+        // This keeps a whole block together — from "Traceback (most recent call last):" through the
+        // final "SomeException: message" summary line — plus any standalone error/status lines.
+        // Sentinel inserted between distinct error groups — the render step turns it into a
+        // horizontal divider instead of a log line, so consecutive errors don't run together.
+        const TERMINAL_ERROR_SEP = ' TERMINAL_ERROR_SEP ';
+
+        function extractTerminalErrorBlocks(lines) {
+            const result = [];
+            let mode = null; // null | 'block' | 'standalone' — tracks the current group's kind
+
+            const pushSeparatorIfNeeded = () => {
+                if (result.length > 0) result.push(TERMINAL_ERROR_SEP);
+            };
+
+            for (const line of lines) {
+                const prefixMatch = line.match(/^\d{2}:\d{2}:\d{2}\s+\S+\s*\|\s?(.*)$/);
+                const body = prefixMatch ? prefixMatch[1] : line;
+                const trimmedBody = body.trim();
+
+                if (/^Traceback \(most recent call last\):/.test(trimmedBody)) {
+                    pushSeparatorIfNeeded();
+                    mode = 'block';
+                    result.push(line);
+                    continue;
+                }
+
+                if (mode === 'block') {
+                    result.push(line);
+                    const isIndented = /^\s/.test(body);
+                    const isExceptionSummary = !isIndented && /\w+(Error|Exception|Warning)\b.*:/.test(trimmedBody);
+                    if (isExceptionSummary || trimmedBody === '') {
+                        mode = null;
+                    }
+                    continue;
+                }
+
+                if (/error|exception|critical/i.test(trimmedBody) || / (4\d{2}|5\d{2}) -\s*$/.test(trimmedBody)) {
+                    if (mode !== 'standalone') {
+                        pushSeparatorIfNeeded();
+                        mode = 'standalone';
+                    }
+                    result.push(line);
+                } else {
+                    // A non-matching line breaks contiguity — the next standalone match starts a new group
+                    mode = null;
+                }
+            }
+
+            return result;
+        }
+
+        // Same block detection as extractTerminalErrorBlocks, but for the unfiltered Terminal tab:
+        // every line is kept in original order, a separator is just inserted immediately before
+        // and after each traceback block so it stands out from the surrounding request traffic.
+        function insertBlockSeparators(lines) {
+            const result = [];
+            let inBlock = false;
+
+            for (const line of lines) {
+                const prefixMatch = line.match(/^\d{2}:\d{2}:\d{2}\s+\S+\s*\|\s?(.*)$/);
+                const body = prefixMatch ? prefixMatch[1] : line;
+                const trimmedBody = body.trim();
+
+                if (/^Traceback \(most recent call last\):/.test(trimmedBody)) {
+                    if (result.length > 0) result.push(TERMINAL_ERROR_SEP);
+                    inBlock = true;
+                    result.push(line);
+                    continue;
+                }
+
+                if (inBlock) {
+                    result.push(line);
+                    const isIndented = /^\s/.test(body);
+                    const isExceptionSummary = !isIndented && /\w+(Error|Exception|Warning)\b.*:/.test(trimmedBody);
+                    if (isExceptionSummary || trimmedBody === '') {
+                        inBlock = false;
+                        result.push(TERMINAL_ERROR_SEP);
+                    }
+                    continue;
+                }
+
+                result.push(line);
+            }
+
+            return result;
+        }
+
         // Fetch Backend Logs
         async function fetchBackendLogs() {
+            if (sessionExpired) return;
             if (logsPaused) return;
             if (!document.getElementById('auto-refresh').checked) return;
 
@@ -2549,12 +2895,9 @@
 
             const consoleEl = document.getElementById('console-output');
 
-            // Toggle Terminal Mode
-            if (currentTab === 'terminal' || currentTab === 'terminal_error' || currentTab === 'kafka_logs' || currentTab === 'po_logs') {
-                consoleEl.classList.add('terminal-mode');
-            } else {
-                consoleEl.classList.remove('terminal-mode');
-            }
+            // Terminal Mode sizing applies to every backend log tab (Activity already returned above),
+            // so Error/Consumer/Producer/Debug/Frappe match the Terminal tab's size.
+            consoleEl.classList.add('terminal-mode');
 
             try {
                 const linesArg = document.getElementById('log-lines').value || ((currentTab === 'terminal' || currentTab === 'terminal_error' || currentTab === 'kafka_logs' || currentTab === 'po_logs') ? 100 : 50);
@@ -2571,17 +2914,23 @@
                 if (r.message && r.message.content) {
                     let contentLines = r.message.content;
                     if (currentTab === 'terminal_error') {
-                        contentLines = contentLines.filter(line => line.includes('[ERROR]'));
+                        contentLines = extractTerminalErrorBlocks(contentLines);
                     } else if (currentTab === 'kafka_logs') {
                         contentLines = contentLines.filter(line => line.toLowerCase().includes('kafka'));
                     } else if (currentTab === 'po_logs') {
                         contentLines = contentLines.filter(line => line.includes('[PO UPLOAD]'));
                     } else if (currentTab === 'terminal') {
                         contentLines = contentLines.filter(line => !line.toLowerCase().includes('kafka') && !line.includes('[PO UPLOAD]'));
+                        contentLines = insertBlockSeparators(contentLines);
                     }
 
                     // Process lines and colorize
                     logs[currentTab] = contentLines.map(line => {
+                        if (line === TERMINAL_ERROR_SEP) {
+                            const banner = '------xxxx-----*****-----xxxx------'.repeat(3);
+                            return `<div class="term-error-sep">${banner}</div>`;
+                        }
+
                         let color = 'inherit';
                         let styledLine = line.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -2613,9 +2962,9 @@
                             // Error Highlight
                             if (styledLine.includes('[ERROR]')) {
                                 styledLine = styledLine.replace(/\[ERROR\]/g, '<span style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; padding: 2px 4px; border-radius: 4px; font-weight: bold; margin-right: 5px;">⚠️ [ERROR]</span>');
-                                if (currentTab === 'terminal_error') {
-                                    return `<div class="log-entry" style="color: #ff6b6b; background: rgba(255, 0, 0, 0.05); border-left: 3px solid #ff6b6b; padding-left: 10px;">${styledLine}</div>`;
-                                }
+                            }
+                            if (currentTab === 'terminal_error') {
+                                return `<div class="log-entry" style="color: #ff6b6b; background: rgba(255, 0, 0, 0.05); border-left: 3px solid #ff6b6b; padding-left: 10px;">${styledLine}</div>`;
                             }
                             if (currentTab === 'kafka_logs') {
                                 return `<div class="log-entry" style="color: #d0bfff; border-left: 3px solid #845ef7; padding-left: 10px;">${styledLine}</div>`;
@@ -2630,6 +2979,13 @@
                             else if (line.includes('WARNING')) color = '#f9ab00'; // yellow
                             else if (line.includes('INFO')) color = '#69db7c'; // green
                             else if (line.includes('DEBUG')) color = '#4dabf7'; // blue
+
+                            // Highlight the leading "YYYY-MM-DD HH:MM:SS" date/time so it's visible
+                            // instead of blending into the raw log text (Error/Consumer/Producer/Debug/Frappe tabs)
+                            styledLine = styledLine.replace(
+                                /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
+                                '<span class="log-time">$1</span>'
+                            );
                         }
 
                         return `<div class="log-entry" style="color: ${color}">${styledLine}</div>`;
@@ -2961,11 +3317,22 @@
                 const errors = res.errors || [];
                 const prDeletion = res.pr_deletion || {};
                 const prDeleted = (prDeletion.deleted || []).length > 0;
+                const ext = res.external_api_delete || {};
 
                 let html = `<span style="color:#69db7c;font-weight:bold;">✅ Deleted ${deleted.length} associated document(s).</span>\n`;
                 html += prDeleted
                     ? `<span style="color:#69db7c;font-weight:bold;">✅ Project Registration ${res.pr_name} deleted.</span>\n\n`
                     : `<span style="color:#ff6b6b;font-weight:bold;">⚠️ Project Registration ${res.pr_name} was NOT deleted — check PR deletion result below.</span>\n\n`;
+
+                html += `<span style="font-weight:bold;">External project API:</span>\n`;
+                if (!ext.attempted) {
+                    html += `  ⚪ skipped — ${escHtml(ext.message || 'no project_no on record')}\n\n`;
+                } else if (ext.ok) {
+                    html += `  <span style="color:#69db7c;">✅ DELETE ${escHtml(ext.url)} → ${ext.status_code}</span>\n\n`;
+                } else {
+                    html += `  <span style="color:#ff6b6b;">❌ DELETE ${escHtml(ext.url || '')} → FAILED (${escHtml(ext.error || ext.status_code || '')})</span>\n\n`;
+                }
+
                 if (deleted.length) html += `Associated documents deleted:\n` + deleted.map(d => `  • ${d}`).join('\n') + '\n\n';
                 if (errors.length) html += `<span style="color:#ff6b6b;font-weight:bold;">❌ Errors (${errors.length}):</span>\n` + errors.map(d => `  • ${d}`).join('\n') + '\n\n';
                 if ((prDeletion.errors || []).length) html += `<span style="color:#ff6b6b;font-weight:bold;">❌ PR deletion errors:</span>\n` + prDeletion.errors.map(d => `  • ${d}`).join('\n');
@@ -3089,6 +3456,7 @@
         let qbCurrentFields = []; // fields of the currently open doctype, for the Query Builder
         let qbLastResult = [];    // last Query Builder result rows, for Excel export
         let qbLastColumns = [];   // last Query Builder result columns, for Excel export
+        let qbChildFieldsCache = {}; // child_doctype -> fields[], cached so re-expanding doesn't re-fetch
 
         async function loadDoctypeExplorerListOnce() {
             if (doctypeExplorerLoaded) return;
@@ -3199,17 +3567,49 @@
                             <tbody>${fieldRows}</tbody>
                         </table>
                     </div>
+                    ${res.child_tables && res.child_tables.length ? `
+                    <div class="pr-section-label">Child Tables (${res.child_tables.length})</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem;">
+                        ${res.child_tables.map(ct => `<button type="button" class="wf-refresh-btn" style="display:flex;align-items:center;gap:0.4rem;" onclick="loadDoctypeExplorerDetail('${escHtml(ct.child_doctype)}')" title="${escHtml(ct.fieldname)} → ${escHtml(ct.child_doctype)}">
+                            <span style="font-family:'JetBrains Mono',monospace;">${escHtml(ct.fieldname)}</span> → ${escHtml(ct.child_doctype)}
+                        </button>`).join('')}
+                    </div>` : ''}
+                    ${res.linked_doctypes && res.linked_doctypes.length ? `
+                    <div class="pr-section-label">Linked Doctypes (${res.linked_doctypes.length})</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem;">
+                        ${res.linked_doctypes.map(ld => `<button type="button" class="wf-refresh-btn" style="display:flex;align-items:center;gap:0.4rem;" onclick="loadDoctypeExplorerDetail('${escHtml(ld.linked_doctype)}')" title="${escHtml(ld.fieldname)} → ${escHtml(ld.linked_doctype)}">
+                            <span style="font-family:'JetBrains Mono',monospace;">${escHtml(ld.fieldname)}</span> → ${escHtml(ld.linked_doctype)}
+                        </button>`).join('')}
+                    </div>` : ''}
                     <div class="pr-section-label">Data Preview</div>
                     ${dataTable}
 
                     <div class="pr-section-label" style="margin-top:1.25rem;">🔍 Query Builder — Filter, Select Columns &amp; Extract</div>
                     <div style="border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;background:var(--bg-page);">
-                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Columns</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
+                            <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Columns</div>
+                            <div style="display:flex;gap:0.5rem;">
+                                <button type="button" class="wf-refresh-btn" onclick="qbSetAllColumns(true)">Select All</button>
+                                <button type="button" class="wf-refresh-btn" onclick="qbSetAllColumns(false)">Deselect All</button>
+                            </div>
+                        </div>
                         <div class="pr-fields-grid" id="qb-columns-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
                             ${res.fields.map(f => `<label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;">
-                                <input type="checkbox" class="qb-column-checkbox" value="${escHtml(f.fieldname)}" checked> ${escHtml(f.fieldname)}
+                                <input type="checkbox" class="qb-column-checkbox" value="${escHtml(f.fieldname)}"> ${escHtml(f.fieldname)}
                             </label>`).join('')}
                         </div>
+
+                        ${res.child_tables && res.child_tables.length ? `
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 0.5rem;">Join Child Tables (adds their columns to the results)</div>
+                        <div id="qb-child-tables">
+                            ${res.child_tables.map(ct => `<div class="qb-child-table-block" data-fieldname="${escHtml(ct.fieldname)}" data-child-doctype="${escHtml(ct.child_doctype)}" style="border:1px solid var(--border);border-radius:6px;margin-bottom:0.5rem;overflow:hidden;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.7rem;cursor:pointer;background:var(--bg-sidebar);" onclick="toggleQbChildTable(this.parentElement)">
+                                    <span style="font-size:0.82rem;"><span class="qb-child-chevron">▸</span> <span style="font-family:'JetBrains Mono',monospace;">${escHtml(ct.fieldname)}</span> → ${escHtml(ct.child_doctype)}</span>
+                                    <button type="button" class="wf-refresh-btn" onclick="event.stopPropagation(); loadDoctypeExplorerDetail('${escHtml(ct.child_doctype)}')">↗ Explore</button>
+                                </div>
+                                <div class="qb-child-table-columns" style="display:none;padding:0.6rem 0.7rem;"></div>
+                            </div>`).join('')}
+                        </div>` : ''}
 
                         <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 0.5rem;">Filters</div>
                         <div id="qb-filter-rows"></div>
@@ -3249,6 +3649,54 @@
         }
 
         // ---- Query Builder: filters + column select, no raw SQL required ----
+        function qbSetAllColumns(checked) {
+            document.querySelectorAll('.qb-column-checkbox').forEach(cb => cb.checked = checked);
+        }
+
+        async function toggleQbChildTable(block) {
+            const columnsEl = block.querySelector('.qb-child-table-columns');
+            const chevron = block.querySelector('.qb-child-chevron');
+            const isExpanded = columnsEl.style.display !== 'none';
+            if (isExpanded) {
+                columnsEl.style.display = 'none';
+                chevron.textContent = '▸';
+                return;
+            }
+            columnsEl.style.display = 'block';
+            chevron.textContent = '▾';
+
+            const childDoctype = block.dataset.childDoctype;
+            if (!qbChildFieldsCache[childDoctype]) {
+                columnsEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;font-size:0.8rem;">Loading fields…</span>';
+                try {
+                    const r = await callMethod('rndopsapp.rndopsapp.api.get_doctype_schema_and_data', { doctype: childDoctype, limit: 1 });
+                    const res = r.message;
+                    if (!res || res.status !== 'success') throw new Error(res ? res.message : 'Unknown error');
+                    qbChildFieldsCache[childDoctype] = res.fields;
+                } catch (e) {
+                    columnsEl.innerHTML = `<span style="color:var(--danger);font-size:0.8rem;">❌ ${escHtml(e.message)}</span>`;
+                    return;
+                }
+            }
+
+            const fields = qbChildFieldsCache[childDoctype];
+            columnsEl.innerHTML = `
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-bottom:0.4rem;">
+                    <button type="button" class="wf-refresh-btn" onclick="qbSetAllChildColumns(this, true)">Select All</button>
+                    <button type="button" class="wf-refresh-btn" onclick="qbSetAllChildColumns(this, false)">Deselect All</button>
+                </div>
+                <div class="pr-fields-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
+                    ${fields.map(f => `<label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;cursor:pointer;">
+                        <input type="checkbox" class="qb-child-column-checkbox" value="${escHtml(f.fieldname)}"> ${escHtml(f.fieldname)}
+                    </label>`).join('')}
+                </div>`;
+        }
+
+        function qbSetAllChildColumns(btn, checked) {
+            const columnsEl = btn.closest('.qb-child-table-columns');
+            columnsEl.querySelectorAll('.qb-child-column-checkbox').forEach(cb => cb.checked = checked);
+        }
+
         function addQueryBuilderFilterRow() {
             const container = document.getElementById('qb-filter-rows');
             if (!container || !qbCurrentFields.length) return;
@@ -3297,6 +3745,12 @@
                 value: row.querySelector('.qb-filter-value').value,
             }));
 
+            const childTables = Array.from(document.querySelectorAll('.qb-child-table-block')).map(block => {
+                const fieldname = block.dataset.fieldname;
+                const cols = Array.from(block.querySelectorAll('.qb-child-column-checkbox:checked')).map(cb => cb.value);
+                return cols.length ? { fieldname, columns: cols } : null;
+            }).filter(Boolean);
+
             const limit = document.getElementById('qb-limit').value || 100;
             const runBtn = document.getElementById('qb-run-btn');
             const resultWrap = document.getElementById('qb-result-wrap');
@@ -3310,6 +3764,7 @@
                     doctype: activeExplorerDoctype,
                     columns: JSON.stringify(columns),
                     filters: JSON.stringify(filters),
+                    child_tables: JSON.stringify(childTables),
                     limit
                 });
                 const res = r.message;
@@ -3812,6 +4267,64 @@
                 statusEl.style.color = 'var(--status-stopped-text)';
                 statusEl.textContent = '❌ Error: ' + e.message;
                 log('Clear Mattermost error: ' + e.message, 'error');
+                return { ok: false, message: e.message };
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ---- Clear Bench Log Files ----
+        async function loadBenchLogFileSizes() {
+            const wrap = document.getElementById('bench-log-sizes');
+            if (!wrap) return;
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.get_bench_log_file_sizes');
+                const files = (r.message || {}).files || [];
+                wrap.innerHTML = files.map(f =>
+                    `<span>${escHtml(f.file)}: <strong style="color:var(--text-main);">${fmtBytes(f.size_bytes)}</strong></span>`
+                ).join('');
+            } catch (e) {
+                wrap.innerHTML = `<span style="color:var(--danger);">Failed to load sizes: ${escHtml(e.message)}</span>`;
+            }
+        }
+
+        async function clearBenchLogFiles() {
+            if (!confirm('⚠️ Truncate logs/terminal.log and logs/worker.error.log on disk?\nThis cannot be undone.')) return;
+
+            openWfPasswordModal(
+                (password) => doClearBenchLogFiles(password),
+                'Confirm clearing bench log files (terminal.log, worker.error.log). Enter the admin password to continue.'
+            );
+        }
+
+        async function doClearBenchLogFiles(password) {
+            const statusEl = document.getElementById('bench-log-clear-status');
+            const btn = document.getElementById('bench-log-clear-btn');
+
+            btn.disabled = true;
+            statusEl.style.color = 'var(--text-muted)';
+            statusEl.textContent = 'Clearing...';
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.clear_bench_log_files', { override_password: password });
+                const result = r.message || {};
+                if (result.status === 'cleared') {
+                    const freedBytes = (result.files || []).reduce((sum, f) => sum + (f.freed_bytes || 0), 0);
+                    statusEl.style.color = 'var(--status-running-text)';
+                    statusEl.textContent = `✅ Cleared ${(result.files || []).length} file(s), freed ${fmtBytes(freedBytes)}.`;
+                    log(`Bench log files cleared — freed ${fmtBytes(freedBytes)}.`, 'success');
+                    loadBenchLogFileSizes();
+                    return { ok: true };
+                } else {
+                    statusEl.style.color = 'var(--status-stopped-text)';
+                    statusEl.textContent = '❌ ' + (result.message || 'Unknown error');
+                    log('Clear bench log files failed: ' + (result.message || 'Unknown'), 'error');
+                    return { ok: false, message: result.message || 'Unknown error' };
+                }
+            } catch (e) {
+                statusEl.style.color = 'var(--status-stopped-text)';
+                statusEl.textContent = '❌ Error: ' + e.message;
+                log('Clear bench log files error: ' + e.message, 'error');
                 return { ok: false, message: e.message };
             } finally {
                 btn.disabled = false;
@@ -4465,6 +4978,11 @@
             document.getElementById('pno-new-value').value = '';
             document.getElementById('pno-found-card').style.display = 'none';
             document.getElementById('pno-found-card').innerHTML = '';
+            document.getElementById('pno-sync-options').style.display = 'none';
+            document.getElementById('pno-reason').value = '';
+            document.getElementById('pno-update-archive').checked = true;
+            document.getElementById('pno-update-audit').checked = true;
+            document.getElementById('pno-update-beneficiary').checked = true;
             document.getElementById('pno-mode-tabs').style.display = 'none';
             document.getElementById('pno-generate-pane').style.display = 'none';
             document.getElementById('pno-manual-pane').style.display = 'none';
@@ -4473,6 +4991,8 @@
             document.getElementById('pno-impact-wrap').style.display = 'none';
             document.getElementById('pno-impact-wrap').innerHTML = '';
             document.getElementById('pno-result').style.display = 'none';
+            document.getElementById('pno-external-ack').style.display = 'none';
+            document.getElementById('pno-external-ack').innerHTML = '';
             document.getElementById('pno-apply-btn').disabled = true;
         }
 
@@ -4524,6 +5044,7 @@
                             <span class="pr-wf-badge">🔒 ${escHtml(res.pr.workflow_state || '—')}</span>
                         </div>
                     </div>`;
+                document.getElementById('pno-sync-options').style.display = 'block';
                 document.getElementById('pno-mode-tabs').style.display = 'flex';
                 switchPnoMode('generate');
                 setPnoStep(2);
@@ -4578,23 +5099,35 @@
         async function applyGeneratedProjectNo() {
             if (!pnoFoundPr || !pnoGenerationPrefill) return;
 
+            const syncOpts = getPnoSyncOptions();
+            if (!syncOpts.reason) {
+                alert('Please enter a reason for the change (required for the account portal sync).');
+                document.getElementById('pno-reason').focus();
+                return;
+            }
+
             const confirmed = confirm(
                 `Generate a new project number for ${pnoFoundPr.name} (replacing '${pnoFoundPr.project_no || '(not set)'}') ` +
-                `and cascade it to every application record that caches it? This cannot be undone automatically.`
+                `and cascade it to every application record that caches it, plus the external account portal? ` +
+                `This cannot be undone automatically.`
             );
             if (!confirmed) return;
 
             const applyBtn = document.getElementById('pno-generate-apply-btn');
             const resultEl = document.getElementById('pno-result');
+            const ackEl = document.getElementById('pno-external-ack');
             applyBtn.disabled = true;
             applyBtn.textContent = 'Generating…';
             resultEl.style.display = 'block';
             resultEl.innerHTML = '<span style="color:var(--text-muted);">Generating new project number and applying…</span>';
+            ackEl.style.display = 'none';
+            ackEl.innerHTML = '';
 
             try {
                 const r = await callMethod('rndopsapp.rndopsapp.api.generate_new_project_no_and_apply', {
                     identifier: pnoFoundPr.name,
-                    generation_data: JSON.stringify(pnoGenerationPrefill)
+                    generation_data: JSON.stringify(pnoGenerationPrefill),
+                    ...syncOpts
                 });
                 const res = r.message;
                 if (res.status !== 'success') throw new Error(res.message || 'Unknown error');
@@ -4605,6 +5138,11 @@
                     .join('\n');
                 resultEl.innerHTML = `<span style="color:#69db7c;font-weight:bold;">✅ Generated project_no '${escHtml(res.new_project_no)}' (was '${escHtml(res.old_project_no || '(not set)')}') on ${escHtml(res.pr_name)}</span>\nCascaded to ${res.total_updated} record(s):\n${escHtml(lines || '  (no dependent records found)')}`;
                 log(`Project No. generated: ${res.old_project_no || '(none)'} → ${res.new_project_no} (${res.pr_name}), ${res.total_updated} record(s) updated`, 'success');
+
+                renderPnoExternalAck(res.external_portal, res.old_project_no, res.new_project_no);
+                if (res.warnings && res.warnings.length) {
+                    log('Project No. warning: ' + res.warnings.join(' '), 'error');
+                }
 
                 pnoFoundPr.project_no = res.new_project_no;
                 pnoGenerationPrefill = null;
@@ -4617,6 +5155,65 @@
                 applyBtn.disabled = false;
                 applyBtn.textContent = 'Generate & Apply Everywhere';
             }
+        }
+
+        function getPnoSyncOptions() {
+            return {
+                reason: document.getElementById('pno-reason').value.trim(),
+                update_archive_tables: document.getElementById('pno-update-archive').checked,
+                update_audit_tables: document.getElementById('pno-update-audit').checked,
+                update_beneficiary_project_number: document.getElementById('pno-update-beneficiary').checked,
+            };
+        }
+
+        function renderPnoExternalAck(extResult, oldNo, newNo) {
+            const ack = document.getElementById('pno-external-ack');
+            ack.style.display = 'block';
+            if (!extResult || !extResult.attempted) {
+                ack.innerHTML = `<div style="padding:0.85rem 1.1rem;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:0.85rem;font-style:italic;">${escHtml((extResult && extResult.message) || 'Account portal was not contacted (no prior project number to sync).')}</div>`;
+                return;
+            }
+
+            const resp = extResult.response;
+            const ok = !!extResult.ok;
+            const statusColor = ok ? '#69db7c' : '#ff6b6b';
+            const statusLabel = ok ? '✅ Account Portal Sync: SUCCESS' : '⚠️ Account Portal Sync: FAILED';
+
+            let body;
+            if (resp && typeof resp === 'object') {
+                const tables = Array.isArray(resp.updatedTables) ? resp.updatedTables : [];
+                const warns = Array.isArray(resp.warnings) ? resp.warnings : [];
+                const tableRows = tables.length
+                    ? `<table style="width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:0.5rem;">
+                        <thead><tr style="background:var(--table-header);">
+                            <th style="text-align:left;padding:0.4rem 0.7rem;border-bottom:1px solid var(--border);">Table</th>
+                            <th style="text-align:right;padding:0.4rem 0.7rem;border-bottom:1px solid var(--border);">Rows Affected</th>
+                        </tr></thead><tbody>
+                        ${tables.map(t => `<tr>
+                            <td style="padding:0.4rem 0.7rem;border-bottom:1px solid var(--border);"><code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">${escHtml(t.table)}</code></td>
+                            <td style="padding:0.4rem 0.7rem;border-bottom:1px solid var(--border);text-align:right;font-weight:700;color:var(--accent);">${t.rowsAffected}</td>
+                        </tr>`).join('')}
+                        </tbody></table>`
+                    : '';
+                body = `
+                    <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:0.85rem;margin-top:0.5rem;">
+                        <span>Status: <strong>${escHtml(resp.status || '—')}</strong></span>
+                        <span>Old No.: <strong style="font-family:'JetBrains Mono',monospace;">${escHtml(resp.oldProjectNumber ?? oldNo ?? '—')}</strong></span>
+                        <span>New No.: <strong style="font-family:'JetBrains Mono',monospace;">${escHtml(resp.newProjectNumber ?? newNo ?? '—')}</strong></span>
+                    </div>
+                    ${tableRows}
+                    ${warns.length ? `<div style="margin-top:0.6rem;color:#f0ad4e;font-size:0.85rem;">⚠️ ${warns.map(escHtml).join('<br>')}</div>` : ''}
+                `;
+            } else {
+                body = `<div style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">HTTP ${extResult.status_code ?? '—'}${extResult.error ? ' — ' + escHtml(extResult.error) : ''}${resp ? '<br>' + escHtml(typeof resp === 'string' ? resp : JSON.stringify(resp)) : ''}</div>`;
+            }
+
+            ack.innerHTML = `
+                <div style="padding:1rem 1.25rem;border:1px solid ${ok ? 'var(--border)' : '#ff6b6b'};border-radius:8px;background:${ok ? 'var(--bg-sidebar)' : 'rgba(255,107,107,0.08)'};">
+                    <div style="font-weight:700;color:${statusColor};">${statusLabel}</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;">POST ${escHtml(extResult.url || '')}</div>
+                    ${body}
+                </div>`;
         }
 
         function onPnoNewValueInput() {
@@ -4696,23 +5293,34 @@
             const newValue = document.getElementById('pno-new-value').value.trim();
             if (!newValue) { alert('Please enter the new Project No.'); return; }
 
+            const syncOpts = getPnoSyncOptions();
+            if (!syncOpts.reason) {
+                alert('Please enter a reason for the change (required for the account portal sync).');
+                document.getElementById('pno-reason').focus();
+                return;
+            }
+
             const confirmed = confirm(
                 `Replace project_no '${pnoFoundPr.project_no}' with '${newValue}' on ${pnoFoundPr.name} and cascade to every ` +
-                `application record that caches it? This cannot be undone automatically.`
+                `application record that caches it, plus the external account portal? This cannot be undone automatically.`
             );
             if (!confirmed) return;
 
             const applyBtn = document.getElementById('pno-apply-btn');
             const resultEl = document.getElementById('pno-result');
+            const ackEl = document.getElementById('pno-external-ack');
             applyBtn.disabled = true;
             applyBtn.textContent = 'Applying…';
             resultEl.style.display = 'block';
             resultEl.innerHTML = '<span style="color:var(--text-muted);">Applying change…</span>';
+            ackEl.style.display = 'none';
+            ackEl.innerHTML = '';
 
             try {
                 const r = await callMethod('rndopsapp.rndopsapp.api.apply_project_no_change', {
                     identifier: pnoFoundPr.name,
-                    new_project_no: newValue
+                    new_project_no: newValue,
+                    ...syncOpts
                 });
                 const res = r.message;
                 if (res.status !== 'success') throw new Error(res.message || 'Unknown error');
@@ -4723,6 +5331,11 @@
                     .join('\n');
                 resultEl.innerHTML = `<span style="color:#69db7c;font-weight:bold;">✅ Changed project_no '${escHtml(res.old_project_no)}' → '${escHtml(res.new_project_no)}' on ${escHtml(res.pr_name)}</span>\nCascaded to ${res.total_updated} record(s):\n${escHtml(lines || '  (no dependent records found)')}`;
                 log(`Project No. changed: ${res.old_project_no} → ${res.new_project_no} (${res.pr_name}), ${res.total_updated} record(s) updated`, 'success');
+
+                renderPnoExternalAck(res.external_portal, res.old_project_no, res.new_project_no);
+                if (res.warnings && res.warnings.length) {
+                    log('Project No. warning: ' + res.warnings.join(' '), 'error');
+                }
 
                 pnoFoundPr.project_no = res.new_project_no;
                 document.getElementById('pno-apply-btn').disabled = true;
@@ -4843,18 +5456,18 @@
             });
 
             // Poll status every 10 seconds
-            setInterval(fetchStatus, 10000);
+            pollIntervalIds.push(setInterval(fetchStatus, 10000));
 
             // Poll logs every 3 seconds
-            setInterval(fetchBackendLogs, 3000);
+            pollIntervalIds.push(setInterval(fetchBackendLogs, 3000));
 
             // Poll activity log (logins/impersonations) every 15 seconds — only
             // does anything if that section is visible and auto-refresh is on.
-            setInterval(() => loadActivityLog(true), 15000);
+            pollIntervalIds.push(setInterval(() => loadActivityLog(true), 15000));
 
             // Poll system resource stats (CPU/memory/disk) every 5 seconds — only
             // does anything if the dashboard section is visible.
-            setInterval(() => loadSystemMonitoring(true), 5000);
+            pollIntervalIds.push(setInterval(() => loadSystemMonitoring(true), 5000));
         });
     </script>
 </body>

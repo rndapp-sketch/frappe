@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit &amp; Security Dashboard — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page:    #f9f7f2;
+            --bg-card:    #ffffff;
+            --text-main:  #3f3f46;
+            --text-muted: #71717a;
+            --accent:     #2563EB;
+            --accent-light:#e8e2d4;
+            --border:     #e4e4e7;
+            --border-sub: #f0ede4;
+            --shadow-sm:  0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.03);
+            --shadow-md:  0 4px 12px rgba(0,0,0,.06);
+            --radius:     10px;
+            --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono:  'JetBrains Mono', monospace;
+
+            --surface: var(--bg-card, #ffffff);
+            --accent-hover: #1D4ED8;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+            --purple: #8b5cf6;
+            --purple-soft: #F3EEFF;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --bg-card: #111827;
+            --surface: #111827;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+            --border-sub: #1E293B;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+            --purple: #A78BFA;
+            --purple-soft: rgba(167, 139, 250, 0.14);
+        }
+        :root[data-theme="dark"] body { color-scheme: dark; }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .btn {
+            height: 34px;
+            padding: 0 .9rem;
+            border-radius: 7px;
+            font-family: var(--font-sans);
+            font-size: .82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            white-space: nowrap;
+            transition: all .15s;
+        }
+        .btn:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-primary  { background: #18181b; color: #fff; }
+        .btn-primary:not(:disabled):hover { opacity: .85; }
+        .btn-outline  { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:not(:disabled):hover { background: var(--bg-page); border-color: #a1a1aa; }
+        .btn-sm { height: 28px; padding: 0 .6rem; font-size: .74rem; border-radius: 6px; }
+
+        .field { height: 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-page);
+            color: var(--text-main); font-family: var(--font-sans); font-size: .82rem; padding: 0 .7rem; outline: none; }
+        .field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+        /* ── Topbar ── */
+        .topbar {
+            position: sticky; top: 0; z-index: 20;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .8rem 1.4rem; background: var(--surface); border-bottom: 1px solid var(--border);
+        }
+        .topbar h1 { font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: .5rem; }
+        .topbar h1 svg { color: var(--accent); }
+        .topbar-actions { display: flex; align-items: center; gap: .5rem; }
+        .who { font-size: .8rem; color: var(--text-muted); margin-right: .3rem; }
+        .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); }
+        .icon-btn:hover { background: var(--bg-page); }
+
+        /* ── Filter bar ── */
+        .filter-bar {
+            position: sticky; top: 53px; z-index: 19;
+            display: flex; flex-wrap: wrap; gap: .55rem; align-items: center;
+            padding: .7rem 1.4rem; background: var(--bg-page); border-bottom: 1px solid var(--border-sub);
+        }
+        .filter-bar label { font-size: .72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; margin-right: .25rem; }
+        .filter-group { display: flex; align-items: center; gap: .3rem; }
+        .filter-bar .spacer { flex: 1; }
+
+        .content { padding: 1.3rem 1.4rem 2.5rem; max-width: 1440px; margin: 0 auto; }
+
+        /* ── KPI cards ── */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .8rem; margin-bottom: 1.3rem; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: .95rem 1.05rem; box-shadow: var(--shadow-sm); }
+        .kpi-card .kpi-label { font-size: .72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; display: flex; align-items: center; gap: .35rem; }
+        .kpi-card .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: .3rem; font-family: var(--font-mono); }
+        .kpi-card .kpi-sub { font-size: .74rem; color: var(--text-muted); margin-top: .15rem; }
+        .kpi-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .kpi-card.accent .kpi-value { color: var(--accent); }
+        .kpi-card.success .kpi-value { color: var(--success); }
+        .kpi-card.danger .kpi-value { color: var(--danger); }
+        .kpi-card.warning .kpi-value { color: var(--warning); }
+        .kpi-card.purple .kpi-value { color: var(--purple); }
+
+        /* ── Charts ── */
+        .charts-row { display: grid; grid-template-columns: 1fr; gap: .9rem; margin-bottom: .9rem; }
+        .charts-row.split { grid-template-columns: 1.3fr 1fr; }
+        .charts-row.triple { grid-template-columns: repeat(3, 1fr); }
+        @media (max-width: 980px) { .charts-row.split, .charts-row.triple { grid-template-columns: 1fr; } }
+
+        .mini-list { display: flex; flex-direction: column; gap: .4rem; max-height: 260px; overflow-y: auto; }
+        .mini-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .4rem .55rem;
+            border: 1px solid var(--border-sub); border-radius: 7px; font-size: .78rem; }
+        .mini-row .mini-main { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+        .mini-row .mini-main strong { font-family: var(--font-mono); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mini-row .mini-sub { color: var(--text-muted); font-size: .7rem; }
+        .mini-row .mini-count { font-family: var(--font-mono); font-weight: 700; flex-shrink: 0; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem 1.1rem; box-shadow: var(--shadow-sm); }
+        .card h3 { font-size: .88rem; font-weight: 700; margin: 0 0 .15rem; }
+        .card .card-sub { font-size: .74rem; color: var(--text-muted); margin-bottom: .6rem; }
+        .legend { display: flex; flex-wrap: wrap; gap: .8rem; font-size: .74rem; color: var(--text-muted); margin-top: .5rem; }
+        .legend span { display: inline-flex; align-items: center; gap: .3rem; }
+        .legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+        .empty-chart { display:flex; align-items:center; justify-content:center; height:180px; color: var(--text-muted); font-size:.82rem; }
+
+        /* ── Tabs ── */
+        .tabs { display: flex; gap: .3rem; border-bottom: 1px solid var(--border); margin: 1.4rem 0 0; flex-wrap: wrap; }
+        .tab-btn { background: none; border: none; padding: .6rem .9rem; font-size: .82rem; font-weight: 600; color: var(--text-muted);
+            cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel { display: none; padding-top: .9rem; }
+        .tab-panel.active { display: block; }
+
+        .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+        table.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 720px; }
+        table.data-table th { text-align: left; padding: .55rem .8rem; font-size: .7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .03em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-page); white-space: nowrap; position: sticky; top: 0; }
+        table.data-table td { padding: .55rem .8rem; border-bottom: 1px solid var(--border-sub); vertical-align: top; }
+        table.data-table tbody tr:hover { background: var(--bg-page); }
+        table.data-table tbody tr:last-child td { border-bottom: none; }
+        .mono { font-family: var(--font-mono); font-size: .78rem; }
+        .muted { color: var(--text-muted); }
+
+        .field-diff-list { display: flex; flex-direction: column; gap: .25rem; min-width: 240px; }
+        .field-diff { font-size: .76rem; }
+        .field-diff .fname { font-weight: 600; }
+        .field-diff .fval { font-family: var(--font-mono); font-size: .72rem; }
+        .field-diff .arrow { color: var(--text-muted); margin: 0 .25rem; }
+
+        .badge { display: inline-flex; align-items: center; gap: .3rem; padding: .18rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; white-space: nowrap; }
+        .badge.ok { background: var(--success-soft); color: var(--success); }
+        .badge.fail { background: var(--danger-soft); color: var(--danger); }
+        .badge.neutral { background: var(--accent-light); color: var(--accent); }
+        .badge.warn { background: var(--warning-soft); color: var(--warning); }
+        .badge.purple { background: var(--purple-soft); color: var(--purple); }
+        .row-suspicious { background: var(--danger-soft) !important; }
+
+        .table-footer { display: flex; align-items: center; justify-content: space-between; padding: .6rem .8rem; font-size: .76rem; color: var(--text-muted); }
+        .table-empty { padding: 2.2rem; text-align: center; color: var(--text-muted); font-size: .85rem; }
+        .table-loading { padding: 2.2rem; text-align: center; color: var(--text-muted); font-size: .85rem; }
+
+        .source-tag { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: .1rem .45rem; border-radius: 5px; }
+        .source-tag.al { background: var(--accent-light); color: var(--accent); }
+        .source-tag.sal { background: var(--purple-soft); color: var(--purple); }
+        .source-tag.pal { background: var(--warning-soft); color: var(--warning); }
+        .source-tag.internal { background: var(--border-sub); color: var(--text-muted); }
+
+        .ip-link, .user-link { color: var(--accent); cursor: pointer; text-decoration: none; border-bottom: 1px dashed transparent; }
+        .ip-link:hover, .user-link:hover { border-bottom-color: var(--accent); }
+
+        .badge.critical { background: var(--danger-soft); color: var(--danger); }
+        .badge.info { background: var(--accent-light); color: var(--accent); }
+
+        /* ── Risk bands ── */
+        .risk-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .18rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+        .risk-badge.Critical { background: var(--danger-soft); color: var(--danger); }
+        .risk-badge.High { background: var(--warning-soft); color: var(--warning); }
+        .risk-badge.Medium { background: var(--accent-light); color: var(--accent); }
+        .risk-badge.Low { background: var(--success-soft); color: var(--success); }
+        .risk-bar-track { height: 6px; border-radius: 4px; background: var(--border-sub); overflow: hidden; width: 70px; display: inline-block; vertical-align: middle; margin-right: .5rem; }
+        .risk-bar-fill { height: 100%; border-radius: 4px; }
+        .risk-band-summary { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .8rem; }
+        .risk-band-chip { flex: 1; min-width: 90px; text-align: center; padding: .5rem; border-radius: 8px; border: 1px solid var(--border-sub); cursor: pointer; transition: opacity .15s; }
+        .risk-band-chip:hover { opacity: .8; }
+        .risk-band-chip.active { outline: 2px solid currentColor; }
+        .risk-band-chip .rb-count { font-size: 1.2rem; font-weight: 700; font-family: var(--font-mono); }
+        .risk-band-chip .rb-label { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+
+
+        /* ── Recommendations ── */
+        .rec-list { display: flex; flex-direction: column; gap: .55rem; }
+        .rec-item { display: flex; gap: .7rem; padding: .7rem .85rem; border-radius: 9px; border: 1px solid var(--border-sub); background: var(--bg-page); }
+        .rec-item .rec-icon { flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+        .rec-item.critical .rec-icon { background: var(--danger-soft); color: var(--danger); }
+        .rec-item.warning .rec-icon { background: var(--warning-soft); color: var(--warning); }
+        .rec-item.info .rec-icon { background: var(--accent-light); color: var(--accent); }
+        .rec-item .rec-title { font-weight: 700; font-size: .84rem; margin-bottom: .1rem; }
+        .rec-item .rec-detail { font-size: .78rem; color: var(--text-muted); line-height: 1.45; }
+
+        /* ── Timeline ── */
+        .timeline { position: relative; padding-left: 1.6rem; }
+        .timeline::before { content: ''; position: absolute; left: .45rem; top: .3rem; bottom: .3rem; width: 2px; background: var(--border); }
+        .timeline-item { position: relative; padding-bottom: 1rem; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot { position: absolute; left: -1.6rem; top: .2rem; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--surface); }
+        .timeline-dot.critical { background: var(--danger); }
+        .timeline-dot.warning { background: var(--warning); }
+        .timeline-dot.info { background: var(--accent); }
+        .timeline-time { font-size: .7rem; color: var(--text-muted); font-family: var(--font-mono); }
+        .timeline-title { font-size: .84rem; font-weight: 700; margin: .1rem 0 .15rem; }
+        .timeline-detail { font-size: .78rem; color: var(--text-muted); }
+
+        /* ── Device analysis ── */
+        .device-row { display: flex; align-items: center; justify-content: space-between; padding: .4rem 0; font-size: .8rem; border-bottom: 1px solid var(--border-sub); }
+        .device-row:last-child { border-bottom: none; }
+        .device-bar-track { flex: 1; height: 6px; border-radius: 4px; background: var(--border-sub); margin: 0 .7rem; overflow: hidden; }
+        .device-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); }
+
+        /* ── User detail modal ── */
+        .modal-overlay#user-modal-overlay .modal-panel { max-width: 860px; }
+
+        /* ── IP detail modal ── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 50;
+            align-items: flex-start; justify-content: center; padding: 3.5rem 1rem; overflow-y: auto; }
+        .modal-overlay.open { display: flex; }
+        .modal-panel { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border);
+            box-shadow: var(--shadow-md); width: 100%; max-width: 780px; max-height: calc(100vh - 5rem); display: flex; flex-direction: column; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); }
+        .modal-header h2 { font-size: 1rem; font-weight: 700; margin: 0; font-family: var(--font-mono); display: flex; align-items: center; gap: .5rem; }
+        .modal-body { padding: 1.1rem 1.2rem 1.4rem; overflow-y: auto; }
+        .modal-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); flex-shrink: 0; }
+        .modal-close:hover { background: var(--bg-page); }
+        .modal-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .6rem; margin-bottom: 1.1rem; }
+        .modal-kpi { background: var(--bg-page); border: 1px solid var(--border-sub); border-radius: 8px; padding: .55rem .7rem; }
+        .modal-kpi .k-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: .03em; }
+        .modal-kpi .k-value { font-size: 1.1rem; font-weight: 700; font-family: var(--font-mono); margin-top: .15rem; }
+        .modal-section-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin: 1.1rem 0 .5rem; }
+        .modal-section-title:first-child { margin-top: 0; }
+
+        @media (max-width: 640px) {
+            .filter-bar { position: static; }
+            table.data-table { min-width: 600px; }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+        window.dashboardUnlocked = {{ 'true' if dashboard_unlocked else 'false' }};
+    </script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>window.location.href = '/login?redirect-to=/audit_security_dashboard';</script>
+    {% endif %}
+
+    <div class="modal-overlay" id="password-gate-overlay" style="z-index:100">
+        <div class="modal-panel" style="max-width:380px">
+            <div class="modal-header">
+                <h2>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Dashboard Locked</span>
+                </h2>
+            </div>
+            <div class="modal-body">
+                <div class="card-sub" style="margin-bottom:1rem">
+                    This dashboard requires an additional access password, separate from your login.
+                </div>
+                <input type="password" class="field" id="dashboard-password-input" placeholder="Access password"
+                    style="width:100%;margin-bottom:.6rem" autocomplete="off"
+                    onkeydown="if (event.key === 'Enter') submitDashboardPassword()">
+                <div id="dashboard-password-error" class="muted" style="color:var(--danger);font-size:.78rem;margin-bottom:.7rem;display:none"></div>
+                <button class="btn btn-primary" style="width:100%;justify-content:center" id="dashboard-unlock-btn" onclick="submitDashboardPassword()">Unlock Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="topbar">
+        <h1>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Audit &amp; Security Dashboard
+        </h1>
+        <div class="topbar-actions">
+            <span class="who">{{ frappe.session.user }}</span>
+            <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="refreshAll()">Refresh</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" class="field" id="f-date-from">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" class="field" id="f-date-to">
+        </div>
+        <div class="filter-group">
+            <label>User</label>
+            <input type="text" class="field" id="f-user" list="user-list" placeholder="All users" style="width:190px">
+            <datalist id="user-list"></datalist>
+        </div>
+        <div class="filter-group">
+            <label>IP</label>
+            <input type="text" class="field mono" id="f-ip" list="ip-list" placeholder="All IPs" style="width:150px">
+            <datalist id="ip-list"></datalist>
+            <button class="icon-btn" id="f-ip-view" style="display:none;width:28px;height:28px" title="View details for this IP" onclick="openIpDetail(document.getElementById('f-ip').value.trim())">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+        </div>
+        <div class="filter-group">
+            <label>Module</label>
+            <select class="field" id="f-module"><option value="">All modules</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Activity</label>
+            <select class="field" id="f-activity-type"><option value="">All types</option></select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="resetFilters()">Reset</button>
+        <button class="btn btn-primary btn-sm" onclick="applyFilters()">Apply Filters</button>
+    </div>
+
+    <div class="content">
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="charts-row">
+            <div class="card">
+                <h3>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:.3rem"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    Security Recommendations
+                </h3>
+                <div class="card-sub" id="rec-sub">Auto-generated from the metrics below — every recommendation traces back to a concrete number</div>
+                <div class="rec-list" id="rec-list"></div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="card">
+                <h3>Activity Trend</h3>
+                <div class="card-sub">Daily logins, workflow and admin actions over the selected range</div>
+                <div id="trend-chart"></div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="card">
+                <h3>Daily Event Volume</h3>
+                <div class="card-sub" id="date-bar-sub">Total events (logins + workflow + admin) per day</div>
+                <div id="date-bar-chart"></div>
+            </div>
+        </div>
+
+        <div class="charts-row split">
+            <div class="card">
+                <h3>Top Active Users</h3>
+                <div class="card-sub">Ranked by total activity in range</div>
+                <div id="top-users-chart"></div>
+            </div>
+            <div class="card">
+                <h3>Module Access</h3>
+                <div class="card-sub">Workflow actions per business area</div>
+                <div id="module-access-chart"></div>
+            </div>
+        </div>
+
+        <div class="charts-row triple">
+            <div class="card">
+                <h3>Shared IP Addresses</h3>
+                <div class="card-sub" id="shared-ip-sub">3+ distinct users from one address</div>
+                <div class="mini-list" id="shared-ip-list"></div>
+            </div>
+            <div class="card">
+                <h3>Users with Multiple IPs</h3>
+                <div class="card-sub" id="multi-ip-sub">One account, 3+ different addresses</div>
+                <div class="mini-list" id="multi-ip-list"></div>
+            </div>
+            <div class="card">
+                <h3>New / First-seen IPs</h3>
+                <div class="card-sub">Not seen in the equal-length prior window</div>
+                <div class="mini-list" id="new-ip-list"></div>
+            </div>
+        </div>
+
+        <div class="charts-row split">
+            <div class="card">
+                <h3>Device &amp; Client Analysis</h3>
+                <div class="card-sub" id="device-sub">Browser / OS mix on the admin-bypass account (only source with a User-Agent)</div>
+                <div id="device-chart"></div>
+            </div>
+            <div class="card">
+                <h3>Risk Score Summary</h3>
+                <div class="card-sub">Users bucketed by composite risk score — click a band to filter the Risk Scoring tab</div>
+                <div class="risk-band-summary" id="risk-band-summary"></div>
+                <div id="risk-summary-chart"></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="recent" onclick="setActiveTab('recent')">Recent Audit Logs</button>
+            <button class="tab-btn" data-tab="login" onclick="setActiveTab('login')">Login &amp; Access History</button>
+            <button class="tab-btn" data-tab="failed" onclick="setActiveTab('failed')">Failed &amp; Suspicious</button>
+            <button class="tab-btn" data-tab="admin" onclick="setActiveTab('admin')">Admin Actions</button>
+            <button class="tab-btn" data-tab="users" onclick="setActiveTab('users')">User-wise Activity</button>
+            <button class="tab-btn" data-tab="ip" onclick="setActiveTab('ip')">IP Address Activity</button>
+            <button class="tab-btn" data-tab="genuine" onclick="setActiveTab('genuine')">Genuine Logins</button>
+            <button class="tab-btn" data-tab="unresolved" onclick="setActiveTab('unresolved')">Unresolved IPs (Predicted)</button>
+            <button class="tab-btn" data-tab="risk" onclick="setActiveTab('risk')">Risk Scoring</button>
+            <button class="tab-btn" data-tab="anomalies" onclick="setActiveTab('anomalies')">Anomalies</button>
+            <button class="tab-btn" data-tab="timeline" onclick="setActiveTab('timeline')">Security Timeline</button>
+            <button class="tab-btn" data-tab="changes" onclick="setActiveTab('changes')">Document Changes</button>
+        </div>
+
+        <div class="tab-panel active" id="panel-recent">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>Source</th><th>User</th><th>Event</th><th>Status</th><th>Detail</th><th>IP</th></tr></thead>
+                    <tbody id="recent-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="recent-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="recent-prev" onclick="pageTable('recent',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="recent-next" onclick="pageTable('recent',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-login">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>User</th><th>Event</th><th>Status</th><th>IP Address</th></tr></thead>
+                    <tbody id="login-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="login-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="login-prev" onclick="pageTable('login',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="login-next" onclick="pageTable('login',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-failed">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>Source</th><th>User</th><th>Event</th><th>Detail</th><th>IP</th></tr></thead>
+                    <tbody id="failed-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="failed-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="failed-prev" onclick="pageTable('failed',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="failed-next" onclick="pageTable('failed',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-admin">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>Actor</th><th>Event</th><th>Target</th><th>Status</th><th>Document</th><th>IP</th></tr></thead>
+                    <tbody id="admin-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="admin-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="admin-prev" onclick="pageTable('admin',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="admin-next" onclick="pageTable('admin',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-users">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>User</th><th>Logins</th><th>Failed</th><th>Workflow Actions</th><th>Admin Actions</th><th>Total</th><th>Last Active</th></tr></thead>
+                    <tbody id="users-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="users-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="users-prev" onclick="pageTable('users',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="users-next" onclick="pageTable('users',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-ip">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>IP Address</th><th>Total</th><th>Success</th><th>Failed</th><th>Distinct Users</th><th>Sample Users</th><th>First Seen</th><th>Last Seen</th></tr></thead>
+                    <tbody id="ip-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="ip-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="ip-prev" onclick="pageTable('ip',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="ip-next" onclick="pageTable('ip',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-genuine">
+            <div class="card" style="margin-bottom:.9rem">
+                <h3>What "genuine" means here</h3>
+                <div class="card-sub" style="margin-bottom:0">
+                    When prorndadmin impersonates someone, Frappe logs a normal "Login" event for that user at the swap —
+                    carrying prorndadmin's IP, not theirs. Those are excluded below as <strong>Impersonated</strong>.
+                    Separately, most logins in this system currently carry no resolvable client IP at all (proxy/network
+                    path issue, not impersonation) — those are excluded as <strong>Unresolved</strong>. What's left,
+                    <strong>Genuine</strong>, is this data's best evidence of who really logged in from where.
+                </div>
+                <div class="kpi-grid" id="genuine-summary" style="margin-top:.9rem;margin-bottom:0"></div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>User</th><th>Genuine Logins</th><th>Primary IP</th><th>Distinct IPs</th><th>Impersonated (excluded)</th><th>Unresolved (excluded)</th><th>Last Genuine Login</th></tr></thead>
+                    <tbody id="genuine-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="genuine-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="genuine-prev" onclick="pageTable('genuine',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="genuine-next" onclick="pageTable('genuine',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-unresolved">
+            <div class="card" style="margin-bottom:.9rem">
+                <h3>Why these have no real IP</h3>
+                <div class="card-sub" style="margin-bottom:0">
+                    IP resolution was broken for this system's entire history through 2026-07-27 — every login recorded
+                    a loopback/blank address, not just these ones. It started working on 2026-07-28. So this is a
+                    <strong>prediction</strong>, not a lookup: for each user below, we search their own login history
+                    (any date, not just the selected range) for a login that DID resolve to a real IP, and predict that
+                    as the most likely address for their unresolved logins too. No IP is ever guessed from another
+                    user's history. Confidence is what share of that user's own resolved logins agree on the same IP.
+                </div>
+                <div class="kpi-grid" id="unresolved-summary" style="margin-top:.9rem;margin-bottom:0"></div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>User</th><th>Unresolved Logins</th><th>Predicted IP</th><th>Confidence</th><th>Based On</th><th>Other IPs on Record</th><th>Last Unresolved Login</th></tr></thead>
+                    <tbody id="unresolved-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="unresolved-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="unresolved-prev" onclick="pageTable('unresolved',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="unresolved-next" onclick="pageTable('unresolved',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-risk">
+            <div class="filter-bar" style="position:static;padding:0 0 .8rem;background:none;border:none">
+                <label>Band</label>
+                <select class="field" id="f-risk-band" onchange="pageState.risk.start=0;loadTable('risk')">
+                    <option value="">All bands</option>
+                    <option value="Critical">Critical</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>User</th><th>Risk Score</th><th>Band</th><th>Failed Logins</th><th>Off-Hours</th><th>Distinct IPs</th><th>Impersonated</th></tr></thead>
+                    <tbody id="risk-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="risk-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="risk-prev" onclick="pageTable('risk',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="risk-next" onclick="pageTable('risk',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-anomalies">
+            <div class="card-sub" style="margin-bottom:.7rem">
+                New IPs for established users, failed-login bursts, off-hours spikes, and non-browser clients — combined into one prioritized worklist.
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Severity</th><th>Type</th><th>Subject</th><th>Description</th><th>Count</th><th>Last Seen</th></tr></thead>
+                    <tbody id="anomalies-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="anomalies-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="anomalies-prev" onclick="pageTable('anomalies',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="anomalies-next" onclick="pageTable('anomalies',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-timeline">
+            <div class="filter-bar" style="position:static;padding:0 0 .8rem;background:none;border:none">
+                <label>Severity</label>
+                <select class="field" id="f-timeline-severity" onchange="pageState.timeline.start=0;loadTable('timeline')">
+                    <option value="">All severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="warning">Warning</option>
+                    <option value="info">Info</option>
+                </select>
+            </div>
+            <div class="card">
+                <div class="timeline" id="timeline-body"></div>
+            </div>
+            <div class="table-footer">
+                <span id="timeline-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="timeline-prev" onclick="pageTable('timeline',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="timeline-next" onclick="pageTable('timeline',1)">Next</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-changes">
+            <div class="card" style="margin-bottom:.9rem">
+                <h3>Field-level change history, with IP attribution</h3>
+                <div class="card-sub" style="margin-bottom:0">
+                    Sourced from Frappe's own Version log — every field edit on every tracked-changes doctype, not just
+                    the audit doctypes. Frappe doesn't record an IP on edits, so each row's IP is resolved by finding
+                    the editor's nearest Login/Logout around that moment — best-evidence, not a guarantee, since a save
+                    can happen anywhere inside a session. Hover the IP for how it was inferred.
+                </div>
+            </div>
+            <div class="filter-bar" style="position:static;padding:0 0 .8rem;background:none;border:none">
+                <label>Doctype</label>
+                <select class="field" id="f-change-doctype" onchange="pageState.changes.start=0;loadTable('changes')">
+                    <option value="">All doctypes</option>
+                </select>
+                <label>Document</label>
+                <input type="text" class="field" id="f-change-docname" placeholder="e.g. rndadmin@iitg.ac.in" style="width:220px"
+                    oninput="debounceChangeFilter()">
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>Doctype</th><th>Document</th><th>Editor</th><th>Changes</th><th>IP</th></tr></thead>
+                    <tbody id="changes-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="changes-footer-info"></span>
+                <span>
+                    <button class="btn btn-outline btn-sm" id="changes-prev" onclick="pageTable('changes',-1)">Prev</button>
+                    <button class="btn btn-outline btn-sm" id="changes-next" onclick="pageTable('changes',1)">Next</button>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="ip-modal-overlay" onclick="if (event.target === this) closeIpModal()">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h2>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <span id="ip-modal-title">IP Address</span>
+                </h2>
+                <button class="modal-close" onclick="closeIpModal()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="ip-modal-body">
+                <div class="table-loading">Loading…</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="user-modal-overlay" onclick="if (event.target === this) closeUserModal()">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h2>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span id="user-modal-title">User</span>
+                </h2>
+                <button class="modal-close" onclick="closeUserModal()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="user-modal-body">
+                <div class="table-loading">Loading…</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const API_BASE = '/api/method/frappe.www.audit_security_dashboard';
+
+    // ── Helpers ───────────────────────────────────────────────
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function fmtNum(v) { return Number(v || 0).toLocaleString('en-IN'); }
+    function fmtDateTime(v) {
+        if (!v) return '—';
+        try { return new Date(String(v).replace(' ', 'T')).toLocaleString(); } catch (e) { return v; }
+    }
+    function fmtTime(v) {
+        if (!v) return '—';
+        try { return new Date(String(v).replace(' ', 'T')).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch (e) { return v; }
+    }
+    function statusBadge(status) {
+        if (status === 'Success') return '<span class="badge ok">Success</span>';
+        if (status === 'Failed') return '<span class="badge fail">Failed</span>';
+        return status ? `<span class="badge neutral">${escHtml(status)}</span>` : '—';
+    }
+    function sourceTag(source) {
+        const map = { 'Activity Log': ['al','AL'], 'Staff Activity Log': ['sal','SAL'], 'Admin Access Log': ['pal','ADM'] };
+        const [cls, label] = map[source] || ['al', source];
+        return `<span class="source-tag ${cls}">${label}</span>`;
+    }
+    function ipLink(ip) {
+        if (!ip) return '—';
+        return `<a class="ip-link mono" onclick="openIpDetail('${escHtml(ip).replace(/'/g,"\\'")}')" title="View details for ${escHtml(ip)}">${escHtml(ip)}</a>`;
+    }
+    function userLink(user, label) {
+        if (!user) return escHtml(label || '—');
+        const safe = escHtml(user).replace(/'/g, "\\'");
+        return `<a class="user-link" onclick="openUserDetail('${safe}')" title="View details for ${escHtml(user)}">${escHtml(label || user)}</a>`;
+    }
+    function riskBadge(band) {
+        return band ? `<span class="risk-badge ${band}">${escHtml(band)}</span>` : '—';
+    }
+    function severityBadge(sev) {
+        const cls = { critical: 'critical', warning: 'warn', info: 'info' }[sev] || 'neutral';
+        return `<span class="badge ${cls}">${escHtml((sev || '').toUpperCase())}</span>`;
+    }
+
+    async function apiGet(fn, params) {
+        const qs = new URLSearchParams(Object.fromEntries(Object.entries(params || {}).filter(([,v]) => v !== '' && v != null))).toString();
+        const resp = await fetch(`${API_BASE}.${fn}` + (qs ? '?' + qs : ''), {
+            headers: { 'Accept': 'application/json', 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error((data && data.exception) || `Request failed (${resp.status})`);
+        return data.message;
+    }
+
+    async function apiPost(fn, body) {
+        const resp = await fetch(`${API_BASE}.${fn}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+            body: JSON.stringify(body || {}),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error((data && data.exception) || (data && data._server_messages) || `Request failed (${resp.status})`);
+        return data.message;
+    }
+
+    // ── Password gate ─────────────────────────────────────────
+    async function submitDashboardPassword() {
+        const input = document.getElementById('dashboard-password-input');
+        const errEl = document.getElementById('dashboard-password-error');
+        const btn = document.getElementById('dashboard-unlock-btn');
+        const password = input.value;
+        errEl.style.display = 'none';
+        if (!password) return;
+        btn.disabled = true;
+        btn.textContent = 'Checking…';
+        try {
+            await apiPost('unlock_dashboard', { password });
+            window.dashboardUnlocked = true;
+            document.getElementById('password-gate-overlay').classList.remove('open');
+            document.body.style.overflow = '';
+            await startDashboard();
+        } catch (err) {
+            errEl.textContent = 'Incorrect password';
+            errEl.style.display = 'block';
+            input.value = '';
+            input.focus();
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Unlock Dashboard';
+        }
+    }
+
+    // ── Theme ─────────────────────────────────────────────────
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const sun = document.getElementById('theme-icon-sun');
+        const moon = document.getElementById('theme-icon-moon');
+        if (sun && moon) { sun.style.display = theme === 'dark' ? 'none' : 'block'; moon.style.display = theme === 'dark' ? 'block' : 'none'; }
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('auditDashboardTheme', next);
+        applyTheme(next);
+    }
+    (function initTheme() {
+        const saved = localStorage.getItem('auditDashboardTheme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+    })();
+
+    // ── Filter state ─────────────────────────────────────────
+    function isoDate(d) { return d.toISOString().slice(0, 10); }
+
+    let filters = { date_from: '', date_to: '', user: '', ip: '', module: '', activity_type: '' };
+    let knownUsers = [];
+
+    // The User field is free-text (list=user-list gives suggestions, but users
+    // can type anything and the backend filters by exact login). Resolve
+    // whatever was typed against the loaded user list before it's used:
+    // exact login, then exact full-name, then a unique partial match on
+    // either. Ambiguous or no-match input is passed through literally so it
+    // still behaves like a plain (if unmatched) filter rather than erroring.
+    function resolveUserInput(raw) {
+        if (!raw) return '';
+        const exact = knownUsers.find(u => u.user.toLowerCase() === raw.toLowerCase());
+        if (exact) return exact.user;
+        const nameExact = knownUsers.find(u => (u.full_name || '').toLowerCase() === raw.toLowerCase());
+        if (nameExact) return nameExact.user;
+        const needle = raw.toLowerCase();
+        const partial = knownUsers.filter(u =>
+            u.user.toLowerCase().includes(needle) || (u.full_name || '').toLowerCase().includes(needle));
+        if (partial.length === 1) return partial[0].user;
+        return raw;
+    }
+
+    document.getElementById('f-ip').addEventListener('input', e => {
+        document.getElementById('f-ip-view').style.display = e.target.value.trim() ? 'flex' : 'none';
+    });
+
+    function defaultDates() {
+        const to = new Date();
+        const from = new Date();
+        from.setDate(from.getDate() - 29);
+        document.getElementById('f-date-to').value = isoDate(to);
+        document.getElementById('f-date-from').value = isoDate(from);
+    }
+
+    function readFiltersFromForm() {
+        const userInput = document.getElementById('f-user');
+        const resolvedUser = resolveUserInput(userInput.value.trim());
+        if (resolvedUser && resolvedUser !== userInput.value.trim()) {
+            userInput.value = resolvedUser;
+        }
+        filters = {
+            date_from: document.getElementById('f-date-from').value,
+            date_to: document.getElementById('f-date-to').value,
+            user: resolvedUser,
+            ip: document.getElementById('f-ip').value.trim(),
+            module: document.getElementById('f-module').value,
+            activity_type: document.getElementById('f-activity-type').value,
+        };
+        document.getElementById('f-ip-view').style.display = filters.ip ? 'flex' : 'none';
+    }
+
+    function resetFilters() {
+        defaultDates();
+        document.getElementById('f-user').value = '';
+        document.getElementById('f-ip').value = '';
+        document.getElementById('f-module').value = '';
+        document.getElementById('f-activity-type').value = '';
+        applyFilters();
+    }
+
+    function applyFilters() {
+        readFiltersFromForm();
+        refreshAll();
+    }
+
+    async function loadFilterOptions() {
+        try {
+            const data = await apiGet('get_filter_options', {});
+            knownUsers = data.users;
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = data.users.map(u => `<option value="${escHtml(u.user)}">${escHtml(u.full_name)}</option>`).join('');
+
+            const ipList = document.getElementById('ip-list');
+            ipList.innerHTML = data.ips.map(ip => `<option value="${escHtml(ip)}"></option>`).join('');
+
+            const moduleSel = document.getElementById('f-module');
+            data.modules.forEach(m => moduleSel.insertAdjacentHTML('beforeend', `<option value="${escHtml(m)}">${escHtml(m)}</option>`));
+
+            const typeSel = document.getElementById('f-activity-type');
+            data.activity_types.forEach(t => typeSel.insertAdjacentHTML('beforeend', `<option value="${escHtml(t)}">${escHtml(t)}</option>`));
+        } catch (err) { console.error('Failed to load filter options', err); }
+    }
+
+    // ── KPIs ─────────────────────────────────────────────────
+    const KPI_DEFS = [
+        { key: 'total_events',        label: 'Total Events',        cls: 'accent'  },
+        { key: 'successful_logins',   label: 'Successful Logins',   cls: 'success' },
+        { key: 'failed_logins',       label: 'Failed Logins',       cls: 'danger'  },
+        { key: 'unique_active_users', label: 'Unique Active Users', cls: 'accent'  },
+        { key: 'workflow_actions',    label: 'Workflow Actions',    cls: 'purple'  },
+        { key: 'admin_actions',       label: 'Admin Actions',       cls: 'warning' },
+        { key: 'impersonation_sessions', label: 'Impersonations',   cls: 'warning' },
+        { key: 'failed_activities',   label: 'Failed / Suspicious', cls: 'danger'  },
+        { key: 'distinct_ip_count',   label: 'Distinct IP Addresses', cls: 'accent' },
+        { key: 'off_hours_logins',    label: 'Off-Hours Logins',    cls: 'warning' },
+    ];
+
+    async function loadKPIs() {
+        const grid = document.getElementById('kpi-grid');
+        try {
+            const data = await apiGet('get_kpis', { date_from: filters.date_from, date_to: filters.date_to, user: filters.user, module: filters.module, ip: filters.ip });
+            grid.innerHTML = KPI_DEFS.map(def => {
+                let sub = '';
+                if (def.key === 'failed_activities' && data.suspicious_ip_count) {
+                    sub = `<div class="kpi-sub">${data.suspicious_ip_count} IP(s) with repeated failures</div>`;
+                }
+                return `
+                <div class="kpi-card ${def.cls}">
+                    <div class="kpi-label">${def.label}</div>
+                    <div class="kpi-value">${fmtNum(data[def.key])}</div>
+                    ${sub}
+                </div>`;
+            }).join('');
+        } catch (err) {
+            grid.innerHTML = `<div class="table-empty">Failed to load KPIs: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── SVG chart helpers (dependency-free) ───────────────────
+    function svgEl(tag, attrs) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.entries(attrs || {}).forEach(([k, v]) => el.setAttribute(k, v));
+        return el;
+    }
+
+    function lineChart(container, series, xLabels, opts) {
+        opts = opts || {};
+        const W = 900, H = 220, padL = 36, padR = 10, padT = 10, padB = 26;
+        const innerW = W - padL - padR, innerH = H - padT - padB;
+        const allVals = series.flatMap(s => s.values);
+        const maxV = Math.max(1, ...allVals);
+        const n = xLabels.length;
+        const xStep = n > 1 ? innerW / (n - 1) : 0;
+
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H, style: 'display:block' });
+
+        for (let g = 0; g <= 4; g++) {
+            const y = padT + innerH - (g / 4) * innerH;
+            svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y, y2: y, stroke: 'currentColor', 'stroke-opacity': .08 }));
+            const label = Math.round(maxV * g / 4);
+            const t = svgEl('text', { x: 4, y: y + 3, 'font-size': 9, fill: 'currentColor', opacity: .5 });
+            t.textContent = label;
+            svg.appendChild(t);
+        }
+
+        const stepLabel = Math.max(1, Math.ceil(n / 8));
+        xLabels.forEach((lab, i) => {
+            if (i % stepLabel !== 0 && i !== n - 1) return;
+            const x = padL + i * xStep;
+            const t = svgEl('text', { x, y: H - 6, 'font-size': 9, fill: 'currentColor', opacity: .5, 'text-anchor': 'middle' });
+            t.textContent = lab;
+            svg.appendChild(t);
+        });
+
+        series.forEach(s => {
+            const pts = s.values.map((v, i) => {
+                const x = padL + i * xStep;
+                const y = padT + innerH - (v / maxV) * innerH;
+                return [x, y];
+            });
+            const path = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+            svg.appendChild(svgEl('path', { d: path, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+            pts.forEach((p, i) => {
+                const c = svgEl('circle', { cx: p[0], cy: p[1], r: 2.2, fill: s.color });
+                const title = svgEl('title', {});
+                title.textContent = `${s.name}: ${s.values[i]} (${xLabels[i]})`;
+                c.appendChild(title);
+                svg.appendChild(c);
+            });
+        });
+
+        container.innerHTML = '';
+        container.appendChild(svg);
+
+        if (opts.legend !== false) {
+            const legend = document.createElement('div');
+            legend.className = 'legend';
+            legend.innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${escHtml(s.name)}</span>`).join('');
+            container.appendChild(legend);
+        }
+    }
+
+    function barChart(container, values, labels, opts) {
+        opts = opts || {};
+        const W = opts.width || 900, H = opts.height || 150, padL = 26, padR = 6, padT = 6, padB = 20;
+        const innerW = W - padL - padR, innerH = H - padT - padB;
+        const n = values.length;
+        const maxV = Math.max(1, ...values);
+        const gap = 2;
+        const barW = n > 0 ? Math.max(1, innerW / n - gap) : 0;
+
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H, style: 'display:block' });
+        const peakIdx = opts.highlightMax ? values.indexOf(maxV) : -1;
+
+        values.forEach((v, i) => {
+            const h = (v / maxV) * innerH;
+            const x = padL + i * (barW + gap);
+            const y = padT + innerH - h;
+            const rect = svgEl('rect', { x, y, width: barW, height: Math.max(h, v > 0 ? 1 : 0), fill: i === peakIdx ? (opts.peakColor || 'var(--danger)') : (opts.color || 'var(--accent)'), rx: 1.5 });
+            const title = svgEl('title', {});
+            title.textContent = `${labels[i]}: ${v}`;
+            rect.appendChild(title);
+            svg.appendChild(rect);
+        });
+
+        const stepLabel = Math.max(1, Math.ceil(n / 12));
+        labels.forEach((lab, i) => {
+            if (i % stepLabel !== 0) return;
+            const x = padL + i * (barW + gap) + barW / 2;
+            const t = svgEl('text', { x, y: H - 5, 'font-size': 8.5, fill: 'currentColor', opacity: .55, 'text-anchor': 'middle' });
+            t.textContent = lab;
+            svg.appendChild(t);
+        });
+
+        container.innerHTML = '';
+        container.appendChild(svg);
+    }
+
+    function hBarChart(container, items) {
+        if (!items.length) { container.innerHTML = '<div class="empty-chart">No activity in this range</div>'; return; }
+        const maxV = Math.max(1, ...items.map(i => i.value));
+        container.innerHTML = items.map(it => `
+            <div style="margin-bottom:.5rem">
+                <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:.2rem">
+                    <span title="${escHtml(it.user || '')}">${escHtml(it.label)}</span>
+                    <span class="mono muted">${fmtNum(it.value)}</span>
+                </div>
+                <div style="height:7px;border-radius:4px;background:var(--border-sub);overflow:hidden">
+                    <div style="height:100%;width:${(it.value / maxV * 100).toFixed(1)}%;background:var(--accent);border-radius:4px"></div>
+                </div>
+            </div>`).join('');
+    }
+
+    // ── Trend chart ────────────────────────────────────────────
+    let _trendRows = null;  // shared between loadTrendChart and loadDateBarChart
+
+    async function loadTrendChart() {
+        const el = document.getElementById('trend-chart');
+        try {
+            const rows = await apiGet('get_activity_trend', { date_from: filters.date_from, date_to: filters.date_to, user: filters.user, module: filters.module, ip: filters.ip });
+            _trendRows = rows;
+            if (!rows.length) { el.innerHTML = '<div class="empty-chart">No activity in this range</div>'; return; }
+            const labels = rows.map(r => r.date.slice(5));
+            lineChart(el, [
+                { name: 'Successful Logins', color: 'var(--success)', values: rows.map(r => r.logins_success) },
+                { name: 'Failed Logins',     color: 'var(--danger)',  values: rows.map(r => r.logins_failed) },
+                { name: 'Workflow Actions',  color: 'var(--purple)',  values: rows.map(r => r.workflow_actions) },
+                { name: 'Admin Actions',     color: 'var(--warning)', values: rows.map(r => r.admin_actions) },
+            ], labels);
+        } catch (err) {
+            el.innerHTML = `<div class="empty-chart">Failed to load trend: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Daily event volume bar chart ────────────────────────────
+    async function loadDateBarChart() {
+        const el = document.getElementById('date-bar-chart');
+        const sub = document.getElementById('date-bar-sub');
+        if (!el) return;
+        try {
+            const rows = (_trendRows && _trendRows.length)
+                ? _trendRows
+                : await apiGet('get_activity_trend', { date_from: filters.date_from, date_to: filters.date_to, user: filters.user, module: filters.module, ip: filters.ip });
+            if (!rows || !rows.length) { el.innerHTML = '<div class="empty-chart">No activity in this range</div>'; return; }
+            const labels = rows.map(r => r.date.slice(5));
+            const totals = rows.map(r => (r.logins_success || 0) + (r.logins_failed || 0) + (r.workflow_actions || 0) + (r.admin_actions || 0));
+            const maxV = Math.max(1, ...totals);
+            const peakIdx = totals.indexOf(maxV);
+            barChart(el, totals, labels, { height: 140, highlightMax: true, peakColor: 'var(--accent)', color: 'rgba(37,99,235,0.55)' });
+            const legend = document.createElement('div');
+            legend.className = 'legend';
+            legend.style.marginTop = '.4rem';
+            legend.innerHTML = [
+                { color: 'var(--success)', name: 'Logins OK' },
+                { color: 'var(--danger)',  name: 'Logins Failed' },
+                { color: 'var(--purple)',  name: 'Workflow' },
+                { color: 'var(--warning)', name: 'Admin' },
+            ].map(s => `<span><i style="background:${s.color}"></i>${escHtml(s.name)}</span>`).join('');
+            el.appendChild(legend);
+            const peakDate = rows[peakIdx] ? rows[peakIdx].date : '';
+            sub.textContent = `Total events per day · Peak: ${peakDate} (${fmtNum(maxV)})`;
+        } catch (err) {
+            el.innerHTML = `<div class="empty-chart">Failed to load: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Module access chart ──────────────────────────────────────
+    async function loadModuleAccess() {
+        const el = document.getElementById('module-access-chart');
+        try {
+            const data = await apiGet('get_module_access', { date_from: filters.date_from, date_to: filters.date_to, user: filters.user });
+            if (!data.modules.length) { el.innerHTML = '<div class="empty-chart">No workflow activity in this range</div>'; return; }
+            const maxV = Math.max(1, ...data.modules.map(m => m.total));
+            el.innerHTML = data.modules.map(m => `
+                <div style="margin-bottom:.55rem">
+                    <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:.2rem">
+                        <span>${escHtml(m.module)}</span>
+                        <span class="mono muted">${fmtNum(m.total)} <span class="muted" style="font-size:.7rem">(${m.approved} appr / ${m.rejected} rej)</span></span>
+                    </div>
+                    <div style="height:7px;border-radius:4px;background:var(--border-sub);overflow:hidden;display:flex">
+                        <div style="height:100%;width:${(m.total / maxV * 100).toFixed(1)}%;background:var(--purple);border-radius:4px"></div>
+                    </div>
+                </div>`).join('');
+        } catch (err) {
+            el.innerHTML = `<div class="empty-chart">Failed to load: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Device / client analysis ───────────────────────────────────
+    async function loadDeviceAnalysis() {
+        const el = document.getElementById('device-chart');
+        const sub = document.getElementById('device-sub');
+        try {
+            const data = await apiGet('get_device_analysis', { date_from: filters.date_from, date_to: filters.date_to });
+            if (!data.total) { el.innerHTML = '<div class="empty-chart">No User-Agent data in this range</div>'; return; }
+            const maxV = Math.max(1, ...data.browsers.map(b => b.count), ...data.os.map(o => o.count));
+            const row = (name, count, color) => `
+                <div class="device-row">
+                    <span>${escHtml(name)}</span>
+                    <div class="device-bar-track"><div class="device-bar-fill" style="width:${(count/maxV*100).toFixed(1)}%;background:${color}"></div></div>
+                    <span class="mono muted">${fmtNum(count)}</span>
+                </div>`;
+            let html = '<div class="modal-section-title" style="margin-top:0">Browser</div>' + data.browsers.map(b => row(b.name, b.count, 'var(--accent)')).join('');
+            html += '<div class="modal-section-title">Operating System</div>' + data.os.map(o => row(o.name, o.count, 'var(--purple)')).join('');
+            if (data.scripts.length) {
+                html += '<div class="modal-section-title">Scripted / Non-browser Clients</div>' +
+                    data.scripts.map(s => `
+                        <div class="device-row">
+                            <span>${escHtml(s.client)} <span class="badge critical" style="margin-left:.3rem">script</span></span>
+                            <span class="muted" style="font-size:.72rem" title="${escHtml(s.users.join(', '))}">${escHtml(s.users[0] || 'unknown')}${s.users.length > 1 ? ` +${s.users.length - 1}` : ''}</span>
+                            <span class="mono muted">${fmtNum(s.count)}</span>
+                        </div>`).join('');
+            }
+            el.innerHTML = html;
+            sub.textContent = `${fmtNum(data.total)} requests with a resolvable User-Agent`;
+        } catch (err) {
+            el.innerHTML = `<div class="empty-chart">Failed to load: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Risk band summary ─────────────────────────────────────────
+    const RISK_BAND_COLORS = { Critical: 'var(--danger)', High: 'var(--warning)', Medium: 'var(--accent)', Low: 'var(--success)' };
+    let lastRiskBandCounts = null;
+
+    async function loadRiskSummary() {
+        const summaryEl = document.getElementById('risk-band-summary');
+        const chartEl = document.getElementById('risk-summary-chart');
+        try {
+            const data = await apiGet('get_risk_scores', { date_from: filters.date_from, date_to: filters.date_to, page_length: 1 });
+            lastRiskBandCounts = data.band_counts;
+            const bands = ['Critical', 'High', 'Medium', 'Low'];
+            const total = bands.reduce((s, b) => s + (data.band_counts[b] || 0), 0);
+            summaryEl.innerHTML = bands.map(b => `
+                <div class="risk-band-chip" style="color:${RISK_BAND_COLORS[b]}" onclick="filterRiskBand('${b}')">
+                    <div class="rb-count">${fmtNum(data.band_counts[b] || 0)}</div>
+                    <div class="rb-label">${b}</div>
+                </div>`).join('');
+            chartEl.innerHTML = total ? `
+                <div style="display:flex;height:10px;border-radius:5px;overflow:hidden">
+                    ${bands.map(b => `<div style="width:${((data.band_counts[b]||0)/total*100).toFixed(1)}%;background:${RISK_BAND_COLORS[b]}"></div>`).join('')}
+                </div>` : '<div class="empty-chart" style="height:auto;padding-top:.6rem">No users with login activity in this range</div>';
+        } catch (err) {
+            summaryEl.innerHTML = `<div class="empty-chart">Failed to load: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    function filterRiskBand(band) {
+        document.getElementById('f-risk-band').value = band;
+        pageState.risk.start = 0;
+        setActiveTab('risk');
+    }
+
+    // ── Recommendations ─────────────────────────────────────────
+    const SEVERITY_ICONS = { critical: '⛔', warning: '⚠️', info: 'ℹ️' };
+
+    async function loadRecommendations() {
+        const el = document.getElementById('rec-list');
+        try {
+            const data = await apiGet('get_recommendations', { date_from: filters.date_from, date_to: filters.date_to });
+            el.innerHTML = data.recommendations.map(r => `
+                <div class="rec-item ${r.severity}">
+                    <div class="rec-icon">${SEVERITY_ICONS[r.severity] || 'ℹ️'}</div>
+                    <div>
+                        <div class="rec-title">${escHtml(r.title)}</div>
+                        <div class="rec-detail">${escHtml(r.detail)}</div>
+                    </div>
+                </div>`).join('');
+        } catch (err) {
+            el.innerHTML = `<div class="table-empty">Failed to load recommendations: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Top users chart ────────────────────────────────────────
+    async function loadTopUsersChart() {
+        const el = document.getElementById('top-users-chart');
+        try {
+            const data = await apiGet('get_user_activity', { date_from: filters.date_from, date_to: filters.date_to, module: filters.module, ip: filters.ip, page_length: 10 });
+            hBarChart(el, data.rows.map(r => ({ label: r.full_name || r.user, user: r.user, value: r.total })));
+        } catch (err) {
+            el.innerHTML = `<div class="empty-chart">Failed to load: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Advanced IP analysis (shared IPs, multi-IP users, new IPs) ────
+    function renderMiniList(elId, items, emptyMsg) {
+        const el = document.getElementById(elId);
+        if (!items.length) { el.innerHTML = `<div class="empty-chart" style="height:auto;padding:1.2rem 0">${escHtml(emptyMsg)}</div>`; return; }
+        el.innerHTML = items.map(it => `
+            <div class="mini-row">
+                <div class="mini-main">
+                    <strong>${it.clickIp ? ipLink(it.main) : escHtml(it.main)}</strong>
+                    <span class="mini-sub">${escHtml(it.sub)}</span>
+                </div>
+                <span class="mini-count">${fmtNum(it.count)}</span>
+            </div>`).join('');
+    }
+
+    async function loadIpInsights() {
+        try {
+            const data = await apiGet('get_ip_insights', { date_from: filters.date_from, date_to: filters.date_to });
+
+            document.getElementById('shared-ip-sub').textContent = `${data.shared_ip_threshold}+ distinct users from one address (excludes internal/loopback)`;
+            renderMiniList('shared-ip-list', data.shared_ips.map(r => ({
+                main: r.ip_address, sub: `${r.total} events`, count: r.distinct_users, clickIp: true,
+            })), 'No shared IPs above the threshold');
+
+            document.getElementById('multi-ip-sub').textContent = `One account, ${data.multi_ip_threshold}+ different addresses`;
+            renderMiniList('multi-ip-list', data.multi_ip_users.map(r => ({
+                main: r.user, sub: `${r.total} events`, count: r.distinct_ips,
+            })), 'No users with multiple IPs above the threshold');
+
+            renderMiniList('new-ip-list', data.new_ips.map(r => ({
+                main: r.ip_address, sub: `first seen ${fmtDateTime(r.first_seen)} · ${r.distinct_users} user(s)`, count: r.total, clickIp: true,
+            })), 'No new IP addresses in this range');
+        } catch (err) {
+            ['shared-ip-list', 'multi-ip-list', 'new-ip-list'].forEach(id => {
+                document.getElementById(id).innerHTML = `<div class="empty-chart" style="height:auto;padding:1.2rem 0">Failed to load: ${escHtml(err.message)}</div>`;
+            });
+        }
+    }
+
+    // ── Tabs & tables ──────────────────────────────────────────
+    const TABS = ['recent', 'login', 'failed', 'admin', 'users', 'ip', 'genuine', 'unresolved', 'risk', 'anomalies', 'timeline', 'changes'];
+    const pageState = {};
+    TABS.forEach(t => pageState[t] = { start: 0, page_length: 25, lastCount: 0, total: null, hasMore: false });
+
+    function setActiveTab(tab) {
+        TABS.forEach(t => {
+            document.getElementById(`panel-${t}`).classList.toggle('active', t === tab);
+            document.querySelector(`.tab-btn[data-tab="${t}"]`).classList.toggle('active', t === tab);
+        });
+        loadTable(tab);
+    }
+
+    function currentTab() {
+        return TABS.find(t => document.getElementById(`panel-${t}`).classList.contains('active'));
+    }
+
+    function pageTable(tab, dir) {
+        const st = pageState[tab];
+        const next = st.start + dir * st.page_length;
+        if (next < 0) return;
+        st.start = next;
+        loadTable(tab);
+    }
+
+    function renderFooter(tab) {
+        const st = pageState[tab];
+        const info = document.getElementById(`${tab}-footer-info`);
+        const prevBtn = document.getElementById(`${tab}-prev`);
+        const nextBtn = document.getElementById(`${tab}-next`);
+        const from = st.lastCount ? st.start + 1 : 0;
+        const to = st.start + st.lastCount;
+        if (st.total != null) {
+            info.textContent = st.total ? `Showing ${from}–${to} of ${fmtNum(st.total)}` : 'No records';
+            nextBtn.disabled = to >= st.total;
+        } else {
+            info.textContent = st.lastCount ? `Showing ${from}–${to}` : 'No records';
+            nextBtn.disabled = !st.hasMore;
+        }
+        prevBtn.disabled = st.start === 0;
+    }
+
+    async function loadTable(tab) {
+        const body = document.getElementById(`${tab}-body`);
+        const cols = { recent: 7, login: 5, failed: 6, admin: 7, users: 7, ip: 8, genuine: 7, unresolved: 7, risk: 7, anomalies: 6, timeline: 1, changes: 6 }[tab];
+        body.innerHTML = `<tr><td colspan="${cols}" class="table-loading">Loading…</td></tr>`;
+        const st = pageState[tab];
+        try {
+            const renderer = { recent: renderRecent, login: renderLogin, failed: renderFailed, admin: renderAdmin, users: renderUsers, ip: renderIp, genuine: renderGenuine, unresolved: renderUnresolved, risk: renderRisk, anomalies: renderAnomalies, timeline: renderTimeline, changes: renderChanges }[tab];
+            await renderer(st);
+        } catch (err) {
+            body.innerHTML = `<tr><td colspan="${cols}" class="table-empty">Failed to load: ${escHtml(err.message)}</td></tr>`;
+        }
+    }
+
+    async function renderRecent(st) {
+        const data = await apiGet('get_recent_audit_logs', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user, ip: filters.ip,
+            module: filters.module, activity_type: filters.activity_type,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.hasMore = data.has_more; st.total = null;
+        const body = document.getElementById('recent-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr>
+                <td class="mono">${fmtDateTime(r.timestamp)}</td>
+                <td>${sourceTag(r.source)}</td>
+                <td>${userLink(r.user, r.full_name || r.user)}</td>
+                <td>${escHtml(r.event || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td class="muted">${escHtml(r.detail || '—')}</td>
+                <td class="mono muted">${ipLink(r.ip_address)}</td>
+            </tr>`).join('') : `<tr><td colspan="7" class="table-empty">No audit events found for this filter</td></tr>`;
+        renderFooter('recent');
+    }
+
+    async function renderLogin(st) {
+        const data = await apiGet('get_login_history', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user, ip: filters.ip,
+            event_type: ['Login', 'Logout'].includes(filters.activity_type) ? filters.activity_type : '',
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('login-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr>
+                <td class="mono">${fmtDateTime(r.communication_date)}</td>
+                <td>${userLink(r.user, r.full_name || r.user)}</td>
+                <td>${escHtml(r.operation || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td class="mono muted">${ipLink(r.ip_address)}</td>
+            </tr>`).join('') : `<tr><td colspan="5" class="table-empty">No login/logout events found for this filter</td></tr>`;
+        renderFooter('login');
+    }
+
+    async function renderFailed(st) {
+        const data = await apiGet('get_failed_activities', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user, ip: filters.ip,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('failed-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr class="${r.suspicious ? 'row-suspicious' : ''}">
+                <td class="mono">${fmtDateTime(r.timestamp)}</td>
+                <td>${sourceTag(r.source)}</td>
+                <td>${userLink(r.user, r.user)}</td>
+                <td>${escHtml(r.event || '—')} ${r.suspicious ? '<span class="badge fail" title="3+ failures from this IP">Suspicious IP</span>' : ''}</td>
+                <td class="muted">${escHtml(r.detail || '—')}</td>
+                <td class="mono muted">${ipLink(r.ip_address)}</td>
+            </tr>`).join('') : `<tr><td colspan="6" class="table-empty">No failed or suspicious activity in this range 🎉</td></tr>`;
+        renderFooter('failed');
+    }
+
+    async function renderAdmin(st) {
+        const compatibleTypes = ['Login', 'Impersonate', 'Logout', 'Document Action'];
+        const data = await apiGet('get_admin_actions', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user, ip: filters.ip,
+            event_type: compatibleTypes.includes(filters.activity_type) ? filters.activity_type : '',
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('admin-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr>
+                <td class="mono">${fmtDateTime(r.timestamp)}</td>
+                <td>${userLink(r.user, r.user)}</td>
+                <td>${escHtml(r.event_type || '—')}</td>
+                <td class="muted">${userLink(r.target_user, r.target_user)}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td class="muted">${r.action_doctype ? escHtml(`${r.action_doctype} ${r.action_docname || ''} (${r.action_type || ''})`) : escHtml(r.details || '—')}</td>
+                <td class="mono muted">${ipLink(r.ip_address)}</td>
+            </tr>`).join('') : `<tr><td colspan="7" class="table-empty">No admin actions found for this filter</td></tr>`;
+        renderFooter('admin');
+    }
+
+    async function renderUsers(st) {
+        const data = await apiGet('get_user_activity', {
+            date_from: filters.date_from, date_to: filters.date_to, module: filters.module, ip: filters.ip,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('users-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr>
+                <td>${userLink(r.user, r.full_name || r.user)}</td>
+                <td class="mono">${fmtNum(r.logins)}</td>
+                <td class="mono ${r.failed_logins ? 'muted' : ''}" style="${r.failed_logins ? 'color:var(--danger)' : ''}">${fmtNum(r.failed_logins)}</td>
+                <td class="mono">${fmtNum(r.workflow_actions)}</td>
+                <td class="mono">${fmtNum(r.admin_actions)}</td>
+                <td class="mono" style="font-weight:600">${fmtNum(r.total)}</td>
+                <td class="mono muted">${fmtDateTime(r.last_active)}</td>
+            </tr>`).join('') : `<tr><td colspan="7" class="table-empty">No user activity found for this filter</td></tr>`;
+        renderFooter('users');
+    }
+
+    async function renderIp(st) {
+        const data = await apiGet('get_ip_activity', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user, ip: filters.ip,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('ip-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => {
+            const sample = (r.users_sample || []).join(', ') + (r.distinct_users > (r.users_sample || []).length ? ', …' : '');
+            return `
+            <tr>
+                <td class="mono">${ipLink(r.ip_address)} ${r.is_internal ? '<span class="source-tag internal" title="Loopback / unresolved client IP">INTERNAL</span>' : ''}</td>
+                <td class="mono">${fmtNum(r.total)}</td>
+                <td class="mono">${fmtNum(r.success)}</td>
+                <td class="mono" style="${r.failed ? 'color:var(--danger)' : ''}">${fmtNum(r.failed)}</td>
+                <td class="mono">${fmtNum(r.distinct_users)}</td>
+                <td class="muted" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(sample)}">${escHtml(sample || '—')}</td>
+                <td class="mono muted">${fmtDateTime(r.first_seen)}</td>
+                <td class="mono muted">${fmtDateTime(r.last_seen)}</td>
+            </tr>`;
+        }).join('') : `<tr><td colspan="8" class="table-empty">No IP activity found for this filter</td></tr>`;
+        renderFooter('ip');
+    }
+
+    async function renderGenuine(st) {
+        const data = await apiGet('get_genuine_user_ips', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+
+        const s = data.summary;
+        document.getElementById('genuine-summary').innerHTML = `
+            <div class="kpi-card success"><div class="kpi-label">Users w/ Genuine IP</div><div class="kpi-value">${fmtNum(s.users_with_genuine_ip)}</div></div>
+            <div class="kpi-card accent"><div class="kpi-label">Genuine Logins</div><div class="kpi-value">${fmtNum(s.total_genuine_logins)}</div></div>
+            <div class="kpi-card warning"><div class="kpi-label">Impersonation Artifacts</div><div class="kpi-value">${fmtNum(s.total_impersonated_logins)}</div></div>
+            <div class="kpi-card danger"><div class="kpi-label">Unresolved (no real IP)</div><div class="kpi-value">${fmtNum(s.total_unresolved_logins)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Impersonation-only Users</div><div class="kpi-value">${fmtNum(s.users_impersonation_only)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Never Resolved Users</div><div class="kpi-value">${fmtNum(s.users_unresolved_only)}</div></div>`;
+
+        const body = document.getElementById('genuine-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => {
+            const extraIps = (r.all_ips || []).slice(1);
+            const extraTitle = extraIps.length ? extraIps.map(i => `${i.ip_address} (${i.count})`).join(', ') : '';
+            return `
+            <tr>
+                <td>${userLink(r.user, r.full_name || r.user)}</td>
+                <td class="mono" style="font-weight:600">${fmtNum(r.genuine_logins)}</td>
+                <td>${r.primary_ip ? ipLink(r.primary_ip) : '<span class="muted">—</span>'}${extraIps.length ? ` <span class="muted" title="${escHtml(extraTitle)}">+${extraIps.length} more</span>` : ''}</td>
+                <td class="mono">${fmtNum(r.distinct_genuine_ips)}</td>
+                <td class="mono muted">${fmtNum(r.impersonated_logins)}</td>
+                <td class="mono muted">${fmtNum(r.unresolved_logins)}</td>
+                <td class="mono muted">${fmtDateTime(r.primary_ip_last_seen)}</td>
+            </tr>`;
+        }).join('') : `<tr><td colspan="7" class="table-empty">No login activity found for this filter</td></tr>`;
+        renderFooter('genuine');
+    }
+
+    function confidencePill(pct) {
+        const cls = pct >= 70 ? 'ok' : pct >= 40 ? 'warn' : 'fail';
+        return `<span class="badge ${cls}">${pct}%</span>`;
+    }
+
+    async function renderUnresolved(st) {
+        const data = await apiGet('get_unresolved_ip_predictions', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+
+        const s = data.summary;
+        document.getElementById('unresolved-summary').innerHTML = `
+            <div class="kpi-card danger"><div class="kpi-label">Unresolved Users</div><div class="kpi-value">${fmtNum(s.unresolved_users)}</div></div>
+            <div class="kpi-card danger"><div class="kpi-label">Unresolved Logins</div><div class="kpi-value">${fmtNum(s.unresolved_logins)}</div></div>
+            <div class="kpi-card success"><div class="kpi-label">Predictable (own history)</div><div class="kpi-value">${fmtNum(s.predictable_users)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">No Evidence Available</div><div class="kpi-value">${fmtNum(s.unpredictable_users)}</div></div>`;
+
+        const body = document.getElementById('unresolved-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr>
+                <td>${userLink(r.user, r.full_name || r.user)}</td>
+                <td class="mono" style="font-weight:600">${fmtNum(r.unresolved_logins)}</td>
+                <td>${r.predicted_ip ? ipLink(r.predicted_ip) : '<span class="muted">No prediction possible</span>'}</td>
+                <td>${r.predicted_ip ? confidencePill(r.predicted_ip_confidence) : '—'}</td>
+                <td class="muted">${r.predicted_ip ? `${fmtNum(r.predicted_ip_observations)} past login(s), last ${fmtDateTime(r.predicted_ip_last_seen)}` : '—'}</td>
+                <td class="mono muted">${r.alt_ip_count ? `+${r.alt_ip_count}` : '—'}</td>
+                <td class="mono muted">${fmtDateTime(r.last_unresolved)}</td>
+            </tr>`).join('') : `<tr><td colspan="7" class="table-empty">No unresolved logins found for this filter</td></tr>`;
+        renderFooter('unresolved');
+    }
+
+    async function renderRisk(st) {
+        const data = await apiGet('get_risk_scores', {
+            date_from: filters.date_from, date_to: filters.date_to,
+            band: document.getElementById('f-risk-band').value,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('risk-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => `
+            <tr>
+                <td>${userLink(r.user, r.full_name || r.user)}</td>
+                <td>
+                    <span class="risk-bar-track"><span class="risk-bar-fill" style="width:${r.score}%;background:${RISK_BAND_COLORS[r.band]}"></span></span>
+                    <span class="mono">${r.score}</span>
+                </td>
+                <td>${riskBadge(r.band)}</td>
+                <td class="mono" style="${r.failed_logins ? 'color:var(--danger)' : ''}">${fmtNum(r.failed_logins)}</td>
+                <td class="mono">${fmtNum(r.off_hours_logins)}</td>
+                <td class="mono">${fmtNum(r.distinct_ips)}</td>
+                <td class="mono muted">${fmtNum(r.impersonated_count)}</td>
+            </tr>`).join('') : `<tr><td colspan="7" class="table-empty">No users with login activity in this range</td></tr>`;
+        renderFooter('risk');
+    }
+
+    async function renderAnomalies(st) {
+        const data = await apiGet('get_anomalies', { date_from: filters.date_from, date_to: filters.date_to });
+        st.total = Math.min(data.total, data.anomalies.length);
+        const page = data.anomalies.slice(st.start, st.start + st.page_length);
+        st.lastCount = page.length;
+        const body = document.getElementById('anomalies-body');
+        body.innerHTML = page.length ? page.map(a => `
+            <tr>
+                <td>${severityBadge(a.severity)}</td>
+                <td>${escHtml(a.type)}</td>
+                <td>${a.subject_type === 'ip' ? ipLink(a.subject) : userLink(a.subject, a.subject_label)}</td>
+                <td class="muted">${escHtml(a.description)}</td>
+                <td class="mono">${fmtNum(a.count)}</td>
+                <td class="mono muted">${fmtDateTime(a.timestamp)}</td>
+            </tr>`).join('') : `<tr><td colspan="6" class="table-empty">No anomalies detected in this range 🎉</td></tr>`;
+        renderFooter('anomalies');
+    }
+
+    async function renderTimeline(st) {
+        const data = await apiGet('get_security_timeline', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user, ip: filters.ip,
+            severity: document.getElementById('f-timeline-severity').value,
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.hasMore = data.has_more; st.total = null;
+        const body = document.getElementById('timeline-body');
+        body.innerHTML = data.rows.length ? data.rows.map(e => `
+            <div class="timeline-item">
+                <span class="timeline-dot ${e.severity}"></span>
+                <div class="timeline-time">${fmtDateTime(e.timestamp)} · ${sourceTag(e.source)} ${e.ip_address ? ipLink(e.ip_address) : ''}</div>
+                <div class="timeline-title">${escHtml(e.type)} — ${userLink(e.user, e.user)}</div>
+                <div class="timeline-detail">${escHtml(e.detail || '—')}</div>
+            </div>`).join('') : `<div class="table-empty">No notable security events found for this filter</div>`;
+        renderFooter('timeline');
+    }
+
+    function fmtDiffValue(v) {
+        if (v === null || v === undefined || v === '') return '<span class="muted">∅</span>';
+        let s = String(v);
+        if (s.length > 60) s = s.slice(0, 57) + '…';
+        return `<span class="fval">${escHtml(s)}</span>`;
+    }
+
+    let _changeFilterTimer = null;
+    function debounceChangeFilter() {
+        clearTimeout(_changeFilterTimer);
+        _changeFilterTimer = setTimeout(() => { pageState.changes.start = 0; loadTable('changes'); }, 400);
+    }
+
+    async function loadChangedDoctypeOptions() {
+        try {
+            const data = await apiGet('get_changed_doctypes', { date_from: filters.date_from, date_to: filters.date_to });
+            const sel = document.getElementById('f-change-doctype');
+            const current = sel.value;
+            sel.innerHTML = '<option value="">All doctypes</option>' +
+                data.map(d => `<option value="${escHtml(d.doctype)}">${escHtml(d.doctype)} (${fmtNum(d.count)})</option>`).join('');
+            sel.value = current;
+        } catch (err) { console.error('Failed to load changed doctypes', err); }
+    }
+
+    async function renderChanges(st) {
+        const data = await apiGet('get_document_changes', {
+            date_from: filters.date_from, date_to: filters.date_to, user: filters.user,
+            doctype: document.getElementById('f-change-doctype').value,
+            docname: document.getElementById('f-change-docname').value.trim(),
+            start: st.start, page_length: st.page_length,
+        });
+        st.lastCount = data.rows.length; st.total = data.total;
+        const body = document.getElementById('changes-body');
+        body.innerHTML = data.rows.length ? data.rows.map(r => {
+            const diffs = r.changes.length ? r.changes.map(c => `
+                <div class="field-diff">
+                    <span class="fname">${escHtml(c.field)}</span>:
+                    ${fmtDiffValue(c.old)}<span class="arrow">→</span>${fmtDiffValue(c.new)}
+                </div>`).join('') : '<span class="muted">No field changes (re-save)</span>';
+            const ipCell = r.ip_address
+                ? `${ipLink(r.ip_address)}${r.ip_is_internal ? ' <span class="source-tag internal" title="Loopback / unresolved">INT</span>' : ''}`
+                : '<span class="muted">Unknown</span>';
+            const ipTitle = r.ip_method ? ` title="${escHtml(r.ip_method)}, ~${Math.round((r.ip_gap_seconds||0)/60)}m from edit"` : '';
+            return `
+            <tr>
+                <td class="mono">${fmtDateTime(r.timestamp)}</td>
+                <td>${escHtml(r.doctype)}</td>
+                <td class="mono">${escHtml(r.docname)}</td>
+                <td>${userLink(r.editor, r.editor_full_name || r.editor)}</td>
+                <td><div class="field-diff-list">${diffs}</div></td>
+                <td${ipTitle}>${ipCell}</td>
+            </tr>`;
+        }).join('') : `<tr><td colspan="6" class="table-empty">No document changes found for this filter</td></tr>`;
+        renderFooter('changes');
+    }
+
+    // ── Refresh orchestration ──────────────────────────────────
+    function refreshAll() {
+        TABS.forEach(t => { pageState[t].start = 0; });
+        _trendRows = null;
+        loadKPIs();
+        loadRecommendations();
+        loadTrendChart().then(() => loadDateBarChart());
+        loadTopUsersChart();
+        loadModuleAccess();
+        loadIpInsights();
+        loadDeviceAnalysis();
+        loadRiskSummary();
+        loadChangedDoctypeOptions();
+        loadTable(currentTab());
+    }
+
+    // ── IP detail modal ─────────────────────────────────────────
+    async function openIpDetail(ip) {
+        const overlay = document.getElementById('ip-modal-overlay');
+        const body = document.getElementById('ip-modal-body');
+        document.getElementById('ip-modal-title').textContent = ip;
+        body.innerHTML = '<div class="table-loading">Loading…</div>';
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const data = await apiGet('get_ip_detail', { ip_address: ip, date_from: filters.date_from, date_to: filters.date_to });
+            renderIpDetail(data);
+        } catch (err) {
+            body.innerHTML = `<div class="table-empty">Failed to load IP details: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    function closeIpModal() {
+        document.getElementById('ip-modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('ip-modal-overlay').classList.contains('open')) closeIpModal();
+        if (document.getElementById('user-modal-overlay').classList.contains('open')) closeUserModal();
+    });
+
+    function renderIpDetail(data) {
+        const s = data.summary;
+        const kpis = [
+            { label: 'Total Events', value: s.total },
+            { label: 'Success', value: s.success },
+            { label: 'Failed', value: s.failed },
+            { label: 'Distinct Users', value: data.user_breakdown.length },
+        ];
+
+        const kpiHtml = kpis.map(k => `
+            <div class="modal-kpi">
+                <div class="k-label">${escHtml(k.label)}</div>
+                <div class="k-value">${fmtNum(k.value)}</div>
+            </div>`).join('');
+
+        const rangeHtml = `
+            <div class="modal-kpi">
+                <div class="k-label">First Seen</div>
+                <div class="k-value" style="font-size:.78rem">${fmtDateTime(s.first_seen)}</div>
+            </div>
+            <div class="modal-kpi">
+                <div class="k-label">Last Seen</div>
+                <div class="k-value" style="font-size:.78rem">${fmtDateTime(s.last_seen)}</div>
+            </div>`;
+
+        const userRows = data.user_breakdown.map(u => `
+            <tr>
+                <td>${userLink(u.user, u.full_name || u.user)}</td>
+                <td class="mono">${fmtNum(u.total)}</td>
+                <td class="mono">${fmtNum(u.success)}</td>
+                <td class="mono" style="${u.failed ? 'color:var(--danger)' : ''}">${fmtNum(u.failed)}</td>
+                <td class="mono muted">${fmtDateTime(u.last_seen)}</td>
+            </tr>`).join('');
+
+        const eventRows = data.events.map(e => `
+            <tr>
+                <td class="mono">${fmtDateTime(e.timestamp)}</td>
+                <td>${sourceTag(e.source)}</td>
+                <td>${escHtml(e.user || '—')}</td>
+                <td>${escHtml(e.event || '—')}</td>
+                <td>${statusBadge(e.status)}</td>
+                <td class="muted">${escHtml(e.detail || '—')}</td>
+            </tr>`).join('');
+
+        document.getElementById('ip-modal-body').innerHTML = `
+            ${s.is_internal ? '<span class="badge warn" style="margin-bottom:.8rem;display:inline-flex">Internal / unresolved client IP — not a real network address</span>' : ''}
+            <div class="modal-kpis">${kpiHtml}${rangeHtml}</div>
+
+            <div class="modal-section-title">Users from this IP (${data.user_breakdown.length})</div>
+            <div class="table-wrap" style="max-height:220px;overflow-y:auto">
+                <table class="data-table">
+                    <thead><tr><th>User</th><th>Total</th><th>Success</th><th>Failed</th><th>Last Seen</th></tr></thead>
+                    <tbody>${userRows || '<tr><td colspan="5" class="table-empty">No users recorded</td></tr>'}</tbody>
+                </table>
+            </div>
+
+            <div class="modal-section-title">Recent Events (up to 100)</div>
+            <div class="table-wrap" style="max-height:320px;overflow-y:auto">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>Source</th><th>User</th><th>Event</th><th>Status</th><th>Detail</th></tr></thead>
+                    <tbody>${eventRows || '<tr><td colspan="6" class="table-empty">No events recorded</td></tr>'}</tbody>
+                </table>
+            </div>`;
+    }
+
+    // ── User detail modal ─────────────────────────────────────────
+    async function openUserDetail(user) {
+        const overlay = document.getElementById('user-modal-overlay');
+        const body = document.getElementById('user-modal-body');
+        document.getElementById('user-modal-title').textContent = user;
+        body.innerHTML = '<div class="table-loading">Loading…</div>';
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const data = await apiGet('get_user_detail', { user, date_from: filters.date_from, date_to: filters.date_to });
+            renderUserDetail(data);
+        } catch (err) {
+            body.innerHTML = `<div class="table-empty">Failed to load user details: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    function closeUserModal() {
+        document.getElementById('user-modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function renderUserDetail(data) {
+        document.getElementById('user-modal-title').textContent = data.full_name !== data.user ? `${data.full_name} (${data.user})` : data.user;
+        const risk = data.risk;
+
+        const kpiHtml = [
+            { label: 'Risk Score', value: `${risk.score} · ${risk.band}` },
+            { label: 'Logins', value: fmtNum(risk.logins) },
+            { label: 'Failed Logins', value: fmtNum(risk.failed_logins) },
+            { label: 'Off-Hours Logins', value: fmtNum(risk.off_hours_logins) },
+            { label: 'Distinct IPs', value: fmtNum(risk.distinct_ips) },
+            { label: 'Times Impersonated', value: fmtNum(risk.impersonated_count) },
+        ].map(k => `
+            <div class="modal-kpi">
+                <div class="k-label">${escHtml(k.label)}</div>
+                <div class="k-value" style="font-size:${String(k.value).length > 6 ? '.85rem' : '1.1rem'}">${k.value}</div>
+            </div>`).join('');
+
+        const factorHtml = Object.entries(risk.factors).map(([k, v]) => `
+            <span class="mini-row" style="display:inline-flex;width:auto;margin:.2rem .3rem 0 0">
+                <span class="mini-sub" style="margin-right:.4rem">${escHtml(k.replace(/_/g, ' '))}</span>
+                <span class="mono" style="font-weight:700">+${v}</span>
+            </span>`).join('');
+
+        const ipRows = data.ip_breakdown.map(r => `
+            <tr>
+                <td>${ipLink(r.ip_address)} ${r.is_internal ? '<span class="source-tag internal">INTERNAL</span>' : ''}</td>
+                <td class="mono">${fmtNum(r.total)}</td>
+                <td class="mono" style="${r.failed ? 'color:var(--danger)' : ''}">${fmtNum(r.failed)}</td>
+                <td class="mono muted">${fmtDateTime(r.last_seen)}</td>
+            </tr>`).join('');
+
+        const moduleRows = data.module_breakdown.map(m => `
+            <tr><td>${escHtml(m.module)}</td><td class="mono">${fmtNum(m.cnt)}</td></tr>`).join('');
+
+        const eventRows = data.events.map(e => `
+            <tr>
+                <td class="mono">${fmtDateTime(e.timestamp)}</td>
+                <td>${sourceTag(e.source)}</td>
+                <td>${escHtml(e.event || '—')}</td>
+                <td>${e.status ? statusBadge(e.status) : '—'}</td>
+                <td class="muted">${escHtml(e.detail || '—')}</td>
+                <td class="mono muted">${e.ip_address ? ipLink(e.ip_address) : '—'}</td>
+            </tr>`).join('');
+
+        document.getElementById('user-modal-body').innerHTML = `
+            <div class="modal-kpis">${kpiHtml}</div>
+            <div class="modal-section-title" style="margin-top:0">Risk factor breakdown</div>
+            <div>${factorHtml}</div>
+
+            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1rem;margin-top:.5rem">
+                <div>
+                    <div class="modal-section-title">IP Addresses Used</div>
+                    <div class="table-wrap" style="max-height:200px;overflow-y:auto">
+                        <table class="data-table">
+                            <thead><tr><th>IP</th><th>Total</th><th>Failed</th><th>Last Seen</th></tr></thead>
+                            <tbody>${ipRows || '<tr><td colspan="4" class="table-empty">No IP data</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <div class="modal-section-title">Module Activity</div>
+                    <div class="table-wrap" style="max-height:200px;overflow-y:auto">
+                        <table class="data-table">
+                            <thead><tr><th>Module</th><th>Count</th></tr></thead>
+                            <tbody>${moduleRows || '<tr><td colspan="2" class="table-empty">No workflow activity</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-section-title">Recent Events (up to 100)</div>
+            <div class="table-wrap" style="max-height:320px;overflow-y:auto">
+                <table class="data-table">
+                    <thead><tr><th>Time</th><th>Source</th><th>Event</th><th>Status</th><th>Detail</th><th>IP</th></tr></thead>
+                    <tbody>${eventRows || '<tr><td colspan="6" class="table-empty">No events recorded</td></tr>'}</tbody>
+                </table>
+            </div>`;
+    }
+
+    // ── Init ────────────────────────────────────────────────────
+    async function startDashboard() {
+        defaultDates();
+        readFiltersFromForm();
+        await loadFilterOptions();
+        refreshAll();
+    }
+
+    (function init() {
+        if (window.dashboardUnlocked) {
+            startDashboard();
+        } else {
+            document.getElementById('password-gate-overlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('dashboard-password-input').focus();
+        }
+    })();
+</script>
+</body>
+</html>

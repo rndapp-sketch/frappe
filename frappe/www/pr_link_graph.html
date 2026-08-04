@@ -38,7 +38,47 @@
             --c-purchase-bg: rgba(245,158,11,.08);
             --c-hr-bg:       rgba(16,185,129,.08);
             --c-project-bg:  rgba(139,92,246,.08);
+
+            /* ---- app-shell parity with kafka_control.html ---- */
+            --surface: var(--bg-card, #ffffff);
+            --accent-hover: #1D4ED8;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+            --sidebar-width: 268px;
         }
+        :root { --accent: #2563EB; }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --bg-sidebar: #0F172A;
+            --bg-card: #111827;
+            --surface: #111827;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+            --border-sub: #1E293B;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.6);
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+        }
+        :root[data-theme="dark"] body { color-scheme: dark; }
 
         * { box-sizing: border-box; }
 
@@ -50,108 +90,6 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-        }
-
-        /* ── Sidebar ── */
-        nav {
-            width: 240px;
-            min-width: 240px;
-            height: 100vh;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
-            padding: 2rem 1.25rem;
-            z-index: 100;
-            transition: transform .3s ease, width .3s ease;
-            flex-shrink: 0;
-        }
-        .nav-header {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--accent);
-            margin-bottom: 1.75rem;
-            display: flex;
-            align-items: center;
-            gap: .4rem;
-        }
-        .nav-links { list-style: none; padding: 0; margin: 0; }
-        .nav-links li { margin-bottom: .3rem; }
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-size: .9rem;
-            display: block;
-            padding: .5rem .85rem;
-            border-radius: 6px;
-            transition: all .15s;
-            font-weight: 500;
-        }
-        .nav-links a:hover, .nav-links a.active {
-            background: var(--accent-light);
-            color: var(--accent);
-        }
-
-        /* ── Top bar ── */
-        .top-nav {
-            position: fixed;
-            top: 0; left: 240px; right: 0;
-            height: 56px;
-            background: rgba(249,247,242,.95);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 1.5rem;
-            z-index: 90;
-            backdrop-filter: blur(8px);
-            gap: 1rem;
-            justify-content: space-between;
-            transition: left .3s ease;
-        }
-        body.nav-collapsed nav    { transform: translateX(-100%); }
-        body.nav-collapsed .top-nav { left: 0; }
-        body.nav-collapsed main   { margin-left: 0; }
-
-        .sidebar-toggle {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted);
-            padding: .35rem;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            transition: all .15s;
-        }
-        .sidebar-toggle:hover { background: var(--bg-page); color: var(--accent); }
-
-        .top-right { display: flex; align-items: center; gap: .75rem; }
-        .user-label { font-size: .85rem; color: var(--text-muted); }
-        .logout-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: .35rem .75rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: .82rem;
-            transition: all .15s;
-            display: flex;
-            align-items: center;
-            gap: .4rem;
-            text-decoration: none;
-        }
-        .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-        /* ── Main layout ── */
-        main {
-            margin-left: 240px;
-            margin-top: 56px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 56px);
-            overflow: hidden;
-            transition: margin-left .3s ease;
         }
 
         /* ── Search bar ── */
@@ -599,6 +537,112 @@
             max-width: 260px;
             white-space: normal;
         }
+
+        /* ── App shell (sidebar + topbar), matching kafka_control.html ── */
+        /* This page needs a fixed, non-scrolling viewport (the graph canvas fills
+           the remaining space), so .app-shell/.app-main/.app-content override the
+           usual scrollable-page defaults with a 100vh flex column instead. */
+        .app-shell { display: flex; height: 100vh; overflow: hidden; }
+
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.4rem 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 100;
+            transition: transform .25s ease, background-color .2s ease, border-color .2s ease;
+        }
+
+        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; }
+        .brand-logo {
+            width: 30px; height: 30px; border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; flex-shrink: 0; box-shadow: var(--shadow-sm);
+        }
+        .brand-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; color: var(--text-main); }
+        .brand-text small { display: block; font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; }
+        .nav-group-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 700; padding: 0 .6rem; margin-bottom: .45rem; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .62rem .75rem; border-radius: var(--radius-sm);
+            color: var(--text-muted); font-size: .89rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none; background: transparent;
+            width: 100%; text-align: left; font-family: inherit;
+            transition: background .15s ease, color .15s ease;
+        }
+        .nav-item svg { flex-shrink: 0; }
+        .nav-item:hover { background: var(--accent-light); color: var(--accent); }
+        .nav-item.active { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+        .nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+        .nav-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
+
+        .app-main { margin-left: var(--sidebar-width); flex: 1; min-width: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        .app-topbar {
+            flex-shrink: 0;
+            height: 66px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0 1.75rem;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+        .topbar-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; color: var(--text-main); }
+        .topbar-title span { display: block; font-size: .74rem; font-weight: 500; color: var(--text-muted); }
+        .topbar-actions { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; position: relative;
+            transition: color .15s, border-color .15s, transform .15s;
+        }
+        .icon-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+        .avatar-chip { display: flex; align-items: center; gap: .6rem; padding: .3rem .5rem .3rem .3rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: .78rem; flex-shrink: 0;
+        }
+        .avatar-chip .who { font-size: .8rem; font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .app-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+
+        .btn:focus-visible, .nav-item:focus-visible, .icon-btn:focus-visible, .search-input:focus-visible {
+            outline: 2px solid var(--accent); outline-offset: 2px;
+        }
+
+        /* Mobile / tablet responsive */
+        .sidebar-backdrop { display: none; }
+        #sidebar-toggle { display: none; }
+        @media (max-width: 1080px) {
+            #sidebar-toggle { display: flex; }
+            .app-sidebar { transform: translateX(-100%); }
+            body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
+            .app-main { margin-left: 0; }
+            body.sidebar-open .sidebar-backdrop {
+                display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 99;
+            }
+        }
+        @media (max-width: 720px) {
+            .topbar-title span { display: none; }
+            .avatar-chip .who { display: none; }
+        }
     </style>
 </head>
 
@@ -608,46 +652,100 @@
     <script>window.location.href = '/login?redirect-to=/pr_link_graph';</script>
     {% endif %}
 
-    <!-- ── Sidebar ── -->
-    <nav id="sidebar">
-        <div class="nav-header">
-            <span>rndopsapp</span>
-            <span style="font-size:.65rem;background:var(--accent);color:white;padding:2px 5px;border-radius:4px;">ADMIN</span>
-        </div>
-        <ul class="nav-links">
-            <li><a href="/documentation">Documentation</a></li>
-            <li><a href="/kafka_control">Kafka Control</a></li>
-            <li><a href="/project_search">Search Projects</a></li>
-            <li><a href="/pr_link_graph" class="active">PR Link Graph</a></li>
-            <li><a href="/app">Desk</a></li>
-        </ul>
-    </nav>
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
-    <!-- ── Top bar ── -->
-    <header class="top-nav">
-        <button class="sidebar-toggle" onclick="toggleNav()" aria-label="Toggle sidebar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"/>
-                <line x1="3" y1="6"  x2="21" y2="6"/>
-                <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-        </button>
-        <div class="top-right">
-            <span class="user-label">{{ frappe.session.user }}</span>
-            <button onclick="frappe.app.logout()" class="logout-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-                Logout
-            </button>
-        </div>
-    </header>
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="brand-row">
+                <div class="brand-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <div class="brand-text">rndopsapp<small>DevOps Control Center</small></div>
+            </div>
 
-    <!-- ── Main ── -->
-    <main>
+            <div class="nav-scroll">
+                <div>
+                    <div class="nav-group-label">Tools</div>
+                    <ul class="nav-list">
+                        <li><a class="nav-item" href="/kafka_control">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                            Dashboard
+                        </a></li>
+                        <li><a class="nav-item" href="/project_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Project Search
+                        </a></li>
+                        <li><a class="nav-item" href="/funding_agency_search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
+                            Funding Agencies
+                        </a></li>
+                        <li><a class="nav-item" href="/pr_lookup">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            PR Lookup
+                        </a></li>
+                        <li><a class="nav-item active" href="/pr_link_graph">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="12" cy="18" r="3"></circle><line x1="7.5" y1="7.5" x2="10" y2="16"></line><line x1="16.5" y1="7.5" x2="14" y2="16"></line></svg>
+                            PR Link Graph
+                        </a></li>
+                        <li><a class="nav-item" href="/project_delete">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                            Delete Project
+                        </a></li>
+                        <li><a class="nav-item" href="/document_edit">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Document Editor
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-footer">
+                <div class="nav-group-label">Quick Links</div>
+                <ul class="nav-list">
+                    <li><a class="nav-item" href="/documentation">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        Documentation
+                    </a></li>
+                    <li><a class="nav-item" href="/app">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        Frappe Desk
+                    </a></li>
+                    <li><a class="nav-item" href="/rndops-leaderboard">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+                        Leaderboard
+                    </a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar">
+                <button id="sidebar-toggle" class="icon-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="topbar-title">PR Link Graph<span>Visualize linked documents for a Project Registration</span></div>
+
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                        <svg id="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg id="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <div class="avatar-chip">
+                        <div class="avatar">{{ (frappe.session.user or 'U')[0]|upper }}</div>
+                        <span class="who">{{ frappe.session.user }}</span>
+                        <button onclick="frappe.app.logout()" class="icon-btn" style="border:none;background:transparent;width:26px;height:26px;" aria-label="Logout">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="app-content">
         <!-- Search bar -->
         <div class="search-bar">
             <span class="search-label">Project ID</span>
@@ -809,7 +907,9 @@
             </div>
             <div class="panel-body" id="panel-body"></div>
         </div>
-    </main>
+            </div>
+        </div>
+    </div>
 
     <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
     <script src="/assets/js/frappe-web.min.js"></script>
@@ -849,15 +949,35 @@
     let mmSvgZoom   = null;
     let currentView = 'graph';
 
-    // ── Sidebar toggle ───────────────────────────────────────
-    function toggleNav() {
-        document.body.classList.toggle('nav-collapsed');
-        localStorage.setItem('prLinkNav', document.body.classList.contains('nav-collapsed') ? '0' : '1');
+    // ── Sidebar toggle (mobile drawer) ────────────────────────
+    function toggleSidebar() {
+        document.body.classList.toggle('sidebar-open');
         if (simulation) {
             setTimeout(fitGraph, 350);
         }
     }
-    if (localStorage.getItem('prLinkNav') === '0') document.body.classList.add('nav-collapsed');
+
+    // ── Theme (light/dark) ────────────────────────────────────
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const sun = document.getElementById('theme-icon-sun');
+        const moon = document.getElementById('theme-icon-moon');
+        if (sun && moon) {
+            sun.style.display = theme === 'dark' ? 'none' : 'block';
+            moon.style.display = theme === 'dark' ? 'block' : 'none';
+        }
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('kafkaControlTheme', next);
+        applyTheme(next);
+    }
+    (function initTheme() {
+        const saved = localStorage.getItem('kafkaControlTheme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+    })();
 
     // ── Error helpers ─────────────────────────────────────────
     function showError(msg) {
@@ -1319,6 +1439,10 @@
             </div>`;
         }
 
+        if (d.doctype === 'Fund Sanction') {
+            html += `<div id="fs-budget-breakup-section" style="margin-top:0.75rem;"></div>`;
+        }
+
         html += `<a class="panel-open-btn" href="${deskUrl(d.doctype, d.name)}" target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1330,6 +1454,92 @@
 
         body.innerHTML = html;
         panel.classList.add('open');
+
+        if (d.doctype === 'Fund Sanction') {
+            renderFsBudgetBreakupInto(
+                document.getElementById('fs-budget-breakup-section'),
+                d.name,
+                { titlePrefix: '', showLabel: true }
+            );
+        }
+    }
+
+    // ── Fund Sanction: sanctioned budget breakup ──────────────
+    // Shared by both the detail panel (graph/mindmap views) and the list view's
+    // expandable rows, so the same fetch + table markup is used everywhere.
+    const FUND_SANCTION_BUDGET_API = '/api/method/rndopsapp.rndopsapp.doctype.project_registration.project_registration.get_fund_sanction_budget_breakup';
+    const FS_BUDGET_COLS = [
+        ['account_head', 'Account Head'],
+        ['first_year_budget', '1st Year'],
+        ['second_year_budget', '2nd Year'],
+        ['third_year_budget', '3rd Year'],
+        ['fourth_year_budget', '4th Year'],
+        ['fifth_year_budget', '5th Year'],
+        ['sixth_year_budget', '6th Year'],
+        ['total_proposal_of_heads', 'Total'],
+    ];
+
+    async function renderFsBudgetBreakupInto(container, fundSanctionName, opts) {
+        if (!container) return;
+        const label = (opts && opts.showLabel === false) ? '' :
+            `<div class="panel-field-label" style="margin-bottom:0.4rem;">Sanctioned Budget Breakup</div>`;
+        container.innerHTML = `${label}<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">Loading…</div>`;
+
+        try {
+            const resp = await fetch(`${FUND_SANCTION_BUDGET_API}?fund_sanction_name=${encodeURIComponent(fundSanctionName)}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Frappe-CSRF-Token': window.csrf_token || '',
+                },
+            });
+            const json = await resp.json();
+            const data = json.message || json;
+            if (!resp.ok || data.status === 'error') throw new Error(data.message || resp.statusText);
+
+            if (!container.isConnected) return; // panel/row closed meanwhile
+
+            if (!data.rows.length) {
+                container.innerHTML = `${label}<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">No budget breakup rows on this Fund Sanction.</div>`;
+                return;
+            }
+
+            const rowsHtml = data.rows.map(r => `<tr${r.is_total_row ? ' style="font-weight:700;"' : ''}>
+                ${FS_BUDGET_COLS.map(([f]) => `<td>${escHtml(r[f] !== null && r[f] !== undefined ? String(r[f]) : '')}</td>`).join('')}
+            </tr>`).join('');
+
+            container.innerHTML = `${(opts && opts.showLabel === false) ? '' : `<div class="panel-field-label" style="margin-bottom:0.4rem;">Sanctioned Budget Breakup (${data.rows.length})</div>`}
+                <div style="overflow-x:auto;border:1px solid var(--border);border-radius:6px;">
+                    <table class="list-table" style="font-size:0.76rem;">
+                        <thead><tr>${FS_BUDGET_COLS.map(([, label]) => `<th>${escHtml(label)}</th>`).join('')}</tr></thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>`;
+        } catch (err) {
+            if (container.isConnected) {
+                container.innerHTML = `${label}<div style="color:var(--danger);font-size:0.8rem;">Failed to load: ${escHtml(err.message)}</div>`;
+            }
+        }
+    }
+
+    function toggleFsListBudgetRow(rowEl, fundSanctionName) {
+        const budgetRow = rowEl.nextElementSibling;
+        if (!budgetRow || !budgetRow.classList.contains('fs-budget-row')) return;
+        const chevron = rowEl.querySelector('.fs-list-chevron');
+        const isOpen = budgetRow.style.display !== 'none';
+
+        if (isOpen) {
+            budgetRow.style.display = 'none';
+            if (chevron) chevron.textContent = '▸';
+            return;
+        }
+        budgetRow.style.display = '';
+        if (chevron) chevron.textContent = '▾';
+
+        const container = budgetRow.querySelector('.fs-budget-container');
+        if (container && !container.dataset.loaded) {
+            container.dataset.loaded = '1';
+            renderFsBudgetBreakupInto(container, fundSanctionName, { showLabel: false });
+        }
     }
 
     function closePanel() {
@@ -1385,14 +1595,15 @@
                     : n.type === 'chained'
                     ? `<span class="stat-chip chained" style="font-size:.7rem">Chained</span>`
                     : `<span class="stat-chip indirect" style="font-size:.7rem">Indirect</span>`;
-                html += `<tr>
-                    <td class="mono-cell">${escHtml(n.name)}</td>
+                const isFundSanction = n.doctype === 'Fund Sanction';
+                html += `<tr${isFundSanction ? ` style="cursor:pointer;" onclick="toggleFsListBudgetRow(this, '${escHtml(n.name)}')"` : ''}>
+                    <td class="mono-cell">${isFundSanction ? `<span class="fs-list-chevron" style="display:inline-block;width:1em;">▸</span>` : ''}${escHtml(n.name)}</td>
                     <td>${escHtml(n.subtitle)}</td>
                     <td>${ltype}</td>
                     <td class="mono-cell">${escHtml(n.link_field || '—')}</td>
                     <td>${wfBadge(n.workflow_state)}</td>
                     <td>
-                        <a class="desk-link-sm" href="${deskUrl(n.doctype, n.name)}" target="_blank" rel="noopener">
+                        <a class="desk-link-sm" href="${deskUrl(n.doctype, n.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -1402,6 +1613,13 @@
                         </a>
                     </td>
                 </tr>`;
+                if (isFundSanction) {
+                    html += `<tr class="fs-budget-row" style="display:none;">
+                        <td colspan="6" style="padding:0.6rem 1rem;background:var(--bg-page);">
+                            <div class="fs-budget-container"></div>
+                        </td>
+                    </tr>`;
+                }
             });
 
             html += `</tbody></table></div></div>`;
