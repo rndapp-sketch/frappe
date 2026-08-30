@@ -55,6 +55,7 @@
             --status-warning-text: #B45309;
 
             --sidebar-width: 268px;
+            --sidebar-rail-width: 72px;
         }
 
         :root[data-theme="dark"] {
@@ -697,7 +698,7 @@
         .brand-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; }
         .brand-text small { display: block; font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
 
-        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; }
+        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; min-height: 200px; }
 
         .nav-group-label {
             font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
@@ -892,7 +893,7 @@
         .nav-footer-header svg { color: var(--text-muted); transition: transform .18s ease; flex-shrink: 0; }
         .nav-footer.open .nav-footer-header svg { transform: rotate(90deg); }
         .nav-footer-list { display: none; }
-        .nav-footer.open .nav-footer-list { display: flex; flex-direction: column; }
+        .nav-footer.open .nav-footer-list { display: flex; flex-direction: column; max-height: 260px; overflow-y: auto; }
 
         /* Warning / info banners */
         .banner {
@@ -1017,7 +1018,7 @@
         .doctype-item .badge-mini { font-size: .65rem; padding: 1px 6px; border-radius: 4px; background: var(--border); color: var(--text-muted); font-family: 'Inter', sans-serif; flex-shrink: 0; }
         .doctype-item.active .badge-mini { background: rgba(255,255,255,0.25); color: #fff; }
         .doctype-explorer-detail-panel { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); padding: 1.25rem; min-height: 200px; }
-        @media (max-width: 1080px) {
+        @media (max-width: 860px) {
             .doctype-explorer-layout { grid-template-columns: 1fr; }
         }
 
@@ -1037,17 +1038,44 @@
         /* Mobile / tablet responsive */
         .sidebar-backdrop { display: none; }
         #sidebar-toggle { display: none; }
-        @media (max-width: 1080px) {
+
+        /* Tablet / narrow-desktop: collapse to an icon-only rail instead of
+           hiding the sidebar entirely, so nav groups (e.g. "Operations")
+           stay reachable without needing to open a drawer. */
+        @media (max-width: 860px) {
+            .app-sidebar { width: var(--sidebar-rail-width); padding-left: .5rem; padding-right: .5rem; }
+            .app-sidebar .brand-text,
+            .app-sidebar .nav-group-label,
+            .app-sidebar .nav-label,
+            .app-sidebar .nav-footer,
+            .app-sidebar .nav-danger-dot { display: none; }
+            .app-sidebar .brand-row { justify-content: center; padding: .3rem 0 1rem; }
+            .app-sidebar .nav-item { justify-content: center; padding: .7rem; gap: 0; }
+            .app-main { margin-left: var(--sidebar-rail-width); }
+            .doctype-explorer-layout { grid-template-columns: 1fr; }
+        }
+
+        /* Mobile: rail becomes a full hidden drawer, toggled via hamburger */
+        @media (max-width: 560px) {
             #sidebar-toggle { display: flex; }
-            .app-sidebar { transform: translateX(-100%); }
+            .app-sidebar {
+                width: var(--sidebar-width);
+                padding-left: 1rem; padding-right: 1rem;
+                transform: translateX(-100%);
+            }
+            .app-sidebar .brand-text { display: block; }
+            .app-sidebar .nav-group-label { display: block; }
+            .app-sidebar .nav-label { display: inline; }
+            .app-sidebar .nav-footer { display: block; }
+            .app-sidebar .nav-danger-dot { display: inline-block; }
+            .app-sidebar .brand-row { justify-content: flex-start; padding: .3rem .6rem 1rem; }
+            .app-sidebar .nav-item { justify-content: flex-start; gap: .7rem; padding: .62rem .75rem; }
             body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
             .app-main { margin-left: 0; }
             .sql-layout { grid-template-columns: 1fr; }
             body.sidebar-open .sidebar-backdrop {
                 display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 99;
             }
-        }
-        @media (max-width: 720px) {
             .app-content { padding: 1.25rem 1rem 2.5rem; }
             .global-search { display: none; }
             .topbar-title span { display: none; }
@@ -1082,51 +1110,51 @@
                 <div>
                     <div class="nav-group-label">Operations</div>
                     <ul class="nav-list">
-                        <li><button class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')">
+                        <li><button class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')" title="Dashboard">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-                            Dashboard
+                            <span class="nav-label">Dashboard</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="kafka" onclick="showSection('kafka')">
+                        <li><button class="nav-item" data-section="kafka" onclick="showSection('kafka')" title="Kafka">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"></circle><circle cx="6" cy="19" r="2"></circle><circle cx="18" cy="19" r="2"></circle><path d="M12 7v4M12 11l-5.2 6M12 11l5.2 6"></path></svg>
-                            Kafka
+                            <span class="nav-label">Kafka</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="projects" onclick="showSection('projects')">
+                        <li><button class="nav-item" data-section="projects" onclick="showSection('projects')" title="Projects">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            Projects
+                            <span class="nav-label">Projects</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="workflow" onclick="showSection('workflow')">
+                        <li><button class="nav-item" data-section="workflow" onclick="showSection('workflow')" title="Workflow">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            Workflow
+                            <span class="nav-label">Workflow</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="budget" onclick="showSection('budget')">
+                        <li><button class="nav-item" data-section="budget" onclick="showSection('budget')" title="Budget Heads">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                            Budget Heads
+                            <span class="nav-label">Budget Heads</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="database" onclick="showSection('database')">
+                        <li><button class="nav-item" data-section="database" onclick="showSection('database')" title="Database">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-                            Database
+                            <span class="nav-label">Database</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="logs" onclick="showSection('logs')">
+                        <li><button class="nav-item" data-section="logs" onclick="showSection('logs')" title="Logs">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-                            Logs
+                            <span class="nav-label">Logs</span>
                         </button></li>
                     </ul>
                 </div>
                 <div>
                     <div class="nav-group-label">Administration</div>
                     <ul class="nav-list">
-                        <li><button class="nav-item" data-section="activity_log" onclick="showSection('activity_log')">
+                        <li><button class="nav-item" data-section="activity_log" onclick="showSection('activity_log')" title="Activity Log">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            Activity Log
+                            <span class="nav-label">Activity Log</span>
                         </button></li>
-                        <li><button class="nav-item" data-section="danger" onclick="showSection('danger')">
+                        <li><button class="nav-item" data-section="danger" onclick="showSection('danger')" title="Danger Zone">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            Danger Zone
+                            <span class="nav-label">Danger Zone</span>
                             <span class="nav-danger-dot"></span>
                         </button></li>
-                        <li><button class="nav-item" data-section="settings" onclick="showSection('settings')">
+                        <li><button class="nav-item" data-section="settings" onclick="showSection('settings')" title="Settings">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                            Settings
+                            <span class="nav-label">Settings</span>
                         </button></li>
                     </ul>
                 </div>
@@ -1138,6 +1166,14 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
                 <ul class="nav-list nav-footer-list" id="quick-links-list">
+                    <li><a class="nav-item" href="/kafka_dlq_control">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"></path><path d="M3 8h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"></path><path d="M9 12h6"></path><path d="M9 16h3"></path></svg>
+                        DLQ Management
+                    </a></li>
+                    <li><a class="nav-item" href="/email_manager">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                        Email Manager
+                    </a></li>
                     <li><a class="nav-item" href="/documentation">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                         Documentation
@@ -1158,6 +1194,10 @@
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                         PR Lookup
                     </a></li>
+                    <li><a class="nav-item" href="/doc_history">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Document History
+                    </a></li>
                     <li><a class="nav-item" href="http://172.16.131.206:8000/pr_link_graph" target="_blank">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="12" cy="18" r="3"></circle><line x1="7.5" y1="7.5" x2="10" y2="16"></line><line x1="16.5" y1="7.5" x2="14" y2="16"></line></svg>
                         PR Link Graph ↗
@@ -1169,6 +1209,14 @@
                     <li><a class="nav-item" href="/document_edit">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         Document Editor
+                    </a></li>
+                    <li><a class="nav-item" href="/insert_project_staff">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                        Add Project Staff
+                    </a></li>
+                    <li><a class="nav-item" href="/role_permission_manager">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        Role Permissions
                     </a></li>
                     <li><a class="nav-item" href="/funding_agency_search">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
@@ -1533,6 +1581,25 @@
                 </div>
             </div>
 
+            <!-- DLQ Management -->
+            <div class="card" data-section="kafka">
+                <div class="card-header">
+                    <h3 class="card-title">DLQ Management</h3>
+                    <span class="status-badge" style="background:var(--status-warning-bg);color:var(--status-warning-text);">5 topics consumed</span>
+                </div>
+                <div class="control-group">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+                        View dead-letter events, check live backlog per topic, retry failed staged commits, and
+                        clear log tables — for fund-sanction, fund-received, deposit-slip, loan-request,
+                        account-head-commit and account-head-payment DLQs.
+                    </p>
+                    <a class="btn btn-primary" href="/kafka_dlq_control" style="text-decoration:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"></path><path d="M3 8h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"></path></svg>
+                        Open DLQ Management
+                    </a>
+                </div>
+            </div>
+
             <!-- Edit Project Registration -->
             <div class="card" id="pr-edit-section" data-section="projects" style="grid-column: 1 / -1;">
                 <div class="card-header">
@@ -1699,6 +1766,10 @@
                 </div>
             </div>
 
+            <!-- Autocomplete source for every "DocType Name" input below — populated from the
+                 Rndopsapp-module doctype list (see loadDoctypeExplorerListOnce / renderDoctypeNameDatalist) -->
+            <datalist id="rndopsapp-doctype-datalist"></datalist>
+
             <!-- Universal DocType Delete -->
             <div class="card danger-card" data-section="danger" style="grid-column: 1 / -1;">
                 <div class="card-header">
@@ -1714,7 +1785,7 @@
                             <label
                                 style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">DocType
                                 Name</label>
-                            <input type="text" id="delete-doctype-input"
+                            <input type="text" id="delete-doctype-input" list="rndopsapp-doctype-datalist"
                                 style="width: 100%; padding: 0.8rem; border: 1px solid var(--danger); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: var(--danger-soft); color: var(--text-main);"
                                 placeholder="e.g. Project Registration">
                         </div>
@@ -1740,6 +1811,75 @@
                         Delete Records
                     </button>
                     <div id="delete-doctype-result" class="console-output terminal-mode"
+                        style="display: none; height: auto; max-height: 300px; margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Delete Comments / Workflow Comments / Activity Logs of a document (leaves the document itself intact) -->
+            <div class="card danger-card" data-section="danger" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h3 class="card-title">🧹 Delete Comments &amp; Activity Logs</h3>
+                    <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);">DANGER ZONE</span>
+                </div>
+                <div class="control-group">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Fetch lists every Comment
+                        (including Workflow-transition comments — same table, different comment_type) and Activity
+                        Log tied to one document, so you can pick exactly which ones to remove. The document itself
+                        is <strong>never</strong> touched. Also works when the document no longer exists — this is
+                        the cleanup tool for comments/activity logs orphaned by a raw-SQL document delete. Only
+                        System Manager can perform this action.</p>
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <div style="flex: 0 0 280px;">
+                            <label
+                                style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">DocType
+                                Name</label>
+                            <input type="text" id="delete-history-doctype-input" list="rndopsapp-doctype-datalist"
+                                style="width: 100%; padding: 0.8rem; border: 1px solid var(--danger); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: var(--danger-soft); color: var(--text-main);"
+                                placeholder="e.g. Project Registration">
+                        </div>
+                        <div style="flex: 1;">
+                            <label
+                                style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Document
+                                Name</label>
+                            <input type="text" id="delete-history-docname-input"
+                                style="width: 100%; padding: 0.8rem; border: 1px solid var(--danger); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: var(--danger-soft); color: var(--text-main);"
+                                placeholder="e.g. 2026040201000105">
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="fetchDocumentCommentsAndActivity()"
+                        style="align-self: flex-start; margin-top: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Fetch Comments &amp; Activity Logs
+                    </button>
+
+                    <div id="delete-history-list-wrap" style="display: none; margin-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                            <div id="delete-history-summary" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+                            <div style="display: flex; gap: 0.6rem;">
+                                <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="setAllHistorySelection(true)">Select All</button>
+                                <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="setAllHistorySelection(false)">Select None</button>
+                            </div>
+                        </div>
+                        <div id="delete-history-items" style="max-height: 340px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem;"></div>
+                        <button class="btn btn-danger" id="delete-history-selected-btn" onclick="deleteSelectedCommentsAndActivity()"
+                            style="margin-top: 0.8rem;" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                            </svg>
+                            <span id="delete-history-selected-btn-label">Delete Selected (0)</span>
+                        </button>
+                    </div>
+
+                    <div id="delete-history-result" class="console-output terminal-mode"
                         style="display: none; height: auto; max-height: 300px; margin-top: 1rem;"></div>
                 </div>
             </div>
@@ -2334,7 +2474,7 @@
             if (name === 'dashboard') { updateHeroStats(); loadSystemMonitoring(); }
             if (name === 'database') { renderSqlHistory(); loadDoctypeExplorerListOnce(); }
             if (name === 'activity_log') loadActivityLog();
-            if (name === 'danger') loadBenchLogFileSizes();
+            if (name === 'danger') { loadBenchLogFileSizes(); loadDoctypeExplorerListOnce(); }
         }
 
         // ---- Global search: filters cards visible in the active section ----
@@ -3203,6 +3343,201 @@
             }
         }
 
+        // ---- Delete Comments & Activity Logs: fetch, select, delete-selected ----
+        let historyFetchContext = null; // { doctype, docname } for the last successful fetch
+
+        function escapeHtmlForHistory(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
+
+        function truncateForHistory(str, max = 160) {
+            if (str == null) return '';
+            const plain = String(str).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            return plain.length > max ? plain.slice(0, max) + '…' : plain;
+        }
+
+        async function fetchDocumentCommentsAndActivity() {
+            const doctype = document.getElementById('delete-history-doctype-input').value.trim();
+            const docname = document.getElementById('delete-history-docname-input').value.trim();
+            const listWrap = document.getElementById('delete-history-list-wrap');
+            const itemsEl = document.getElementById('delete-history-items');
+            const summaryEl = document.getElementById('delete-history-summary');
+            const resultEl = document.getElementById('delete-history-result');
+
+            if (!doctype) { alert('Please enter a DocType name.'); return; }
+            if (!docname) { alert('Please enter a document name.'); return; }
+
+            resultEl.style.display = 'none';
+            listWrap.style.display = 'block';
+            itemsEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;">Fetching…</span>';
+            document.getElementById('delete-history-selected-btn').disabled = true;
+            historyFetchContext = null;
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.get_document_comments_and_activity', { doctype, docname });
+                const res = r.message || {};
+                if (res.status === 'error') {
+                    itemsEl.innerHTML = `<span style="color:#ff6b6b;font-weight:bold;">❌ ${escapeHtmlForHistory(res.message)}</span>`;
+                    return;
+                }
+
+                historyFetchContext = { doctype, docname };
+                const comments = res.comments || [];
+                const activityLogs = res.activity_logs || [];
+                const meta = res.document_meta || null;
+                const metaLineCount = meta ? 2 : 0;
+
+                summaryEl.textContent = `${comments.length} comment(s), ${activityLogs.length} activity log(s)`
+                    + (meta ? ` + 2 non-deletable line(s) shown on the desk page (${comments.length + activityLogs.length + metaLineCount} total, matches the desk timeline)` : '')
+                    + (res.document_existed ? '' : ' — document no longer exists (orphaned records)');
+
+                if (!comments.length && !activityLogs.length && !meta) {
+                    itemsEl.innerHTML = '<span style="color:var(--text-muted);">Nothing found for this document.</span>';
+                    return;
+                }
+
+                let html = '';
+                if (meta) {
+                    html += '<div style="font-weight:bold;font-size:0.85rem;margin-bottom:0.4rem;">Document Metadata (not deletable — shown for parity with the desk timeline)</div>';
+                    html += `
+                    <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);opacity:0.7;font-style:italic;">
+                        <span style="width:16px;flex-shrink:0;">🔒</span>
+                        <span style="flex:1;font-size:0.85rem;">
+                            <span class="status-badge" style="background:var(--border);color:var(--text-muted);font-size:0.7rem;">Created</span>
+                            <span style="color:var(--text-muted);"> Owner: ${escapeHtmlForHistory(meta.owner)} · ${escapeHtmlForHistory(meta.creation)}</span>
+                            <div>"${escapeHtmlForHistory(meta.owner)} created this" — synthesized by the desk UI from the document's own owner/creation fields, not a Comment or Activity Log row.</div>
+                        </span>
+                    </div>
+                    <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);opacity:0.7;font-style:italic;">
+                        <span style="width:16px;flex-shrink:0;">🔒</span>
+                        <span style="flex:1;font-size:0.85rem;">
+                            <span class="status-badge" style="background:var(--border);color:var(--text-muted);font-size:0.7rem;">Last Modified</span>
+                            <span style="color:var(--text-muted);"> Owner: ${escapeHtmlForHistory(meta.modified_by)} · ${escapeHtmlForHistory(meta.modified)}</span>
+                            <div>"${escapeHtmlForHistory(meta.modified_by)} last edited this" — synthesized by the desk UI from the document's own modified_by/modified fields, not a Comment or Activity Log row.</div>
+                        </span>
+                    </div>`;
+                }
+                if (comments.length) {
+                    html += '<div style="font-weight:bold;font-size:0.85rem;margin-bottom:0.4rem;">Comments</div>';
+                    comments.forEach(c => {
+                        html += `
+                        <label style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);cursor:pointer;">
+                            <input type="checkbox" class="history-comment-checkbox" value="${escapeHtmlForHistory(c.name)}" onchange="updateHistorySelectionCount()" style="margin-top:0.2rem;">
+                            <span style="flex:1;font-size:0.85rem;">
+                                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);font-size:0.7rem;">${escapeHtmlForHistory(c.comment_type)}</span>
+                                <span style="color:var(--text-muted);"> By: ${escapeHtmlForHistory(c.comment_email)} · Owner: ${escapeHtmlForHistory(c.owner)} · ${escapeHtmlForHistory(c.creation)}</span>
+                                <div>${escapeHtmlForHistory(truncateForHistory(c.content))}</div>
+                            </span>
+                        </label>`;
+                    });
+                }
+                if (activityLogs.length) {
+                    html += '<div style="font-weight:bold;font-size:0.85rem;margin:0.8rem 0 0.4rem;">Activity Logs</div>';
+                    activityLogs.forEach(a => {
+                        html += `
+                        <label style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);cursor:pointer;">
+                            <input type="checkbox" class="history-activity-checkbox" value="${escapeHtmlForHistory(a.name)}" onchange="updateHistorySelectionCount()" style="margin-top:0.2rem;">
+                            <span style="flex:1;font-size:0.85rem;">
+                                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);font-size:0.7rem;">${escapeHtmlForHistory(a.operation || 'Activity')}</span>
+                                <span style="color:var(--text-muted);"> User: ${escapeHtmlForHistory(a.full_name)} · Owner: ${escapeHtmlForHistory(a.owner)} · ${escapeHtmlForHistory(a.creation)}</span>
+                                <div>${escapeHtmlForHistory(truncateForHistory(a.subject || a.content))}</div>
+                            </span>
+                        </label>`;
+                    });
+                }
+                itemsEl.innerHTML = html;
+                updateHistorySelectionCount();
+                log(`Fetched history [${doctype} ${docname}]: ${comments.length} comments, ${activityLogs.length} activity logs.`, 'info');
+            } catch (e) {
+                itemsEl.innerHTML = `<span style="color:#ff6b6b;font-weight:bold;">Exception:</span> ${escapeHtmlForHistory(e.message)}`;
+                log('Fetch Comments & Activity Logs error: ' + e.message, 'error');
+            }
+        }
+
+        function setAllHistorySelection(checked) {
+            document.querySelectorAll('.history-comment-checkbox, .history-activity-checkbox').forEach(cb => { cb.checked = checked; });
+            updateHistorySelectionCount();
+        }
+
+        function getSelectedHistoryNames() {
+            const commentNames = Array.from(document.querySelectorAll('.history-comment-checkbox:checked')).map(cb => cb.value);
+            const activityLogNames = Array.from(document.querySelectorAll('.history-activity-checkbox:checked')).map(cb => cb.value);
+            return { commentNames, activityLogNames };
+        }
+
+        function updateHistorySelectionCount() {
+            const { commentNames, activityLogNames } = getSelectedHistoryNames();
+            const total = commentNames.length + activityLogNames.length;
+            const btn = document.getElementById('delete-history-selected-btn');
+            document.getElementById('delete-history-selected-btn-label').textContent = `Delete Selected (${total})`;
+            btn.disabled = total === 0;
+        }
+
+        function deleteSelectedCommentsAndActivity() {
+            if (!historyFetchContext) return;
+            const { doctype, docname } = historyFetchContext;
+            const { commentNames, activityLogNames } = getSelectedHistoryNames();
+            const total = commentNames.length + activityLogNames.length;
+            if (!total) return;
+
+            if (!confirm(`⚠️ This will permanently delete ${commentNames.length} comment(s) and ${activityLogNames.length} activity log(s) for "${doctype}" "${docname}".\n\nThe document itself will NOT be touched. This cannot be undone. Proceed?`)) {
+                return;
+            }
+
+            openWfPasswordModal(
+                (password) => doDeleteSelectedCommentsAndActivity(doctype, docname, commentNames, activityLogNames, password),
+                `Confirm permanent deletion of ${total} selected Comment/Activity Log record(s) for "${doctype}" "${docname}". Enter the admin password to continue.`
+            );
+        }
+
+        async function doDeleteSelectedCommentsAndActivity(doctype, docname, commentNames, activityLogNames, password) {
+            const resultEl = document.getElementById('delete-history-result');
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<span style="color: var(--text-muted)">Deleting...</span>';
+
+            try {
+                const r = await callMethod('rndopsapp.rndopsapp.api.delete_document_comments_and_activity', {
+                    doctype: doctype,
+                    docname: docname,
+                    comment_names: JSON.stringify(commentNames),
+                    activity_log_names: JSON.stringify(activityLogNames),
+                    override_password: password
+                });
+                const res = r.message || {};
+                if (res.status === 'error') {
+                    resultEl.innerHTML = `<span style="color:#ff6b6b;font-weight:bold;">❌ ${escapeHtmlForHistory(res.message)}</span>`;
+                    return { ok: false, message: res.message };
+                }
+
+                const commentsDeleted = res.comments_deleted || 0;
+                const activityLogsDeleted = res.activity_logs_deleted || 0;
+                const breakdown = res.comment_type_breakdown || {};
+
+                let html = `<span style="color:#69db7c;font-weight:bold;">✅ Deleted ${commentsDeleted} comment(s) and ${activityLogsDeleted} activity log(s)</span>\n`;
+                html += res.document_existed
+                    ? `Document "${doctype}" "${docname}" still exists — not touched.\n`
+                    : `<span style="color:#f9ab00;">Note: document "${doctype}" "${docname}" no longer exists — this cleaned up orphaned records.</span>\n`;
+
+                const breakdownEntries = Object.entries(breakdown);
+                if (breakdownEntries.length) {
+                    html += '\nBy comment_type:\n' + breakdownEntries.map(([type, count]) => `  • ${type}: ${count}`).join('\n');
+                }
+
+                resultEl.innerHTML = html.replace(/\n/g, '<br>');
+                log(`Delete Comments & Activity Logs [${doctype} ${docname}]: ${commentsDeleted} comments, ${activityLogsDeleted} activity logs deleted.`, 'success');
+
+                // Re-fetch so the list reflects what's left (deleted rows disappear).
+                fetchDocumentCommentsAndActivity();
+                return { ok: true };
+            } catch (e) {
+                resultEl.innerHTML = `<span style="color:#ff6b6b;font-weight:bold;">Exception:</span> ${escapeHtmlForHistory(e.message)}`;
+                log('Delete Comments & Activity Logs error: ' + e.message, 'error');
+                return { ok: false, message: e.message };
+            }
+        }
+
         // ---- Cascade Delete: Project Registration + every associated document ----
         let prCascadePreview = null; // { pr, total_associated, by_doctype } from the last successful preview
 
@@ -3474,6 +3809,7 @@
                 rndopsappDoctypes = res.doctypes;
                 renderDoctypeExplorerList(rndopsappDoctypes);
                 if (badge) badge.textContent = `${rndopsappDoctypes.length} DOCTYPES`;
+                renderDoctypeNameDatalist(rndopsappDoctypes);
             } catch (e) {
                 listEl.innerHTML = `<span style="color:var(--danger);font-size:0.85rem;">Failed to load: ${escHtml(e.message)}</span>`;
                 if (badge) badge.textContent = 'Load failed';
@@ -3493,6 +3829,17 @@
                     <span>${escHtml(dt.name)}</span>${badge}
                 </div>`;
             }).join('');
+        }
+
+        // Shared autocomplete source for every "DocType Name" text input in the Danger
+        // Zone (Delete DocType Records, Delete Comments & Activity Logs, ...) — same
+        // Rndopsapp-module doctype list as the Doctype Explorer, so typing "Project Staff
+        // Extension" suggests the real name instead of a typo like "Extension Of Tenure
+        // Of Appointment" silently returning zero results.
+        function renderDoctypeNameDatalist(items) {
+            const el = document.getElementById('rndopsapp-doctype-datalist');
+            if (!el) return;
+            el.innerHTML = items.map(dt => `<option value="${escHtml(dt.name)}">`).join('');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
