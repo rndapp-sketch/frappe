@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Project Staff — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Enterprise DevOps Control Center — light theme (matches kafka_control.html) */
+            --bg-page: #F8FAFC;
+            --surface: #FFFFFF;
+            --bg-sidebar: #F1F5F9;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #2563EB;
+            --accent-hover: #1D4ED8;
+            --accent-light: #EFF6FF;
+            --border: #E2E8F0;
+
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+
+            --sidebar-width: 268px;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --surface: #111827;
+            --bg-sidebar: #0F172A;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.6);
+
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+        }
+        :root[data-theme="dark"] body { color-scheme: dark; }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+
+        body.shell {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+        .app-shell { display: flex; min-height: 100vh; }
+
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.4rem 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 100;
+            transition: transform .25s ease, background-color .2s ease, border-color .2s ease;
+        }
+
+        .brand-row { display: flex; align-items: center; gap: .65rem; padding: .3rem .6rem 1rem; }
+        .brand-logo {
+            width: 30px; height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+        .brand-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; }
+        .brand-text small { display: block; font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        .nav-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.4rem; }
+        .nav-group-label {
+            font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+            color: var(--text-muted); font-weight: 700; padding: 0 .6rem; margin-bottom: .45rem;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .62rem .75rem; border-radius: var(--radius-sm);
+            color: var(--text-muted); font-size: .89rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none; background: transparent;
+            width: 100%; text-align: left; font-family: inherit;
+            transition: background .15s ease, color .15s ease;
+        }
+        .nav-item svg { flex-shrink: 0; }
+        .nav-item:hover { background: var(--accent-light); color: var(--accent); }
+        .nav-item.active { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+        .nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+
+        .app-main { margin-left: var(--sidebar-width); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .app-topbar {
+            position: sticky; top: 0; z-index: 90; height: 66px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem; padding: 0 1.75rem;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+        .topbar-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
+        .topbar-title span { display: block; font-size: .74rem; font-weight: 500; color: var(--text-muted); }
+        .topbar-actions { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; position: relative;
+            transition: color .15s, border-color .15s, transform .15s;
+        }
+        .icon-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+        .avatar-chip { display: flex; align-items: center; gap: .6rem; padding: .3rem .5rem .3rem .3rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: .78rem; flex-shrink: 0;
+        }
+        .avatar-chip .who { font-size: .8rem; font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .app-content { padding: 1.75rem 2.25rem 3.5rem; flex: 1; max-width: 980px; }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+        .card-title { font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin: 0; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.65rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-size: 0.88rem; gap: 0.5rem; font-family: inherit; }
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background-color: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-secondary:hover { background-color: var(--bg-page); border-color: var(--accent); color: var(--accent); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .form-input, select.form-input, textarea.form-input {
+            padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: 0.86rem; background: var(--bg-page); color: var(--text-main);
+            width: 100%;
+        }
+        .form-input:focus, select.form-input:focus, textarea.form-input:focus { outline: none; border-color: var(--accent); }
+        .form-input:disabled { opacity: .65; cursor: not-allowed; }
+        textarea.form-input { resize: vertical; min-height: 56px; }
+
+        .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .9rem 1.1rem; }
+        .field-group { display: flex; flex-direction: column; gap: .3rem; }
+        .field-group label { font-size: .78rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: .35rem; }
+        .field-group label .req-dot { color: var(--danger); }
+        .field-group.field-missing label { color: var(--danger); }
+        .field-group.field-missing .form-input { border-color: var(--danger); background: var(--danger-soft); }
+
+        .ps-combo-wrap { position: relative; }
+        .ps-search-results {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 95;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-md); max-height: 260px; overflow-y: auto;
+        }
+        .ps-search-item { padding: .55rem .75rem; cursor: pointer; border-bottom: 1px solid var(--border); }
+        .ps-search-item:last-child { border-bottom: none; }
+        .ps-search-item:hover, .ps-search-item.active { background: var(--accent-light); }
+        .ps-search-item .ps-si-no { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: .8rem; color: var(--text-main); }
+        .ps-search-item .ps-si-title { font-size: .78rem; color: var(--text-muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ps-search-empty { padding: .7rem .75rem; font-size: .8rem; color: var(--text-muted); font-style: italic; }
+
+        /* No overflow:hidden here (unlike document_edit.html's collapsible sections) —
+           this page's sections never collapse, and clipping would cut off the
+           Project Number search dropdown, which needs to render outside the
+           section's box. Corners are rounded via the header/body radii instead. */
+        .form-section { border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 1.1rem; }
+        .form-section-header { padding: .7rem 1rem; background: var(--bg-sidebar); font-size: .85rem; font-weight: 700; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+        .form-section-body { padding: 1rem; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+        .doc-banner { padding: .75rem 1rem; border-radius: var(--radius-sm); font-size: .85rem; margin-bottom: 1.1rem; display: none; }
+        .doc-banner.success { display: block; background: var(--success-soft); color: var(--success); }
+        .doc-banner.error { display: block; background: var(--danger-soft); color: var(--danger); }
+        .doc-banner.info { display: block; background: var(--accent-light); color: var(--accent); }
+
+        .save-bar {
+            position: sticky; bottom: 0; margin-top: 1.75rem; padding: 1rem 1.25rem;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+        }
+        .save-summary { font-size: .82rem; color: var(--text-muted); }
+
+        .bulk-row-badge { padding: 2px 9px; border-radius: 12px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; display: inline-block; white-space: nowrap; }
+        .bulk-row-badge.success { background: var(--success-soft); color: var(--success); }
+        .bulk-row-badge.duplicate { background: var(--warning-soft); color: var(--warning); }
+        .bulk-row-badge.error { background: var(--danger-soft); color: var(--danger); }
+
+        .bulk-results-table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+        .bulk-results-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+        .bulk-results-table th { text-align: left; padding: .55rem .7rem; background: var(--bg-sidebar); position: sticky; top: 0; }
+        .bulk-results-table td { padding: .5rem .7rem; border-top: 1px solid var(--border); vertical-align: top; }
+
+        .spinner {
+            width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; vertical-align: -2px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .sidebar-backdrop { display: none; }
+        #sidebar-toggle { display: none; }
+        @media (max-width: 1080px) {
+            #sidebar-toggle { display: flex; }
+            .app-sidebar { transform: translateX(-100%); }
+            body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: var(--shadow-lg); }
+            .app-main { margin-left: 0; }
+            body.sidebar-open .sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 99; }
+        }
+
+        /* ---- Login gate ---- */
+        .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+        .login-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 2rem; }
+        .login-brand { display: flex; align-items: center; gap: .65rem; margin-bottom: 1.5rem; }
+        .login-title { font-weight: 700; font-size: 1.15rem; margin: 0 0 .3rem; }
+        .login-sub { font-size: .85rem; color: var(--text-muted); margin: 0 0 1.5rem; }
+        .login-field { margin-bottom: 1rem; }
+        .login-field label { display: block; font-size: .78rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
+        .login-btn { width: 100%; margin-top: .5rem; }
+    </style>
+</head>
+
+<body class="shell">
+<script>window.csrf_token = "{{ frappe.session.csrf_token }}";</script>
+
+{% if frappe.session.user == 'Guest' %}
+<!-- ============== LOGIN VIEW ============== -->
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="brand-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            </div>
+            <div class="brand-text">rndopsapp<small>DevOps Control Center</small></div>
+        </div>
+        <h1 class="login-title">Sign in to add Project Staff</h1>
+        <p class="login-sub">Use your usual rndopsapp / IITG credentials. This page authenticates through the same external login service as the rest of the app, and only your own session is used to create the record.</p>
+
+        <div id="login-banner" class="doc-banner error" style="display:none;"></div>
+
+        <form id="login-form" onsubmit="return handleLogin(event)">
+            <div class="login-field">
+                <label for="login-usr">Username or email</label>
+                <input type="text" id="login-usr" class="form-input" autocomplete="username" required>
+            </div>
+            <div class="login-field">
+                <label for="login-pwd">Password</label>
+                <input type="password" id="login-pwd" class="form-input" autocomplete="current-password" required>
+            </div>
+            <button type="submit" id="login-submit-btn" class="btn btn-primary login-btn">Sign In</button>
+        </form>
+    </div>
+</div>
+
+<script>
+async function handleLogin(evt) {
+    evt.preventDefault();
+    const usr = document.getElementById('login-usr').value.trim();
+    const pwd = document.getElementById('login-pwd').value;
+    const banner = document.getElementById('login-banner');
+    const btn = document.getElementById('login-submit-btn');
+    banner.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in…';
+    try {
+        const resp = await fetch('/api/method/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ usr, pwd })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+            throw new Error(data.message || data._server_messages || 'Invalid username or password.');
+        }
+        // Session cookie is set; reload so the server-rendered page picks up the new session.
+        window.location.reload();
+    } catch (err) {
+        banner.textContent = typeof err.message === 'string' ? err.message : 'Sign in failed. Please check your credentials and try again.';
+        banner.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+    }
+    return false;
+}
+</script>
+
+{% else %}
+<!-- ============== APP VIEW (logged in) ============== -->
+<div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+<div class="app-shell">
+    <aside class="app-sidebar">
+        <div class="brand-row">
+            <div class="brand-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            </div>
+            <div class="brand-text">rndopsapp<small>DevOps Control Center</small></div>
+        </div>
+
+        <div class="nav-scroll">
+            <div>
+                <div class="nav-group-label">Tools</div>
+                <ul class="nav-list">
+                    <li><a class="nav-item" href="/kafka_control">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                        Dashboard
+                    </a></li>
+                    <li><a class="nav-item active" href="/insert_project_staff">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                        Add Project Staff
+                    </a></li>
+                    <li><a class="nav-item" href="/document_edit">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Document Editor
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="nav-footer">
+            <div class="nav-group-label">Quick Links</div>
+            <ul class="nav-list">
+                <li><a class="nav-item" href="/app">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    Frappe Desk
+                </a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <div class="app-main">
+        <header class="app-topbar">
+            <button id="sidebar-toggle" class="icon-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="topbar-title">Add Project Staff<span>Creates a Project Staff Details record and auto-allocates its Employee ID</span></div>
+            <div class="topbar-actions">
+                <div class="avatar-chip">
+                    <div class="avatar">{{ (frappe.session.user or 'U')[0]|upper }}</div>
+                    <span class="who">{{ frappe.session.user }}</span>
+                    <button onclick="handleLogout()" class="icon-btn" style="border:none;background:transparent;width:26px;height:26px;" aria-label="Logout">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-header">
+                    <h3 class="card-title">📥 Bulk Upload (CSV / Excel)</h3>
+                    <button type="button" class="btn btn-secondary" onclick="downloadBulkTemplate()">Download Template</button>
+                </div>
+
+                <div id="bulk-banner" class="doc-banner"></div>
+
+                <div style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;">
+                    <input type="file" id="bulk-file-input" accept=".csv,.xlsx,.xls" class="form-input" style="max-width:340px;">
+                    <button type="button" id="bulk-upload-btn" class="btn btn-primary" onclick="submitBulkUpload()">Upload &amp; Import</button>
+                    <span class="save-summary" id="bulk-summary"></span>
+                </div>
+
+                <div id="bulk-results-wrap" style="display:none;margin-top:1.1rem;">
+                    <div class="bulk-results-table-wrap">
+                        <table class="bulk-results-table">
+                            <thead>
+                                <tr><th>Row</th><th>Name</th><th>Status</th><th>Details</th></tr>
+                            </thead>
+                            <tbody id="bulk-results-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">👤 New Project Staff</h3>
+                    <span class="status-badge" style="background:var(--accent-light);color:var(--accent);">Signed in as {{ frappe.session.user }}</span>
+                </div>
+
+                <div id="ps-banner" class="doc-banner"></div>
+
+                <form id="ps-form" onsubmit="return false;">
+                    <div class="form-section">
+                        <div class="form-section-header">Assignment</div>
+                        <div class="form-section-body field-grid">
+                            <div class="field-group">
+                                <label>Employee ID <span class="field-type-hint">preview — confirmed on save</span></label>
+                                <input type="text" id="f_ps_emp_id_preview" class="form-input" value="Loading preview…" disabled>
+                            </div>
+                            <div class="field-group" data-reqd="1"><label>PI Id (email)<span class="req-dot">*</span></label>
+                                <input type="text" id="f_pi_id" class="form-input" placeholder="pi@iitg.ac.in"></div>
+                            <div class="field-group ps-combo-wrap" data-reqd="1"><label>Project Number<span class="req-dot">*</span></label>
+                                <input type="text" id="f_project_no_search" class="form-input" placeholder="Search by project number, title or PI…"
+                                    autocomplete="off" oninput="psSearchProjects(this.value)" onfocus="psSearchProjects(this.value)">
+                                <input type="hidden" id="f_project_no">
+                                <div id="ps-project-results" class="ps-search-results" style="display:none;"></div>
+                            </div>
+                            <div class="field-group"><label>SCR Id</label>
+                                <input type="text" id="f_scr_id" class="form-input"></div>
+                            <div class="field-group" data-reqd="1"><label>Department<span class="req-dot">*</span></label>
+                                <select id="f_ps_department" class="form-input">
+                                    <option value="">Loading departments…</option>
+                                </select></div>
+                            <div class="field-group" data-reqd="1"><label>Designation<span class="req-dot">*</span></label>
+                                <input type="text" id="f_ps_designation" class="form-input"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">Personal Details</div>
+                        <div class="form-section-body field-grid">
+                            <div class="field-group" data-reqd="1"><label>First Name<span class="req-dot">*</span></label>
+                                <input type="text" id="f_ps_first_name" class="form-input"></div>
+                            <div class="field-group"><label>Middle Name</label>
+                                <input type="text" id="f_ps_middle_name" class="form-input"></div>
+                            <div class="field-group" data-reqd="1"><label>Last Name<span class="req-dot">*</span></label>
+                                <input type="text" id="f_ps_last_name" class="form-input"></div>
+                            <div class="field-group" data-reqd="1"><label>Gender<span class="req-dot">*</span></label>
+                                <select id="f_ps_gender" class="form-input">
+                                    <option value=""></option><option>Male</option><option>Female</option>
+                                </select></div>
+                            <div class="field-group"><label>Date of Birth</label>
+                                <input type="date" id="f_ps_date_of_birth" class="form-input"></div>
+                            <div class="field-group"><label>Father's Name</label>
+                                <input type="text" id="f_ps_fathers_name" class="form-input"></div>
+                            <div class="field-group"><label>Blood Group</label>
+                                <select id="f_ps_blood_group" class="form-input">
+                                    <option value=""></option><option>A+</option><option>A−</option><option>B+</option><option>B−</option>
+                                    <option>AB+</option><option>AB−</option><option>O+</option><option>O−</option>
+                                </select></div>
+                            <div class="field-group"><label>Maritial Status</label>
+                                <select id="f_ps_maritial_status" class="form-input">
+                                    <option value=""></option><option>Single</option><option>Married</option>
+                                </select></div>
+                            <div class="field-group"><label>Citizenship</label>
+                                <input type="text" id="f_ps_citizenship" class="form-input" value="Indian"></div>
+                            <div class="field-group"><label>Phone Number</label>
+                                <input type="tel" id="f_ps_phone_number" class="form-input"></div>
+                            <div class="field-group"><label>Email Id</label>
+                                <input type="email" id="f_ps_email_id" class="form-input"></div>
+                            <div class="field-group"><label>ERP Mail</label>
+                                <input type="email" id="f_erp_mail" class="form-input" placeholder="defaults to Email Id if left blank"></div>
+                            <div class="field-group" style="grid-column: 1 / -1;"><label>Present Address</label>
+                                <textarea id="f_ps_present_address" class="form-input"></textarea></div>
+                            <div class="field-group" style="grid-column: 1 / -1;"><label>Permanent Address</label>
+                                <textarea id="f_ps_permanent_address" class="form-input"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">Bank &amp; Statutory</div>
+                        <div class="form-section-body field-grid">
+                            <div class="field-group"><label>Bank Account Number</label>
+                                <input type="text" id="f_bank_account_number" class="form-input"></div>
+                            <div class="field-group"><label>IFSC Code</label>
+                                <input type="text" id="f_ifsc_code" class="form-input" style="text-transform:uppercase;" maxlength="11" placeholder="e.g. SBIN0001234"></div>
+                            <div class="field-group"><label>PAN</label>
+                                <input type="text" id="f_ps_pan" class="form-input"></div>
+                            <div class="field-group"><label>Aadhar Number</label>
+                                <input type="text" id="f_ps_aadhar_number" class="form-input"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">Tenure &amp; Salary</div>
+                        <div class="form-section-body field-grid">
+                            <div class="field-group" data-reqd="1"><label>Joining Date<span class="req-dot">*</span></label>
+                                <input type="date" id="f_ps_joining_date" class="form-input"></div>
+                            <div class="field-group"><label>Term Completion Date</label>
+                                <input type="date" id="f_ps_term_completion_date" class="form-input"></div>
+                            <div class="field-group"><label>Basic Salary</label>
+                                <input type="number" step="any" id="f_ps_basic_salary" class="form-input"></div>
+                            <div class="field-group"><label>HRA</label>
+                                <select id="f_ps_hra" class="form-input">
+                                    <option value=""></option><option>16%</option><option>18%</option><option>20%</option>
+                                </select></div>
+                            <div class="field-group"><label>Medical Allowance</label>
+                                <input type="text" id="f_ps_ma" class="form-input" placeholder="e.g. 1250"></div>
+                            <div class="field-group"><label>Hostel</label>
+                                <select id="f_ps_hostel" class="form-input">
+                                    <option value=""></option><option>Yes</option><option>No</option>
+                                </select></div>
+                            <div class="field-group"><label>Travel Allowance Needed</label>
+                                <select id="f_ps_ta" class="form-input" onchange="psToggleTaAmount()">
+                                    <option value=""></option><option>Yes</option><option>No</option>
+                                </select></div>
+                            <div class="field-group" id="f_ps_ta_amount_group" style="display:none;"><label>Travel Allowance Amount</label>
+                                <input type="text" id="f_ps_ta_amount" class="form-input"></div>
+                        </div>
+                    </div>
+
+                    <div class="save-bar">
+                        <button type="button" id="ps-submit-btn" class="btn btn-primary" onclick="submitProjectStaff()">Create Staff Record</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetProjectStaffForm()">Clear Form</button>
+                        <span class="save-summary" id="ps-save-summary"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Frappe Scripts (only needed for the logged-in view's logout call) -->
+<script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+<script src="/assets/js/frappe-web.min.js"></script>
+
+<script>
+    function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+
+    function handleLogout() {
+        fetch('/api/method/logout', {
+            method: 'POST',
+            headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' }
+        }).finally(() => { window.location.href = '/insert_project_staff'; });
+    }
+
+    async function callMethod(method, args = {}) {
+        const response = await fetch(`/api/method/${method}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Frappe-CSRF-Token': window.csrf_token || ''
+            },
+            body: JSON.stringify(args)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || data.exc_type || response.statusText || 'Request failed.');
+        }
+        return data;
+    }
+
+    // ---- Bulk Upload (CSV / Excel) ----
+    const BULK_TEMPLATE_HEADERS = [
+        'PI Id', 'Project Number', 'SCR Id', 'Department', 'Designation',
+        'First Name', 'Middle Name', 'Last Name', 'Gender', 'Date of Birth',
+        "Father's Name", 'Blood Group', 'Maritial Status', 'Citizenship',
+        'Phone Number', 'Email Id', 'ERP Mail', 'Present Address', 'Permanent Address',
+        'Bank Account Number', 'IFSC Code', 'PAN', 'Aadhar Number',
+        'Joining Date', 'Term Completion Date', 'Basic Salary', 'HRA',
+        'Medical Allowance', 'Hostel', 'Travel Allowance Needed', 'Travel Allowance Amount',
+    ];
+    const BULK_TEMPLATE_SAMPLE_ROW = [
+        'pi@iitg.ac.in', 'PRJ-0001', '', 'Computer Science', 'Project Assistant',
+        'John', '', 'Doe', 'Male', '1998-05-12',
+        '', '', '', 'Indian',
+        '9000000000', 'john@example.com', '', '', '',
+        '', '', '', '',
+        '2026-01-01', '', '', '',
+        '', '', '', '',
+    ];
+
+    function downloadBulkTemplate() {
+        const csv = [BULK_TEMPLATE_HEADERS, BULK_TEMPLATE_SAMPLE_ROW]
+            .map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+            .join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'project_staff_bulk_upload_template.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    async function submitBulkUpload() {
+        const banner = document.getElementById('bulk-banner');
+        const summary = document.getElementById('bulk-summary');
+        const resultsWrap = document.getElementById('bulk-results-wrap');
+        const resultsBody = document.getElementById('bulk-results-body');
+        const btn = document.getElementById('bulk-upload-btn');
+        const fileInput = document.getElementById('bulk-file-input');
+
+        banner.style.display = 'none';
+        banner.className = 'doc-banner';
+        resultsWrap.style.display = 'none';
+        resultsBody.innerHTML = '';
+        summary.textContent = '';
+
+        const file = fileInput.files[0];
+        if (!file) {
+            banner.textContent = 'Please choose a CSV or Excel file to upload.';
+            banner.className = 'doc-banner error';
+            banner.style.display = 'block';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Importing…';
+        try {
+            const response = await fetch(
+                '/api/method/rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.bulk_import_project_staff_details',
+                {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+                    body: formData,
+                }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || data.exc_type || response.statusText || 'Import failed.');
+            }
+            renderBulkResults(data.message || data);
+        } catch (err) {
+            banner.textContent = err.message || 'Failed to import the file.';
+            banner.className = 'doc-banner error';
+            banner.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Upload & Import';
+            fileInput.value = '';
+        }
+    }
+
+    function renderBulkResults(payload) {
+        const banner = document.getElementById('bulk-banner');
+        const summary = document.getElementById('bulk-summary');
+        const resultsWrap = document.getElementById('bulk-results-wrap');
+        const resultsBody = document.getElementById('bulk-results-body');
+        const counts = payload.counts || { success: 0, duplicate: 0, error: 0 };
+        const results = payload.results || [];
+
+        summary.textContent = `${counts.success} created · ${counts.duplicate} duplicate · ${counts.error} error${counts.error === 1 ? '' : 's'}`;
+        banner.textContent = `Import finished — ${counts.success} created, ${counts.duplicate} duplicates skipped, ${counts.error} failed.`;
+        banner.className = 'doc-banner ' + (counts.error ? 'error' : (counts.duplicate ? 'info' : 'success'));
+        banner.style.display = 'block';
+
+        if (!results.length) {
+            resultsWrap.style.display = 'none';
+            return;
+        }
+
+        resultsBody.innerHTML = results.map(r => `
+            <tr>
+                <td>${r.row}</td>
+                <td>${escHtml(r.name || '')}</td>
+                <td><span class="bulk-row-badge ${escHtml(r.status)}">${escHtml(r.status)}</span></td>
+                <td>${escHtml(r.message || '')}</td>
+            </tr>
+        `).join('');
+        resultsWrap.style.display = 'block';
+    }
+
+    function psToggleTaAmount() {
+        const need = document.getElementById('f_ps_ta').value === 'Yes';
+        document.getElementById('f_ps_ta_amount_group').style.display = need ? '' : 'none';
+    }
+
+    // Preview only — never sent back on save. The real id is allocated
+    // server-side at insert time (see create_project_staff_details_entry),
+    // so this can drift by the time you actually save if someone else
+    // creates a record in between; that's expected and harmless.
+    async function loadEmpIdPreview() {
+        const field = document.getElementById('f_ps_emp_id_preview');
+        if (!field) return; // not present on the logged-out (login) view
+        try {
+            const result = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.get_next_emp_id'
+            );
+            field.value = (result.message || result) + ' (preview)';
+        } catch (err) {
+            field.value = 'Preview unavailable — will still be assigned on save';
+        }
+    }
+    loadEmpIdPreview();
+
+    async function loadDepartmentOptions() {
+        const select = document.getElementById('f_ps_department');
+        if (!select) return; // not present on the logged-out (login) view
+        try {
+            const result = await callMethod('frappe.client.get_list', {
+                doctype: 'Department_prornd',
+                fields: ['name', 'dept_name'],
+                limit_page_length: 0,
+                order_by: 'dept_name asc',
+            });
+            const depts = result.message || result || [];
+            select.innerHTML = '<option value=""></option>' +
+                depts.map(d => `<option value="${escHtml(d.dept_name)}">${escHtml(d.dept_name)}</option>`).join('');
+        } catch (err) {
+            select.innerHTML = '<option value="">Could not load departments — type not available</option>';
+        }
+    }
+    loadDepartmentOptions();
+
+    function escHtml(s) {
+        return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ---- Project Number: searchable combobox backed by the existing
+    // search_projects endpoint (same one project_verification.html uses). ----
+    let psProjectSearchTimer = null;
+    let psProjectSearchSeq = 0;
+
+    function psSearchProjects(query) {
+        const panel = document.getElementById('ps-project-results');
+        clearTimeout(psProjectSearchTimer);
+        if (!query || query.trim().length < 2) {
+            panel.style.display = 'none';
+            panel.innerHTML = '';
+            return;
+        }
+        psProjectSearchTimer = setTimeout(() => psRunProjectSearch(query.trim()), 300);
+    }
+
+    async function psRunProjectSearch(query) {
+        const panel = document.getElementById('ps-project-results');
+        const seq = ++psProjectSearchSeq;
+        panel.style.display = 'block';
+        panel.innerHTML = '<div class="ps-search-empty">Searching…</div>';
+        try {
+            const result = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_registration.project_registration.search_projects',
+                { query, page_size: 15 }
+            );
+            if (seq !== psProjectSearchSeq) return; // a newer keystroke already superseded this search
+            const payload = result.message || result;
+            const rows = (payload && payload.results) || [];
+            if (!rows.length) {
+                panel.innerHTML = '<div class="ps-search-empty">No matching projects</div>';
+                return;
+            }
+            panel.innerHTML = rows.map(r => `
+                <div class="ps-search-item" onclick="psSelectProject('${escHtml(r.project_no)}', this)">
+                    <div class="ps-si-no">${escHtml(r.project_no)}</div>
+                    <div class="ps-si-title">${escHtml(r.project_title || '')}${r.pi_name ? ' — ' + escHtml(r.pi_name) : ''}</div>
+                </div>
+            `).join('');
+        } catch (err) {
+            if (seq !== psProjectSearchSeq) return;
+            panel.innerHTML = '<div class="ps-search-empty">Search failed — you can still type the project number directly</div>';
+        }
+    }
+
+    function psSelectProject(projectNo, el) {
+        document.getElementById('f_project_no').value = projectNo;
+        document.getElementById('f_project_no_search').value = projectNo;
+        const panel = document.getElementById('ps-project-results');
+        panel.style.display = 'none';
+        panel.innerHTML = '';
+        document.getElementById('f_project_no_search').closest('.field-group').classList.remove('field-missing');
+    }
+
+    document.addEventListener('click', (evt) => {
+        const wrap = document.querySelector('.ps-combo-wrap');
+        if (wrap && !wrap.contains(evt.target)) {
+            document.getElementById('ps-project-results').style.display = 'none';
+        }
+    });
+
+    const PS_REQUIRED_IDS = ['f_pi_id', 'f_project_no', 'f_ps_department', 'f_ps_designation',
+        'f_ps_first_name', 'f_ps_last_name', 'f_ps_gender', 'f_ps_joining_date'];
+
+    function psValidate() {
+        let firstInvalid = null;
+        PS_REQUIRED_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            const group = input.closest('.field-group');
+            const missing = !input.value.trim();
+            group.classList.toggle('field-missing', missing);
+            if (missing && !firstInvalid) firstInvalid = input;
+        });
+        return firstInvalid;
+    }
+
+    function psCollectData() {
+        const val = id => document.getElementById(id).value.trim();
+        const data = {
+            pi_id: val('f_pi_id'),
+            project_no: val('f_project_no'),
+            scr_id: val('f_scr_id'),
+            ps_department: val('f_ps_department'),
+            ps_designation: val('f_ps_designation'),
+            ps_first_name: val('f_ps_first_name'),
+            ps_middle_name: val('f_ps_middle_name'),
+            ps_last_name: val('f_ps_last_name'),
+            ps_gender: val('f_ps_gender'),
+            ps_date_of_birth: val('f_ps_date_of_birth'),
+            ps_fathers_name: val('f_ps_fathers_name'),
+            ps_blood_group: val('f_ps_blood_group'),
+            ps_maritial_status: val('f_ps_maritial_status'),
+            ps_citizenship: val('f_ps_citizenship'),
+            ps_phone_number: val('f_ps_phone_number'),
+            ps_email_id: val('f_ps_email_id'),
+            erp_mail: val('f_erp_mail') || val('f_ps_email_id'),
+            ps_present_address: val('f_ps_present_address'),
+            ps_permanent_address: val('f_ps_permanent_address'),
+            bank_account_number: val('f_bank_account_number'),
+            ifsc_code: val('f_ifsc_code').toUpperCase(),
+            ps_pan: val('f_ps_pan'),
+            ps_aadhar_number: val('f_ps_aadhar_number'),
+            ps_joining_date: val('f_ps_joining_date'),
+            ps_term_completion_date: val('f_ps_term_completion_date'),
+            ps_basic_salary: val('f_ps_basic_salary'),
+            ps_hra: val('f_ps_hra'),
+            ps_ma: val('f_ps_ma'),
+            ps_hostel: val('f_ps_hostel'),
+            ps_ta: val('f_ps_ta'),
+            ps_ta_amount: val('f_ps_ta') === 'Yes' ? val('f_ps_ta_amount') : '',
+        };
+        return data;
+    }
+
+    function resetProjectStaffForm() {
+        document.getElementById('ps-form').reset();
+        document.getElementById('f_ps_citizenship').value = 'Indian';
+        document.querySelectorAll('#ps-form .field-group').forEach(g => g.classList.remove('field-missing'));
+        document.getElementById('f_ps_ta_amount_group').style.display = 'none';
+        document.getElementById('f_project_no').value = '';
+        const resultsPanel = document.getElementById('ps-project-results');
+        resultsPanel.style.display = 'none';
+        resultsPanel.innerHTML = '';
+        const banner = document.getElementById('ps-banner');
+        banner.style.display = 'none';
+        banner.className = 'doc-banner';
+    }
+
+    async function submitProjectStaff() {
+        const banner = document.getElementById('ps-banner');
+        const btn = document.getElementById('ps-submit-btn');
+        banner.style.display = 'none';
+        banner.className = 'doc-banner';
+
+        const firstInvalid = psValidate();
+        if (firstInvalid) {
+            banner.textContent = 'Please fill in all required fields (marked *).';
+            banner.className = 'doc-banner error';
+            firstInvalid.focus();
+            return;
+        }
+
+        const data = psCollectData();
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Creating…';
+        try {
+            const result = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.create_project_staff_details_entry',
+                { data }
+            );
+            const payload = result.message || result;
+            banner.innerHTML = `Created <strong>${payload.docname}</strong> — Employee ID <strong>${payload.ps_emp_id}</strong>. ` +
+                `<a href="/app/project-staff-details/${payload.docname}" target="_blank" style="color:inherit;text-decoration:underline;">View in Desk</a>`;
+            banner.className = 'doc-banner success';
+            resetProjectStaffFormFieldsOnly();
+        } catch (err) {
+            banner.textContent = err.message || 'Failed to create the record.';
+            banner.className = 'doc-banner error';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Create Staff Record';
+        }
+    }
+
+    // Same as resetProjectStaffForm but doesn't touch the success/error banner
+    // that submitProjectStaff just set.
+    function resetProjectStaffFormFieldsOnly() {
+        document.getElementById('ps-form').reset();
+        document.getElementById('f_ps_citizenship').value = 'Indian';
+        document.querySelectorAll('#ps-form .field-group').forEach(g => g.classList.remove('field-missing'));
+        document.getElementById('f_ps_ta_amount_group').style.display = 'none';
+        document.getElementById('f_project_no').value = '';
+        const resultsPanel = document.getElementById('ps-project-results');
+        resultsPanel.style.display = 'none';
+        resultsPanel.innerHTML = '';
+    }
+</script>
+</body>
+</html>

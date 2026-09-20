@@ -87,9 +87,8 @@ _PERIOD_LABELS = {
 _ROLE_LABEL_MAP = {
     "staff, RnD":                        "Staff RnD",
     "Hos, RnD (Head of Section, RnD)":   "Head of Section",
-    "Associate Dean, RND":               "Associate Dean",
+    "Ado_RnD":                            "Associate Dean",
     "Dean, RnD":                         "Dean RnD",
-    "Director":                          "Director",
     "Principal Investigator":            "Principal Investigator",
     "HoD (Head of Department)":          "Head of Department",
     "Mentor":                            "Mentor",
@@ -133,19 +132,37 @@ def get_context(context):
     if period not in _PERIOD_SQL:
         period = "month"
 
-    context.period          = period
-    context.period_label    = _PERIOD_LABELS[period]
+    payload = _build_leaderboard_payload(period, role_filter, category_filter)
+
+    context.period          = payload["period"]
+    context.period_label    = payload["period_label"]
     context.role_filter     = role_filter
     context.category_filter = category_filter
+    context.data_source     = "comments"
+    context.leaderboard     = payload["leaderboard"]
+    context.total_processed = payload["total_processed"]
+    context.total_approved  = payload["total_approved"]
+    context.total_rejected  = payload["total_rejected"]
+    context.overall_rate    = payload["overall_rate"]
+    context.top_staff       = payload["top_staff"]
+    context.fastest         = payload["fastest"]
+    context.has_data        = bool(payload["leaderboard"])
+    context.pending_by_role = payload["pending_by_role"]
 
-    # ── Primary source: the workflow Comment trail on each docname ──
-    # (`tabComment`, comment_type='Workflow'). This is the authoritative,
-    # complete record of every user who acted on every document — unlike
-    # the raw doctype tables (which only retain the *last* modifier) or the
-    # custom "Staff Activity Log" (whose logging hook silently misses many
-    # transitions, e.g. manual overrides via Admin Panel/Kafka Control).
+
+def _build_leaderboard_payload(period, role_filter, category_filter):
+    """
+    Shared by the www page (get_context) and the whitelisted API
+    (get_leaderboard_data) so both surfaces stay in sync.
+
+    Primary source: the workflow Comment trail on each docname
+    (`tabComment`, comment_type='Workflow'). This is the authoritative,
+    complete record of every user who acted on every document — unlike
+    the raw doctype tables (which only retain the *last* modifier) or the
+    custom "Staff Activity Log" (whose logging hook silently misses many
+    transitions, e.g. manual overrides via Admin Panel/Kafka Control).
+    """
     leaderboard = _query_workflow_comments(period, role_filter, category_filter)
-    context.data_source = "comments"
 
     # Staff Activity Log still tracks precise queue time, so borrow avg_time
     # from it per-user where available without dropping anyone it missed.
@@ -157,19 +174,35 @@ def get_context(context):
     total_approved  = sum(r.get("approved") or 0 for r in leaderboard)
     total_rejected  = sum(r.get("rejected") or 0 for r in leaderboard)
 
-    context.leaderboard     = leaderboard
-    context.total_processed = total_processed
-    context.total_approved  = total_approved
-    context.total_rejected  = total_rejected
-    context.overall_rate    = round(total_approved / total_processed * 100) if total_processed else 0
-    context.top_staff       = leaderboard[0] if leaderboard else None
-    context.fastest         = min(
-        (r for r in leaderboard if r.get("avg_time")),
-        key=lambda r: r["avg_time"],
-        default=None,
-    )
-    context.has_data        = bool(leaderboard)
-    context.pending_by_role = _get_pending_by_role()
+    return {
+        "period":           period,
+        "period_label":     _PERIOD_LABELS[period],
+        "role_filter":      role_filter,
+        "category_filter":  category_filter,
+        "leaderboard":      leaderboard,
+        "total_processed":  total_processed,
+        "total_approved":   total_approved,
+        "total_rejected":   total_rejected,
+        "overall_rate":     round(total_approved / total_processed * 100) if total_processed else 0,
+        "top_staff":        leaderboard[0] if leaderboard else None,
+        "fastest":          min(
+            (r for r in leaderboard if r.get("avg_time")),
+            key=lambda r: r["avg_time"],
+            default=None,
+        ),
+        "pending_by_role":  _get_pending_by_role(),
+    }
+
+
+@frappe.whitelist()
+def get_leaderboard_data(period="month", role="", category=""):
+    """API twin of the /rndops-leaderboard page — same data, same rules."""
+    frappe.only_for(["System Manager"] + _APPROVER_ROLES)
+
+    if period not in _PERIOD_SQL:
+        period = "month"
+
+    return _build_leaderboard_payload(period, role or "", category or "")
 
 
 def _query_workflow_comments(period, role_filter, category_filter):
@@ -208,7 +241,6 @@ def _query_workflow_comments(period, role_filter, category_filter):
             "total_processed": 0,
             "approved":        0,
             "rejected":        0,
-            "submitted":       0,
             "avg_time":        0.0,
             "last_action":     None,
         })
@@ -232,7 +264,7 @@ def _query_workflow_comments(period, role_filter, category_filter):
 
 
 def _classify_comment_state(content):
-    """Classify a workflow Comment's resulting state as approved/rejected/neutral."""
+    """Classify a workflow Comment's resulting state as approved/rejected."""
     content = (content or "").strip()
 
     if content.startswith("[Manual Override]") and "→" in content:
@@ -242,7 +274,9 @@ def _classify_comment_state(content):
     if any(k in low for k in _NEGATIVE_STATE_KEYWORDS):
         return "rejected"
     if low == "draft":
-        return "neutral"
+        # Being sent back to Draft (directly, or via a Manual Override like
+        # "Approved -> Draft") is a put-back/undo action, not a neutral one.
+        return "rejected"
     return "approved"
 
 
@@ -303,7 +337,6 @@ def _enrich_rows(rows):
         set_("email",      user)
         set_("approved",   int(get("approved") or 0))
         set_("rejected",   int(get("rejected") or 0))
-        set_("submitted",  int(get("submitted") or 0))
         set_("avg_time",   float(get("avg_time") or 0))
 
         user_roles = frappe.get_roles(user)
@@ -346,15 +379,22 @@ def _get_pending_by_role():
     pending_counts = {}
 
     for doctype in TRACKED_DOCTYPES:
-        table = f"`tab{doctype}`"
+        if not frappe.db.table_exists(doctype) or not frappe.db.has_column(doctype, "workflow_state"):
+            continue
+
         try:
-            rows = frappe.db.sql(f"""
-                SELECT workflow_state AS state, COUNT(*) AS cnt
-                FROM {table}
-                WHERE workflow_state LIKE 'Pending%%'
-                GROUP BY workflow_state
-            """, as_dict=True)
+            rows = frappe.get_list(
+                doctype,
+                filters={"workflow_state": ["like", "Pending%"]},
+                fields=["workflow_state as state", "count(name) as cnt"],
+                group_by="workflow_state",
+                ignore_permissions=True,
+            )
         except Exception:
+            frappe.log_error(
+                title="Leaderboard: pending-by-role query failed",
+                message=f"doctype={doctype}\n{frappe.get_traceback()}",
+            )
             continue
 
         for row in rows:

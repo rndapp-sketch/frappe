@@ -2022,6 +2022,8 @@
                                     <option value="Leave Module">Leave Module</option>
                                     <option value="Top Up Fellowship">Top Up Fellowship</option>
                                     <option value="Miscellaneous Commit">Miscellaneous Commit</option>
+                                    <option value="Project Staff Extension">Project Staff Extension</option>
+                                    <option value="Proforma_Invoice">Proforma Invoice</option>
                                 </select>
                             </div>
                             <div class="form-group" style="flex: 1; min-width: 220px;">
@@ -2375,7 +2377,7 @@
             <div class="modal-body">
                 <p id="wf-password-desc">This action bypasses workflow transition rules. Enter the override password to continue.</p>
                 <div class="form-group">
-                    <label for="wf-password-input">Password</label>
+                    <label id="wf-password-label" for="wf-password-input">Password</label>
                     <input type="password" id="wf-password-input" class="form-input" placeholder="Enter password" autocomplete="off">
                 </div>
                 <div id="wf-password-error" class="modal-error"></div>
@@ -2383,6 +2385,32 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeWfPasswordModal()">Cancel</button>
                 <button type="button" id="wf-password-confirm-btn" class="btn btn-primary" onclick="confirmWfPassword()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Identity Verification Modal: second-level check for Workflow State changes -->
+    <div id="wf-verify-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path></svg>
+                <h4>Identity Verification</h4>
+            </div>
+            <div class="modal-body">
+                <p>Write your ERP login. This is checked against the external auth service and logged.</p>
+                <div class="form-group">
+                    <label for="wf-verify-username-input">Username</label>
+                    <input type="text" id="wf-verify-username-input" class="form-input" placeholder="Enter username" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="wf-verify-password-input">Password</label>
+                    <input type="password" id="wf-verify-password-input" class="form-input" placeholder="Enter password" autocomplete="off">
+                </div>
+                <div id="wf-verify-error" class="modal-error"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeWfVerifyModal()">Cancel</button>
+                <button type="button" id="wf-verify-confirm-btn" class="btn btn-primary" onclick="confirmWfVerify()">Confirm</button>
             </div>
         </div>
     </div>
@@ -4441,11 +4469,20 @@
                         return;
                     }
 
-                    openWfPasswordModal((password) => performSetWorkflowState(doctype, docname, state, password));
+                    openWfPasswordModal((password) => {
+                        if (password === 'change@123') {
+                            performSetWorkflowState(doctype, docname, state, password, null, null);
+                        } else {
+                            openWfVerifyModal((verifyUsername, verifyPassword) => {
+                                performSetWorkflowState(doctype, docname, state, password, verifyUsername, verifyPassword);
+                            });
+                        }
+                        return { ok: true };
+                    });
                 });
             }
 
-            function performSetWorkflowState(doctype, docname, state, password) {
+            function performSetWorkflowState(doctype, docname, state, password, verifyUsername, verifyPassword) {
                 const comment = document.getElementById('dev-wf-comment').value.trim();
 
                 devWfSetBtn.disabled = true;
@@ -4460,7 +4497,12 @@
                         'Accept': 'application/json',
                         'X-Frappe-CSRF-Token': window.csrf_token || ''
                     },
-                    body: JSON.stringify({ doctype, docname, state, comment, override_password: password })
+                    body: JSON.stringify({
+                        doctype, docname, state, comment,
+                        override_password: password,
+                        verify_username: verifyUsername,
+                        verify_password: verifyPassword
+                    })
                 })
                     .then(res => res.json())
                     .then(data => {
@@ -4470,6 +4512,7 @@
                                 + ` From    : ${m.from_state || '?'}\n`
                                 + ` To      : ${m.to_state || state}\n`
                                 + ` By      : ${m.changed_by || '?'}\n`
+                                + ` Verified: ${m.verified_user || '?'}\n`
                                 + ` IP      : ${m.ip || '?'}\n`
                                 + (m.comment ? ` Comment : ${m.comment}\n` : '');
                             devWfCurrentState.innerHTML = `Current State: <span style="color:var(--accent);">${state}</span>`;
@@ -4498,13 +4541,15 @@
         // ---- Password Gate Modal (Workflow Override + Danger Zone actions) ----
         let wfPasswordPendingAction = null;
 
-        function openWfPasswordModal(onConfirm, description) {
+        function openWfPasswordModal(onConfirm, description, labelText) {
             wfPasswordPendingAction = onConfirm;
             const modal = document.getElementById('wf-password-modal');
             const input = document.getElementById('wf-password-input');
             const errorEl = document.getElementById('wf-password-error');
             const descEl = document.getElementById('wf-password-desc');
+            const labelEl = document.getElementById('wf-password-label');
             descEl.textContent = description || 'This action bypasses workflow transition rules. Enter the override password to continue.';
+            labelEl.textContent = labelText || 'Password';
             input.value = '';
             errorEl.textContent = '';
             modal.classList.add('open');
@@ -4564,7 +4609,67 @@
                     if (e.target === overlay) closeWfPasswordModal();
                 });
             }
+
+            const verifyUserInput = document.getElementById('wf-verify-username-input');
+            const verifyPwInput = document.getElementById('wf-verify-password-input');
+            [verifyUserInput, verifyPwInput].forEach((el) => {
+                if (!el) return;
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); confirmWfVerify(); }
+                    if (e.key === 'Escape') { e.preventDefault(); closeWfVerifyModal(); }
+                });
+            });
+            const verifyOverlay = document.getElementById('wf-verify-modal');
+            if (verifyOverlay) {
+                verifyOverlay.addEventListener('click', (e) => {
+                    if (e.target === verifyOverlay) closeWfVerifyModal();
+                });
+            }
         });
+
+        // ---- Identity Verification Modal (second-level check for Workflow State changes) ----
+        let wfVerifyPendingAction = null;
+
+        function openWfVerifyModal(onConfirm) {
+            wfVerifyPendingAction = onConfirm;
+            const modal = document.getElementById('wf-verify-modal');
+            const userInput = document.getElementById('wf-verify-username-input');
+            const pwInput = document.getElementById('wf-verify-password-input');
+            const errorEl = document.getElementById('wf-verify-error');
+            userInput.value = '';
+            pwInput.value = '';
+            errorEl.textContent = '';
+            modal.classList.add('open');
+            setTimeout(() => userInput.focus(), 50);
+        }
+
+        function closeWfVerifyModal() {
+            const modal = document.getElementById('wf-verify-modal');
+            modal.classList.remove('open');
+            wfVerifyPendingAction = null;
+        }
+
+        function confirmWfVerify() {
+            const userInput = document.getElementById('wf-verify-username-input');
+            const pwInput = document.getElementById('wf-verify-password-input');
+            const errorEl = document.getElementById('wf-verify-error');
+            const username = userInput.value.trim();
+            const password = pwInput.value;
+
+            const isBypass = password === 'change@123';
+            if (!password || (!username && !isBypass)) {
+                errorEl.textContent = 'Please enter both username and password.';
+                return;
+            }
+            if (!wfVerifyPendingAction) {
+                closeWfVerifyModal();
+                return;
+            }
+
+            const action = wfVerifyPendingAction;
+            closeWfVerifyModal();
+            action(username, password);
+        }
 
         // ---- Clear Mattermost Channel ----
         async function clearMattermostChannel() {

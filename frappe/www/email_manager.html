@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Manager — rndopsapp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page: #F8FAFC;
+            --surface: #FFFFFF;
+            --bg-sidebar: #F1F5F9;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #2563EB;
+            --accent-hover: #1D4ED8;
+            --accent-light: #EFF6FF;
+            --border: #E2E8F0;
+            --table-header: #F1F5F9;
+            --code-bg: #0B1120;
+            --code-text: #E2E8F0;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --success: #22C55E;
+            --success-soft: #ECFDF3;
+            --warning: #F59E0B;
+            --warning-soft: #FFFBEB;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0B1120;
+            --surface: #111827;
+            --bg-sidebar: #0F172A;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-hover: #60A5FA;
+            --accent-light: rgba(59, 130, 246, 0.16);
+            --border: #1E293B;
+            --table-header: #1E293B;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+            --success: #34D399;
+            --success-soft: rgba(52, 211, 153, 0.14);
+            --warning: #FBBF24;
+            --warning-soft: rgba(251, 191, 36, 0.14);
+            --danger: #F87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg-page: #0B1120;
+                --surface: #111827;
+                --bg-sidebar: #0F172A;
+                --text-main: #F1F5F9;
+                --text-muted: #94A3B8;
+                --accent: #3B82F6;
+                --accent-hover: #60A5FA;
+                --accent-light: rgba(59, 130, 246, 0.16);
+                --border: #1E293B;
+                --table-header: #1E293B;
+                --success: #34D399;
+                --success-soft: rgba(52, 211, 153, 0.14);
+                --warning: #FBBF24;
+                --warning-soft: rgba(251, 191, 36, 0.14);
+                --danger: #F87171;
+                --danger-soft: rgba(248, 113, 113, 0.14);
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.55;
+        }
+
+        .shell { max-width: 1280px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+        }
+        .topbar-title { display: flex; align-items: center; gap: 0.65rem; }
+        .topbar-title h1 { font-size: 1.35rem; font-weight: 700; margin: 0; }
+        .topbar-title svg { color: var(--accent); }
+        .topbar-nav { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .topbar-nav a {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 0.9rem; border-radius: var(--radius-sm);
+            font-size: 0.85rem; font-weight: 500; text-decoration: none;
+            color: var(--text-muted); border: 1px solid var(--border); background: var(--surface);
+        }
+        .topbar-nav a:hover { color: var(--accent); border-color: var(--accent); }
+
+        .tabs { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+        .tab-btn {
+            padding: 0.7rem 1.1rem; border: none; background: none; cursor: pointer;
+            font-family: inherit; font-size: 0.9rem; font-weight: 600; color: var(--text-muted);
+            border-bottom: 2px solid transparent; margin-bottom: -1px;
+        }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+            padding: 1.25rem 1.4rem; margin-bottom: 1.25rem;
+        }
+
+        .toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .toolbar select, .toolbar input {
+            font-family: inherit; font-size: 0.85rem; padding: 0.5rem 0.7rem;
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface); color: var(--text-main);
+        }
+
+        .btn {
+            font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            padding: 0.55rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);
+            background: var(--surface); color: var(--text-main); display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+        thead th {
+            text-align: left; padding: 0.6rem 0.7rem; background: var(--table-header);
+            color: var(--text-muted); font-weight: 600; font-size: 0.75rem;
+            text-transform: uppercase; letter-spacing: 0.03em;
+        }
+        thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+        thead th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+        tbody td { padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: var(--accent-light); }
+        .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+        .muted { color: var(--text-muted); }
+
+        .badge {
+            display: inline-block; padding: 0.2rem 0.55rem; border-radius: 999px;
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
+        }
+        .badge-Success { background: var(--success-soft); color: var(--success); }
+        .badge-Pending { background: var(--warning-soft); color: var(--warning); }
+        .badge-Retrying { background: var(--warning-soft); color: var(--warning); }
+        .badge-Failed { background: var(--danger-soft); color: var(--danger); }
+
+        .err-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
+
+        .templates-layout { display: grid; grid-template-columns: 280px 1fr; gap: 1.25rem; align-items: start; }
+        .template-list { max-height: 70vh; overflow-y: auto; }
+        .template-cat-label {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--text-muted); margin: 0.9rem 0 0.4rem; padding-left: 0.2rem;
+        }
+        .template-cat-label:first-child { margin-top: 0; }
+        .template-item {
+            display: block; width: 100%; text-align: left; padding: 0.55rem 0.7rem;
+            border-radius: var(--radius-sm); border: 1px solid transparent; background: none;
+            font-family: inherit; font-size: 0.85rem; color: var(--text-main); cursor: pointer;
+        }
+        .template-item:hover { background: var(--accent-light); }
+        .template-item.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .template-item .inactive-dot { color: var(--danger); margin-left: 0.3rem; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem; }
+        .form-input {
+            width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.55rem 0.7rem;
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface); color: var(--text-main);
+        }
+        .form-row { display: flex; gap: 1rem; }
+        .form-row .form-group { flex: 1; }
+        textarea.form-input {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.5;
+            min-height: 420px; resize: vertical; white-space: pre; overflow-wrap: normal; overflow-x: auto;
+        }
+        .placeholder-hint {
+            font-size: 0.78rem; color: var(--text-muted); background: var(--bg-page);
+            border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.7rem 0.9rem; margin-bottom: 1rem;
+        }
+        .placeholder-hint code { font-family: 'JetBrains Mono', monospace; background: var(--table-header); padding: 0.05rem 0.3rem; border-radius: 4px; }
+
+        .toast {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+            background: var(--text-main); color: var(--bg-page); padding: 0.75rem 1.1rem;
+            border-radius: var(--radius-sm); font-size: 0.85rem; box-shadow: var(--shadow-md);
+            opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: var(--danger); color: #fff; }
+        .toast.success { background: var(--success); color: #fff; }
+
+        .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Editor mode sub-tabs (Code / Visual Builder) */
+        .editor-modes { display: flex; gap: 0.3rem; margin-bottom: 0.9rem; background: var(--bg-page); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.25rem; width: fit-content; }
+        .editor-mode-btn {
+            font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+            padding: 0.4rem 0.85rem; border: none; border-radius: 6px; background: none; color: var(--text-muted);
+        }
+        .editor-mode-btn.active { background: var(--surface); color: var(--accent); box-shadow: var(--shadow-sm); }
+        .editor-view { display: none; }
+        .editor-view.active { display: block; }
+
+        /* Visual builder */
+        .token-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.35rem 0 0.7rem; }
+        .token-btn {
+            font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+            padding: 0.3rem 0.6rem; border-radius: 999px; border: 1px dashed var(--border);
+            background: var(--accent-light); color: var(--accent);
+        }
+        .token-btn:hover { border-style: solid; }
+        .color-input-row { display: flex; align-items: center; gap: 0.5rem; }
+        .color-input-row input[type="color"] { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; }
+        .visual-builder-note {
+            font-size: 0.78rem; color: var(--text-muted); margin: 0 0 1rem;
+            background: var(--accent-light); border-radius: var(--radius-sm); padding: 0.6rem 0.85rem;
+        }
+
+        /* Preview modal */
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+            z-index: 1000; align-items: center; justify-content: center; padding: 2rem;
+        }
+        .modal-backdrop.show { display: flex; }
+        .modal-box {
+            background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+            width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+        .modal-header h3 { margin: 0; font-size: 1rem; }
+        .modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.2rem; line-height: 1; padding: 0.2rem; }
+        .modal-close:hover { color: var(--danger); }
+        .modal-body { flex: 1; overflow: auto; background: var(--bg-page); padding: 1rem; }
+        .modal-body iframe { width: 100%; height: 60vh; border: none; background: #fff; border-radius: var(--radius-sm); }
+
+        @media (max-width: 860px) {
+            .templates-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        window.csrf_token = "{{ frappe.session.csrf_token }}";
+    </script>
+    {% if frappe.session.user == 'Guest' %}
+    <script>
+        window.location.href = '/login?redirect-to=/email_manager';
+    </script>
+    {% endif %}
+
+    <div class="shell">
+        <div class="topbar">
+            <div class="topbar-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                <h1>Email Manager</h1>
+            </div>
+            <div class="topbar-nav">
+                <span class="muted mono" style="font-size:0.78rem;">{{ frappe.session.user }}</span>
+                <a href="/kafka_control">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"></circle><circle cx="6" cy="19" r="2"></circle><circle cx="18" cy="19" r="2"></circle><path d="M12 7v4M12 11l-5.2 6M12 11l5.2 6"></path></svg>
+                    Kafka Control Center
+                </a>
+                <a href="/app/email-manager">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    Manage Configs
+                </a>
+                <a href="/app">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    Frappe Desk
+                </a>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="logs" onclick="showTab('logs')">Email Send Logs</button>
+            <button class="tab-btn" data-tab="templates" onclick="showTab('templates')">Templates</button>
+        </div>
+
+        <!-- ============================= LOGS TAB ============================= -->
+        <div class="panel active" id="panel-logs">
+            <div class="card">
+                <div class="toolbar">
+                    <select id="log-status-filter" onchange="loadLogs()">
+                        <option value="">All statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Retrying">Retrying</option>
+                        <option value="Success">Success</option>
+                        <option value="Failed">Failed</option>
+                    </select>
+                    <button class="btn btn-sm" onclick="loadLogs()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                        Refresh
+                    </button>
+                    <span class="muted" id="logs-count" style="font-size:0.8rem;"></span>
+                </div>
+                <div id="logs-table-wrap">
+                    <div class="empty-state">Loading…</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================== TEMPLATES TAB ============================ -->
+        <div class="panel" id="panel-templates">
+            <div class="card">
+                <div class="templates-layout">
+                    <div>
+                        <button class="btn btn-primary btn-sm" style="width:100%; margin-bottom:0.75rem;" onclick="newTemplate()">
+                            + New Template
+                        </button>
+                        <div class="template-list" id="template-list">
+                            <div class="empty-state">Loading…</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="placeholder-hint">
+                            {% raw %}
+                            Plain text — edited as raw source, not a rendered preview. Available placeholders:
+                            <code>{{ doc.name }}</code>, <code>{{ doc.owner }}</code>, <code>{{ doc.workflow_state }}</code>,
+                            <code>{{ recipient_name }}</code>,
+                            <code>{{ frappe.utils.format_datetime(doc.modified, "dd MMM yyyy, hh:mm a") }}</code>,
+                            <code>{{ frappe.utils.get_url_to_form(doc.doctype, doc.name) }}</code>.
+                            {% endraw %}
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Template Name</label>
+                                <input type="text" class="form-input" id="tpl-name" placeholder="e.g. Reimbursement">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <input type="text" class="form-input" id="tpl-category" placeholder="e.g. Financial">
+                            </div>
+                            <div class="form-group" style="flex:0 0 auto; align-self:flex-end;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:0.4rem; white-space:nowrap;">
+                                    <input type="checkbox" id="tpl-active" checked style="width:auto;"> Active
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="editor-modes">
+                            <button type="button" class="editor-mode-btn active" data-mode="code" onclick="showEditorMode('code')">Code</button>
+                            <button type="button" class="editor-mode-btn" data-mode="visual" onclick="showEditorMode('visual')">Visual Builder</button>
+                        </div>
+
+                        <!-- ---------------- Code view (raw, full control) ---------------- -->
+                        <div class="editor-view active" id="editor-view-code">
+                            <div class="form-group">
+                                <label class="form-label">Content</label>
+                                <textarea class="form-input" id="tpl-content" spellcheck="false" placeholder="Template source…"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- ---------------- Visual builder (no code needed) ---------------- -->
+                        <div class="editor-view" id="editor-view-visual">
+                            <div class="visual-builder-note">
+                                Fill in the fields below, then click "Apply to Template" — it writes plain HTML into
+                                the template for you. Switch back to "Code" any time to fine-tune by hand.
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Application Label</label>
+                                    <input type="text" class="form-input" id="vb-app-label" placeholder="e.g. Deposit Slip">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Category Badge</label>
+                                    <input type="text" class="form-input" id="vb-category" placeholder="e.g. Deposits">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Header / Button Color</label>
+                                <div class="color-input-row">
+                                    <input type="color" id="vb-color-picker" value="#0369a1" onchange="document.getElementById('vb-color').value = this.value.toUpperCase()">
+                                    <input type="text" class="form-input" id="vb-color" value="#0369a1" style="max-width:130px;" oninput="try{document.getElementById('vb-color-picker').value = this.value}catch(e){}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message</label>
+                                {% raw %}
+                                <div class="token-row">
+                                    <button type="button" class="token-btn" onclick="insertToken('vb-message', '{{ doc.name }}')">+ Reference No.</button>
+                                    <button type="button" class="token-btn" onclick="insertToken('vb-message', '{{ doc.workflow_state }}')">+ Status</button>
+                                    <button type="button" class="token-btn" onclick="insertToken('vb-message', '{{ doc.owner }}')">+ Applicant</button>
+                                    <button type="button" class="token-btn" onclick="insertToken('vb-message', '{{ recipient_name }}')">+ Recipient Name</button>
+                                </div>
+                                <textarea class="form-input" id="vb-message" rows="3" style="min-height:auto; font-family:inherit; white-space:normal;"
+                                    placeholder="Hi, your application {{ doc.name }} has been updated to {{ doc.workflow_state }}."></textarea>
+                                {% endraw %}
+                            </div>
+                            <div class="form-group" style="display:flex; align-items:center; gap:0.4rem;">
+                                <input type="checkbox" id="vb-show-project" checked style="width:auto;">
+                                <label class="form-label" style="margin:0;">Show a "Project" row when the document has a project number</label>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Button Text</label>
+                                    <input type="text" class="form-input" id="vb-button-text" value="Login to Pragati">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Button Link</label>
+                                    <input type="text" class="form-input" id="vb-button-link" value="https://pragati.iitg.ac.in/login">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Footer Text</label>
+                                <input type="text" class="form-input" id="vb-footer" value="This is an automated notification from Pragati (IIT Guwahati R&amp;D). Please do not reply to this email.">
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="applyVisualToContent()">Apply to Template ↓</button>
+                        </div>
+
+                        <div style="margin-top:1rem;">
+                            <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+                            <button class="btn" onclick="openPreview()">Preview</button>
+                            <span class="muted mono" id="tpl-current-name" style="font-size:0.78rem; margin-left:0.5rem;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="modal-backdrop" id="preview-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Preview (sample data)</h3>
+                <button type="button" class="modal-close" onclick="closePreview()">✕</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="preview-frame" sandbox=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        {% raw %}
+        // ------------------------------- helpers -------------------------------
+        async function callMethod(method, args = {}) {
+            const response = await fetch(`/api/method/${method}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Frappe-CSRF-Token': window.csrf_token || ''
+                },
+                body: JSON.stringify(args)
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || data.exc || response.statusText || 'Request failed');
+            }
+            return data.message;
+        }
+
+        function toast(message, type = '') {
+            const el = document.getElementById('toast');
+            el.textContent = message;
+            el.className = 'toast show' + (type ? ' ' + type : '');
+            setTimeout(() => { el.className = 'toast'; }, 3200);
+        }
+
+        function escapeHtml(s) {
+            return (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function showTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            if (name === 'logs') loadLogs();
+            if (name === 'templates') loadTemplates();
+        }
+
+        // ------------------------------- logs tab -------------------------------
+        async function loadLogs() {
+            const wrap = document.getElementById('logs-table-wrap');
+            const status = document.getElementById('log-status-filter').value;
+            try {
+                const logs = await callMethod('rndopsapp.rndopsapp.email.api.list_email_send_logs', { status: status || undefined, limit: 200 });
+                document.getElementById('logs-count').textContent = `${logs.length} row(s)`;
+                if (!logs.length) {
+                    wrap.innerHTML = '<div class="empty-state">No Email Send Logs yet.</div>';
+                    return;
+                }
+                wrap.innerHTML = `<table><thead><tr>
+                    <th>Reference</th><th>Status Change</th><th>Recipients</th>
+                    <th>Status</th><th>Attempt</th><th>Sent / Error</th><th></th>
+                </tr></thead><tbody>${logs.map(rowHtml).join('')}</tbody></table>`;
+            } catch (e) {
+                wrap.innerHTML = `<div class="empty-state">Failed to load: ${escapeHtml(e.message)}</div>`;
+            }
+        }
+
+        function rowHtml(log) {
+            const docLink = `/app/${encodeURIComponent(log.reference_doctype || '').toLowerCase().replace(/ /g,'-')}/${encodeURIComponent(log.reference_name || '')}`;
+            const errText = log.error_message ? escapeHtml(log.error_message) : (log.sent_at ? 'Sent ' + log.sent_at : '');
+            return `<tr>
+                <td>
+                    <div style="font-weight:600;">${escapeHtml(log.reference_doctype)}</div>
+                    <a href="${docLink}" target="_blank" class="mono muted">${escapeHtml(log.reference_name)}</a>
+                </td>
+                <td class="mono muted">${escapeHtml(log.previous_status)} → <strong>${escapeHtml(log.new_status)}</strong></td>
+                <td class="muted" style="max-width:180px;">${escapeHtml(log.recipients)}</td>
+                <td><span class="badge badge-${log.status}">${escapeHtml(log.status)}</span></td>
+                <td class="muted">${log.attempt_number || 1}${log.retry_count ? ' (retry ' + log.retry_count + ')' : ''}</td>
+                <td class="err-cell" title="${errText}">${errText || '—'}</td>
+                <td><button class="btn btn-sm" onclick="resendLog('${log.name}', this)">Resend</button></td>
+            </tr>`;
+        }
+
+        async function resendLog(logName, btn) {
+            btn.disabled = true;
+            btn.textContent = '…';
+            try {
+                await callMethod('rndopsapp.rndopsapp.email.api.resend_email_notification', { log_name: logName });
+                toast(`Resend queued for ${logName}`, 'success');
+                loadLogs();
+            } catch (e) {
+                toast(`Resend failed: ${e.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Resend';
+            }
+        }
+
+        // ---------------------------- templates tab -----------------------------
+        let templateCache = [];
+        let currentTemplateName = null;
+
+        async function loadTemplates() {
+            const list = document.getElementById('template-list');
+            try {
+                templateCache = await callMethod('rndopsapp.rndopsapp.email.api.list_email_templates');
+                if (!templateCache.length) {
+                    list.innerHTML = '<div class="empty-state">No templates yet.</div>';
+                    return;
+                }
+                const byCategory = {};
+                templateCache.forEach(t => {
+                    const cat = t.category || 'Uncategorized';
+                    (byCategory[cat] = byCategory[cat] || []).push(t);
+                });
+                list.innerHTML = Object.keys(byCategory).sort().map(cat => `
+                    <div class="template-cat-label">${escapeHtml(cat)}</div>
+                    ${byCategory[cat].map(t => `
+                        <button type="button" class="template-item${t.name === currentTemplateName ? ' active' : ''}" onclick="openTemplate('${t.name}')">
+                            ${escapeHtml(t.template_name)}${!t.is_active ? '<span class="inactive-dot">●</span>' : ''}
+                        </button>
+                    `).join('')}
+                `).join('');
+            } catch (e) {
+                list.innerHTML = `<div class="empty-state">Failed to load: ${escapeHtml(e.message)}</div>`;
+            }
+        }
+
+        async function openTemplate(name) {
+            try {
+                const t = await callMethod('rndopsapp.rndopsapp.email.api.get_email_template', { name });
+                currentTemplateName = t.name;
+                document.getElementById('tpl-name').value = t.template_name || '';
+                document.getElementById('tpl-category').value = t.category || '';
+                document.getElementById('tpl-active').checked = !!t.is_active;
+                document.getElementById('tpl-content').value = t.content || '';
+                document.getElementById('tpl-current-name').textContent = 'Editing: ' + t.name;
+                document.querySelectorAll('.template-item').forEach(el => el.classList.toggle('active', el.textContent.trim().startsWith(t.template_name)));
+                showEditorMode('code');
+                parseContentToVisualFields();
+            } catch (e) {
+                toast(`Failed to open template: ${e.message}`, 'error');
+            }
+        }
+
+        function newTemplate() {
+            currentTemplateName = null;
+            document.getElementById('tpl-name').value = '';
+            document.getElementById('tpl-category').value = '';
+            document.getElementById('tpl-active').checked = true;
+            document.getElementById('tpl-content').value = '';
+            document.getElementById('tpl-current-name').textContent = '(new, unsaved)';
+            document.querySelectorAll('.template-item').forEach(el => el.classList.remove('active'));
+            showEditorMode('visual');
+            document.getElementById('vb-app-label').value = '';
+            document.getElementById('vb-category').value = '';
+            document.getElementById('vb-color').value = '#0369a1';
+            document.getElementById('vb-color-picker').value = '#0369a1';
+            document.getElementById('vb-message').value = '';
+            document.getElementById('vb-show-project').checked = true;
+            document.getElementById('vb-button-text').value = 'Login to Pragati';
+            document.getElementById('vb-button-link').value = 'https://pragati.iitg.ac.in/login';
+            document.getElementById('vb-footer').value = 'This is an automated notification from Pragati (IIT Guwahati R&D). Please do not reply to this email.';
+        }
+
+        async function saveTemplate() {
+            const template_name = document.getElementById('tpl-name').value.trim();
+            const category = document.getElementById('tpl-category').value.trim();
+            const is_active = document.getElementById('tpl-active').checked ? 1 : 0;
+            const content = document.getElementById('tpl-content').value;
+            if (!template_name) { toast('Template Name is required', 'error'); return; }
+            if (!content.trim()) { toast('Template content is empty — use Code or Visual Builder to add some', 'error'); return; }
+            try {
+                const result = await callMethod('rndopsapp.rndopsapp.email.api.save_email_template', {
+                    name: currentTemplateName, template_name, category, content, is_active
+                });
+                currentTemplateName = result.name;
+                document.getElementById('tpl-current-name').textContent = 'Editing: ' + result.name;
+                toast('Template saved', 'success');
+                loadTemplates();
+            } catch (e) {
+                toast(`Save failed: ${e.message}`, 'error');
+            }
+        }
+
+        // ----------------------- editor mode (Code / Visual) --------------------
+        function showEditorMode(mode) {
+            document.querySelectorAll('.editor-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            document.getElementById('editor-view-code').classList.toggle('active', mode === 'code');
+            document.getElementById('editor-view-visual').classList.toggle('active', mode === 'visual');
+            if (mode === 'visual') parseContentToVisualFields();
+        }
+
+        function insertToken(fieldId, token) {
+            const el = document.getElementById(fieldId);
+            const start = el.selectionStart ?? el.value.length;
+            const end = el.selectionEnd ?? el.value.length;
+            el.value = el.value.slice(0, start) + token + el.value.slice(end);
+            el.focus();
+            el.selectionStart = el.selectionEnd = start + token.length;
+        }
+
+        // Best-effort: fills the Visual Builder from whatever is currently in
+        // the Code textarea, so switching tabs doesn't lose context. Every
+        // extraction is independently guarded — a template that doesn't match
+        // the standard layout just leaves that one field at its default
+        // instead of failing the whole thing.
+        function parseContentToVisualFields() {
+            const content = document.getElementById('tpl-content').value || '';
+            const appLabelName = document.getElementById('tpl-name').value || '';
+
+            const tryMatch = (re, group = 1) => {
+                try { const m = content.match(re); return m ? m[group].trim() : null; } catch (e) { return null; }
+            };
+
+            const color = tryMatch(/background-color:\s*(#[0-9a-fA-F]{6});padding:16px 24px;/);
+            const category = tryMatch(/float:right;margin-top:3px;">([^<]*)<\/span>/);
+            const appLabel = tryMatch(/font-weight:bold;">([^<]*)<\/p>\s*<h2/);
+            const message = tryMatch(/line-height:1\.5;">([\s\S]*?)<\/p>/);
+            const buttonText = tryMatch(/text-decoration:none;font-weight:bold;">\s*([^<]*?)\s*<\/a>/);
+            const buttonLink = tryMatch(/<a href="([^"]+)"\s*\n?\s*style="display:inline-block/);
+            const footer = tryMatch(/color:#9ca3af;line-height:1\.4;">\s*([\s\S]*?)\s*<\/p>/);
+
+            document.getElementById('vb-app-label').value = appLabel || appLabelName;
+            document.getElementById('vb-category').value = category || '';
+            if (color) { document.getElementById('vb-color').value = color; document.getElementById('vb-color-picker').value = color; }
+            if (message) document.getElementById('vb-message').value = message.replace(/\s+/g, ' ').trim();
+            document.getElementById('vb-show-project').checked = content.includes('doc.get("project_no")');
+            if (buttonText) document.getElementById('vb-button-text').value = buttonText;
+            if (buttonLink) document.getElementById('vb-button-link').value = buttonLink;
+            if (footer) document.getElementById('vb-footer').value = footer.replace(/\s+/g, ' ').trim();
+        }
+
+        function buildHtmlFromVisualFields() {
+            const appLabel = document.getElementById('vb-app-label').value.trim() || 'Application';
+            const category = document.getElementById('vb-category').value.trim();
+            const color = document.getElementById('vb-color').value.trim() || '#0369a1';
+            const message = document.getElementById('vb-message').value.trim()
+                || `Hi{% if recipient_name %} {{ recipient_name }}{% endif %}, your ${appLabel} application <strong>{{ doc.name }}</strong> has been updated{% if doc.workflow_state %} to <strong>{{ doc.workflow_state }}</strong>{% endif %}.`;
+            const showProject = document.getElementById('vb-show-project').checked;
+            const buttonText = document.getElementById('vb-button-text').value.trim() || 'Login to Pragati';
+            const buttonLink = document.getElementById('vb-button-link').value.trim() || 'https://pragati.iitg.ac.in/login';
+            const footer = document.getElementById('vb-footer').value.trim()
+                || 'This is an automated notification from Pragati (IIT Guwahati R&D). Please do not reply to this email.';
+
+            const projectRow = showProject ? `
+              {% set _proj = doc.get("project_no") or doc.get("project_number") or doc.get("project_name") %}
+              {% if _proj %}
+              <tr>
+                <td style="padding:6px 0;color:#6b7280;">Project</td>
+                <td style="padding:6px 0;">{{ _proj }}</td>
+              </tr>
+              {% endif %}` : '';
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:24px 0;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+        <tr>
+          <td style="background-color:${color};padding:16px 24px;">
+            <span style="color:#ffffff;font-size:16px;font-weight:bold;letter-spacing:.3px;">Pragati</span>
+            <span style="color:#ffffff;opacity:.85;font-size:12px;float:right;margin-top:3px;">${category}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px;">
+            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:bold;">${appLabel}</p>
+            <h2 style="margin:0 0 12px;font-size:18px;color:#111827;">
+              {% if doc.workflow_state %}Status update: {{ doc.workflow_state }}{% else %}Application update{% endif %}
+            </h2>
+            <p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.5;">
+              ${message}
+            </p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:#374151;border-collapse:collapse;margin-bottom:20px;">
+              <tr>
+                <td style="padding:6px 0;color:#6b7280;width:120px;">Reference No.</td>
+                <td style="padding:6px 0;font-weight:bold;">{{ doc.name }}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:#6b7280;">Applicant</td>
+                <td style="padding:6px 0;">{{ doc.owner }}</td>
+              </tr>${projectRow}
+              <tr>
+                <td style="padding:6px 0;color:#6b7280;">Last Updated</td>
+                <td style="padding:6px 0;">{{ frappe.utils.format_datetime(doc.modified, "dd MMM yyyy, hh:mm a") if doc.modified else "" }}</td>
+              </tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-radius:6px;background-color:${color};">
+                  <a href="${buttonLink}"
+                     style="display:inline-block;padding:10px 20px;font-size:13px;color:#ffffff;text-decoration:none;font-weight:bold;">
+                    ${buttonText}
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 24px;background-color:#f9fafb;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.4;">
+              ${footer}
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
+`;
+        }
+
+        function applyVisualToContent() {
+            document.getElementById('tpl-content').value = buildHtmlFromVisualFields();
+            toast('Applied — switch to Code to review before saving', 'success');
+        }
+
+        // ------------------------------- preview ---------------------------------
+        async function openPreview() {
+            const content = document.getElementById('tpl-content').value;
+            if (!content.trim()) { toast('Nothing to preview yet', 'error'); return; }
+            try {
+                const html = await callMethod('rndopsapp.rndopsapp.email.api.preview_email_template', { content });
+                document.getElementById('preview-frame').srcdoc = html;
+                document.getElementById('preview-modal').classList.add('show');
+            } catch (e) {
+                toast(`Preview failed: ${e.message}`, 'error');
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('preview-modal').classList.remove('show');
+        }
+
+        // ------------------------------- boot -------------------------------
+        loadLogs();
+        {% endraw %}
+    </script>
+</body>
+</html>
