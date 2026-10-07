@@ -24,7 +24,7 @@
   },
   {
    "fieldname": "method",
-   "fieldtype": "Data",
+   "fieldtype": "Long Text",
    "in_list_view": 1,
    "label": "Title",
    "read_only": 1

@@ -183,7 +183,9 @@
         }
         .template-item:hover { background: var(--accent-light); }
         .template-item.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-        .template-item .inactive-dot { color: var(--danger); margin-left: 0.3rem; }
+        .template-item .elig-dot { margin-left: 0.4rem; font-size: 0.7rem; }
+        .template-item .elig-dot.ok { color: var(--success); }
+        .template-item .elig-dot.no { color: var(--danger); }
 
         .form-group { margin-bottom: 1rem; }
         .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem; }
@@ -241,6 +243,11 @@
             background: var(--accent-light); border-radius: var(--radius-sm); padding: 0.6rem 0.85rem;
         }
 
+        .em-guide { margin: 0 0 1rem; }
+        .em-guide summary { cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--accent); }
+        .em-guide ol, .em-guide ul { margin: 0.5rem 0 0 1.2rem; padding: 0; }
+        .em-guide li { margin-bottom: 0.3rem; }
+
         /* Preview modal */
         .modal-backdrop {
             display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.55);
@@ -296,6 +303,24 @@
                 </a>
             </div>
         </div>
+
+        <details class="visual-builder-note em-guide">
+            <summary>Guideline: adding email notifications for a DocType</summary>
+            <ol>
+                <li>Create (or reuse) an <b>Email Notification Template</b> in the Templates tab. Wording is fixed text, so write it for the one state it will be used for (e.g. "has been approved, now you can submit the P_11 form").</li>
+                <li>Create an <b>Email Manager</b> record in Desk: Module = the DocType, Enabled, Default Template = your template.</li>
+                <li>In its <b>Doc Status</b> table add one row per workflow state to notify on (e.g. <code>Approved</code>). A row can use its own template. Only list states the template wording fits.</li>
+                <li>Config is cached for up to 5 minutes; clear cache and restart workers for changes to apply immediately.</li>
+            </ol>
+            <ul>
+                <li><b>When it sends:</b> only when the workflow state <i>changes into</i> a listed state, on save/submit. One email per document per state (duplicates are blocked by Email Send Logs).</li>
+                <li><b>Recipient:</b> the document owner (whoever created/applied) &mdash; exactly one user. Skipped if the owner is Administrator/Guest or disabled, so records created by system users send nothing.</li>
+                <li><b>Existing records:</b> documents already in a state are not emailed retroactively.</li>
+                <li><b>Manual overrides:</b> changing state from Kafka Control writes straight to the database and does <i>not</i> send an email.</li>
+                <li><b>Fund Sanction:</b> the state is read from <code>sanction_workflow_status</code> (mirrors <code>workflow_state</code>); every other DocType uses <code>workflow_state</code>.</li>
+                <li>Check the <b>Email Send Logs</b> tab for Pending / Success / Failed and to resend.</li>
+            </ul>
+        </details>
 
         <div class="tabs">
             <button class="tab-btn active" data-tab="logs" onclick="showTab('logs')">Email Send Logs</button>
@@ -569,7 +594,7 @@
                     <div class="template-cat-label">${escapeHtml(cat)}</div>
                     ${byCategory[cat].map(t => `
                         <button type="button" class="template-item${t.name === currentTemplateName ? ' active' : ''}" onclick="openTemplate('${t.name}')">
-                            ${escapeHtml(t.template_name)}${!t.is_active ? '<span class="inactive-dot">●</span>' : ''}
+                            ${escapeHtml(t.template_name)}<span class="elig-dot ${t.eligible ? 'ok' : 'no'}" title="${escapeHtml(t.eligible_reason || '')}${!t.is_active ? ' (template inactive)' : ''}">●</span>
                         </button>
                     `).join('')}
                 `).join('');

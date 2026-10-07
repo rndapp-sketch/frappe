@@ -155,7 +155,7 @@
         }
         .avatar-chip .who { font-size: .8rem; font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .app-content { padding: 1.75rem 2.25rem 3.5rem; flex: 1; max-width: 980px; }
+        .app-content { padding: 1.75rem 2.25rem 3.5rem; flex: 1; max-width: none; }
 
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
@@ -393,16 +393,48 @@ async function handleLogin(evt) {
                 <div id="bulk-banner" class="doc-banner"></div>
 
                 <div style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;">
-                    <input type="file" id="bulk-file-input" accept=".csv,.xlsx,.xls" class="form-input" style="max-width:340px;">
-                    <button type="button" id="bulk-upload-btn" class="btn btn-primary" onclick="submitBulkUpload()">Upload &amp; Import</button>
+                    <input type="file" id="bulk-file-input" accept=".csv,.xlsx,.xls" class="form-input" style="max-width:340px;" onchange="onBulkFileChosen()">
+                    <button type="button" id="bulk-upload-btn" class="btn btn-primary" onclick="previewBulkUpload()">Map Columns &amp; Continue</button>
                     <span class="save-summary" id="bulk-summary"></span>
+                </div>
+
+                <div id="bulk-mapping-wrap" style="display:none;margin-top:1.1rem;">
+                    <p class="save-summary" style="margin:0 0 .7rem;">Match each column from your file to a Project Staff field. Columns set to "Do not import" are ignored. Fields marked <span class="req-dot">*</span> are required.</p>
+                    <div class="bulk-results-table-wrap">
+                        <table class="bulk-results-table">
+                            <thead>
+                                <tr><th>Column in your file</th><th>Sample value</th><th>Maps to</th></tr>
+                            </thead>
+                            <tbody id="bulk-mapping-body"></tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;margin-top:1rem;">
+                        <button type="button" id="bulk-confirm-btn" class="btn btn-primary" onclick="showBulkDataPreview()">Preview &amp; Edit Data →</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelBulkMapping()">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="bulk-preview-wrap" style="display:none;margin-top:1.1rem;">
+                    <p class="save-summary" style="margin:0 0 .7rem;">Review and edit the data below before importing — click any cell to change it, or untick a row to skip it.</p>
+                    <div class="bulk-results-table-wrap">
+                        <table class="bulk-results-table">
+                            <thead><tr id="bulk-preview-head"></tr></thead>
+                            <tbody id="bulk-preview-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="bulk-preview-banner" class="doc-banner" style="margin-top:1rem;"></div>
+                    <div style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;margin-top:1rem;">
+                        <button type="button" id="bulk-preview-import-btn" class="btn btn-primary" onclick="confirmBulkImportFromPreview()">Import All Rows</button>
+                        <button type="button" class="btn btn-secondary" onclick="backToBulkMapping()">← Back to Column Mapping</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelBulkMapping()">Cancel</button>
+                    </div>
                 </div>
 
                 <div id="bulk-results-wrap" style="display:none;margin-top:1.1rem;">
                     <div class="bulk-results-table-wrap">
                         <table class="bulk-results-table">
                             <thead>
-                                <tr><th>Row</th><th>Name</th><th>Status</th><th>Details</th></tr>
+                                <tr><th>Row</th><th>Name</th><th>Status</th><th>Details</th><th>Action</th></tr>
                             </thead>
                             <tbody id="bulk-results-body"></tbody>
                         </table>
@@ -606,19 +638,37 @@ async function handleLogin(evt) {
         URL.revokeObjectURL(url);
     }
 
-    async function submitBulkUpload() {
+    // Selected file's parsed contents are kept in memory across the
+    // upload -> map columns -> edit & preview -> import steps rather than
+    // staged server-side, so there's no temp-file cleanup to worry about
+    // for an internal ops tool.
+    let bulkSelectedFile = null;
+    let bulkPreviewPayload = null;
+    let bulkMappingFields = [];
+    let bulkPreviewColumns = []; // [{colIndex, field, label}] for the currently-shown edit grid
+
+    function onBulkFileChosen() {
+        cancelBulkMapping();
+    }
+
+    function resetBulkBanner() {
         const banner = document.getElementById('bulk-banner');
         const summary = document.getElementById('bulk-summary');
         const resultsWrap = document.getElementById('bulk-results-wrap');
         const resultsBody = document.getElementById('bulk-results-body');
-        const btn = document.getElementById('bulk-upload-btn');
-        const fileInput = document.getElementById('bulk-file-input');
-
         banner.style.display = 'none';
         banner.className = 'doc-banner';
         resultsWrap.style.display = 'none';
         resultsBody.innerHTML = '';
         summary.textContent = '';
+    }
+
+    async function previewBulkUpload() {
+        const banner = document.getElementById('bulk-banner');
+        const btn = document.getElementById('bulk-upload-btn');
+        const fileInput = document.getElementById('bulk-file-input');
+
+        resetBulkBanner();
 
         const file = fileInput.files[0];
         if (!file) {
@@ -632,10 +682,10 @@ async function handleLogin(evt) {
         formData.append('file', file);
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Importing…';
+        btn.innerHTML = '<span class="spinner"></span> Reading columns…';
         try {
             const response = await fetch(
-                '/api/method/rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.bulk_import_project_staff_details',
+                '/api/method/rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.preview_bulk_import_headers',
                 {
                     method: 'POST',
                     headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
@@ -644,47 +694,343 @@ async function handleLogin(evt) {
             );
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error(data.message || data.exc_type || response.statusText || 'Import failed.');
+                throw new Error(data.message || data.exc_type || response.statusText || 'Could not read the file.');
             }
-            renderBulkResults(data.message || data);
+            bulkSelectedFile = file;
+            bulkPreviewPayload = data.message || data;
+            renderBulkMapping(bulkPreviewPayload);
         } catch (err) {
-            banner.textContent = err.message || 'Failed to import the file.';
+            banner.textContent = err.message || 'Failed to read the file.';
             banner.className = 'doc-banner error';
             banner.style.display = 'block';
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Upload & Import';
-            fileInput.value = '';
+            btn.textContent = 'Map Columns & Continue';
         }
     }
 
+    function renderBulkMapping(payload) {
+        const mappingWrap = document.getElementById('bulk-mapping-wrap');
+        const mappingBody = document.getElementById('bulk-mapping-body');
+        const headers = payload.headers || [];
+        const suggested = payload.suggested_mapping || [];
+        const sample = payload.sample_row || [];
+        bulkMappingFields = payload.fields || [];
+
+        const optionsHtml = '<option value="">— Do not import —</option>' +
+            bulkMappingFields.map(f => `<option value="${escHtml(f.fieldname)}">${escHtml(f.label)}${f.required ? ' *' : ''}</option>`).join('');
+
+        mappingBody.innerHTML = headers.map((h, i) => `
+            <tr>
+                <td>${escHtml(h || '(blank header)')}</td>
+                <td style="color:var(--text-muted);">${escHtml(sample[i] || '')}</td>
+                <td><select class="form-input bulk-map-select" data-col="${i}">${optionsHtml}</select></td>
+            </tr>
+        `).join('');
+
+        headers.forEach((h, i) => {
+            const select = mappingBody.querySelector(`select[data-col="${i}"]`);
+            if (select && suggested[i]) select.value = suggested[i];
+        });
+
+        document.getElementById('bulk-preview-wrap').style.display = 'none';
+        mappingWrap.style.display = 'block';
+    }
+
+    function cancelBulkMapping() {
+        bulkSelectedFile = null;
+        bulkPreviewPayload = null;
+        bulkPreviewColumns = [];
+        document.getElementById('bulk-mapping-wrap').style.display = 'none';
+        document.getElementById('bulk-mapping-body').innerHTML = '';
+        document.getElementById('bulk-preview-wrap').style.display = 'none';
+        document.getElementById('bulk-preview-body').innerHTML = '';
+        document.getElementById('bulk-preview-head').innerHTML = '';
+    }
+
+    function backToBulkMapping() {
+        document.getElementById('bulk-preview-wrap').style.display = 'none';
+        document.getElementById('bulk-mapping-wrap').style.display = 'block';
+    }
+
+    function getBulkColumnMapping() {
+        const selects = Array.from(document.querySelectorAll('#bulk-mapping-body .bulk-map-select'))
+            .sort((a, b) => Number(a.dataset.col) - Number(b.dataset.col));
+        return selects.map(s => s.value || null);
+    }
+
+    // Step 2 -> 3: turn the chosen column mapping + all parsed rows into an
+    // editable grid, so mistakes (bad dates, "0" instead of "No", a typo'd
+    // department, ...) can be fixed by hand before anything is inserted,
+    // and individual rows can be excluded outright.
+    function showBulkDataPreview() {
+        const banner = document.getElementById('bulk-banner');
+        resetBulkBanner();
+
+        const columnMapping = getBulkColumnMapping();
+        const requiredFields = bulkMappingFields.filter(f => f.required).map(f => f.fieldname);
+        const mappedFields = new Set(columnMapping.filter(Boolean));
+        const missingRequired = requiredFields.filter(f => !mappedFields.has(f));
+        if (missingRequired.length) {
+            const labels = missingRequired.map(f => (bulkMappingFields.find(x => x.fieldname === f) || {}).label || f);
+            banner.textContent = `Please map a column to each required field: ${labels.join(', ')}.`;
+            banner.className = 'doc-banner error';
+            banner.style.display = 'block';
+            return;
+        }
+
+        bulkPreviewColumns = columnMapping
+            .map((field, colIndex) => (field ? { colIndex, field, label: (bulkMappingFields.find(f => f.fieldname === field) || {}).label || field } : null))
+            .filter(Boolean);
+
+        renderBulkPreviewGrid();
+        document.getElementById('bulk-mapping-wrap').style.display = 'none';
+        document.getElementById('bulk-preview-wrap').style.display = 'block';
+    }
+
+    function renderBulkPreviewGrid() {
+        const head = document.getElementById('bulk-preview-head');
+        const body = document.getElementById('bulk-preview-body');
+        const dataRows = (bulkPreviewPayload && bulkPreviewPayload.data_rows) || [];
+
+        head.innerHTML = '<th style="width:70px;">Include</th><th style="width:50px;">#</th>' +
+            bulkPreviewColumns.map(c => `<th>${escHtml(c.label)}</th>`).join('');
+
+        body.innerHTML = dataRows.map((row, r) => `
+            <tr>
+                <td><input type="checkbox" class="bulk-preview-include" data-row="${r}" checked></td>
+                <td style="color:var(--text-muted);">${r + 1}</td>
+                ${bulkPreviewColumns.map(c => `
+                    <td><input type="text" class="form-input bulk-preview-cell" style="min-width:130px;"
+                        data-row="${r}" data-field="${escHtml(c.field)}" value="${escHtml(row[c.colIndex] || '')}"></td>
+                `).join('')}
+            </tr>
+        `).join('');
+    }
+
+    async function confirmBulkImportFromPreview() {
+        const banner = document.getElementById('bulk-preview-banner');
+        const btn = document.getElementById('bulk-preview-import-btn');
+
+        banner.style.display = 'none';
+        banner.className = 'doc-banner';
+
+        const includeBoxes = Array.from(document.querySelectorAll('.bulk-preview-include'))
+            .filter(cb => cb.checked)
+            .map(cb => Number(cb.dataset.row));
+        const includeSet = new Set(includeBoxes);
+
+        const rowsByIndex = {};
+        document.querySelectorAll('.bulk-preview-cell').forEach(inp => {
+            const r = Number(inp.dataset.row);
+            if (!includeSet.has(r)) return;
+            if (!rowsByIndex[r]) rowsByIndex[r] = {};
+            const v = inp.value.trim();
+            if (v) rowsByIndex[r][inp.dataset.field] = v;
+        });
+        const rows = Object.keys(rowsByIndex)
+            .sort((a, b) => Number(a) - Number(b))
+            .map(r => rowsByIndex[r])
+            .filter(row => Object.keys(row).length);
+
+        if (!rows.length) {
+            banner.textContent = 'No rows selected to import.';
+            banner.className = 'doc-banner error';
+            banner.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Importing…';
+        try {
+            const result = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.bulk_import_project_staff_details_from_rows',
+                { rows }
+            );
+            renderBulkResults(result.message || result);
+            cancelBulkMapping();
+            document.getElementById('bulk-file-input').value = '';
+        } catch (err) {
+            banner.textContent = err.message || 'Failed to import the data.';
+            banner.className = 'doc-banner error';
+            banner.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Import All Rows';
+        }
+    }
+
+    // Bulk-import results + running counts are kept here so a per-row
+    // "Fix & Retry" (see below) can patch a single row's status in place —
+    // via create_project_staff_details_entry, the same single-record
+    // endpoint the manual form uses — without re-uploading or re-parsing
+    // the whole file.
+    let bulkLastResults = [];
+    let bulkLastCounts = { success: 0, duplicate: 0, error: 0 };
+
     function renderBulkResults(payload) {
+        bulkLastResults = payload.results || [];
+        bulkLastCounts = payload.counts || { success: 0, duplicate: 0, error: 0 };
+        renderBulkBanner();
+        renderBulkResultsTable();
+    }
+
+    function renderBulkBanner() {
         const banner = document.getElementById('bulk-banner');
         const summary = document.getElementById('bulk-summary');
-        const resultsWrap = document.getElementById('bulk-results-wrap');
-        const resultsBody = document.getElementById('bulk-results-body');
-        const counts = payload.counts || { success: 0, duplicate: 0, error: 0 };
-        const results = payload.results || [];
+        const counts = bulkLastCounts;
 
         summary.textContent = `${counts.success} created · ${counts.duplicate} duplicate · ${counts.error} error${counts.error === 1 ? '' : 's'}`;
         banner.textContent = `Import finished — ${counts.success} created, ${counts.duplicate} duplicates skipped, ${counts.error} failed.`;
         banner.className = 'doc-banner ' + (counts.error ? 'error' : (counts.duplicate ? 'info' : 'success'));
         banner.style.display = 'block';
+    }
+
+    function renderBulkResultsTable() {
+        const resultsWrap = document.getElementById('bulk-results-wrap');
+        const resultsBody = document.getElementById('bulk-results-body');
+        const results = bulkLastResults;
 
         if (!results.length) {
             resultsWrap.style.display = 'none';
             return;
         }
 
-        resultsBody.innerHTML = results.map(r => `
-            <tr>
-                <td>${r.row}</td>
-                <td>${escHtml(r.name || '')}</td>
-                <td><span class="bulk-row-badge ${escHtml(r.status)}">${escHtml(r.status)}</span></td>
-                <td>${escHtml(r.message || '')}</td>
-            </tr>
-        `).join('');
+        resultsBody.innerHTML = results.map((r, i) => {
+            const canRetry = (r.status === 'error' || r.status === 'duplicate') && r.row_data;
+            const actionCell = canRetry
+                ? `<button type="button" class="btn btn-secondary" style="padding:.3rem .6rem;font-size:.75rem;" onclick="toggleBulkRetryForm(${i})">Fix &amp; Retry</button>`
+                : '';
+            return `
+                <tr id="bulk-result-row-${i}">
+                    <td>${r.row}</td>
+                    <td>${escHtml(r.name || '')}</td>
+                    <td><span class="bulk-row-badge ${escHtml(r.status)}">${escHtml(r.status)}</span></td>
+                    <td>${escHtml(r.message || '')}</td>
+                    <td>${actionCell}</td>
+                </tr>
+                <tr id="bulk-retry-row-${i}" style="display:none;">
+                    <td colspan="5" style="background:var(--bg-page);">
+                        <div id="bulk-retry-form-${i}"></div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
         resultsWrap.style.display = 'block';
+    }
+
+    function toggleBulkRetryForm(i) {
+        const row = document.getElementById(`bulk-retry-row-${i}`);
+        const container = document.getElementById(`bulk-retry-form-${i}`);
+        if (row.style.display !== 'none') {
+            row.style.display = 'none';
+            return;
+        }
+        if (!container.dataset.built) {
+            renderBulkRetryForm(i, container);
+            container.dataset.built = '1';
+        }
+        row.style.display = '';
+    }
+
+    function renderBulkRetryForm(i, container) {
+        const result = bulkLastResults[i];
+        const rowData = result.row_data || {};
+        // Falls back to the full known field list if this session never ran
+        // the mapping-preview step (e.g. results loaded from elsewhere).
+        const fields = bulkMappingFields.length ? bulkMappingFields : [
+            { fieldname: 'pi_id', label: 'PI Id', required: true },
+            { fieldname: 'project_no', label: 'Project Number', required: true },
+            { fieldname: 'scr_id', label: 'SCR Id', required: false },
+            { fieldname: 'ps_department', label: 'Department', required: true },
+            { fieldname: 'ps_designation', label: 'Designation', required: true },
+            { fieldname: 'ps_first_name', label: 'First Name', required: true },
+            { fieldname: 'ps_middle_name', label: 'Middle Name', required: false },
+            { fieldname: 'ps_last_name', label: 'Last Name', required: true },
+            { fieldname: 'ps_gender', label: 'Gender', required: true },
+            { fieldname: 'ps_date_of_birth', label: 'Date of Birth', required: false },
+            { fieldname: 'ps_fathers_name', label: "Father's Name", required: false },
+            { fieldname: 'ps_blood_group', label: 'Blood Group', required: false },
+            { fieldname: 'ps_maritial_status', label: 'Maritial Status', required: false },
+            { fieldname: 'ps_citizenship', label: 'Citizenship', required: false },
+            { fieldname: 'ps_phone_number', label: 'Phone Number', required: false },
+            { fieldname: 'ps_email_id', label: 'Email Id', required: false },
+            { fieldname: 'erp_mail', label: 'ERP Mail', required: false },
+            { fieldname: 'ps_present_address', label: 'Present Address', required: false },
+            { fieldname: 'ps_permanent_address', label: 'Permanent Address', required: false },
+            { fieldname: 'bank_account_number', label: 'Bank Account Number', required: false },
+            { fieldname: 'ifsc_code', label: 'IFSC Code', required: false },
+            { fieldname: 'ps_pan', label: 'PAN', required: false },
+            { fieldname: 'ps_aadhar_number', label: 'Aadhar Number', required: false },
+            { fieldname: 'ps_joining_date', label: 'Joining Date', required: true },
+            { fieldname: 'ps_term_completion_date', label: 'Term Completion Date', required: false },
+            { fieldname: 'ps_basic_salary', label: 'Basic Salary', required: false },
+            { fieldname: 'ps_hra', label: 'HRA', required: false },
+            { fieldname: 'ps_ma', label: 'Medical Allowance', required: false },
+            { fieldname: 'ps_hostel', label: 'Hostel', required: false },
+            { fieldname: 'ps_ta', label: 'Travel Allowance Needed', required: false },
+            { fieldname: 'ps_ta_amount', label: 'Travel Allowance Amount', required: false },
+        ];
+
+        container.innerHTML = `
+            <div class="field-grid" style="margin:.75rem 0;">
+                ${fields.map(f => `
+                    <div class="field-group">
+                        <label>${escHtml(f.label)}${f.required ? ' <span class="req-dot">*</span>' : ''}</label>
+                        <input type="text" class="form-input bulk-retry-input" data-field="${escHtml(f.fieldname)}"
+                            id="bulk-retry-${i}-${escHtml(f.fieldname)}" value="${escHtml(rowData[f.fieldname] || '')}">
+                    </div>
+                `).join('')}
+            </div>
+            <div id="bulk-retry-banner-${i}" class="doc-banner" style="display:none;"></div>
+            <div style="display:flex;gap:.6rem;margin-bottom:.9rem;">
+                <button type="button" class="btn btn-primary" style="padding:.5rem 1rem;font-size:.82rem;" onclick="retryBulkRow(${i})">Save &amp; Retry Import</button>
+                <button type="button" class="btn btn-secondary" style="padding:.5rem 1rem;font-size:.82rem;" onclick="toggleBulkRetryForm(${i})">Close</button>
+            </div>
+        `;
+    }
+
+    async function retryBulkRow(i) {
+        const container = document.getElementById(`bulk-retry-form-${i}`);
+        const banner = document.getElementById(`bulk-retry-banner-${i}`);
+        const btn = container.querySelector('.btn-primary');
+
+        const data = {};
+        container.querySelectorAll('.bulk-retry-input').forEach(inp => {
+            const v = inp.value.trim();
+            if (v) data[inp.dataset.field] = v;
+        });
+
+        banner.style.display = 'none';
+        banner.className = 'doc-banner';
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Retrying…';
+        try {
+            const result = await callMethod(
+                'rndopsapp.rndopsapp.doctype.project_staff_details.project_staff_details.create_project_staff_details_entry',
+                { data }
+            );
+            const created = result.message || result;
+            const oldResult = bulkLastResults[i];
+            if (oldResult.status === 'error') bulkLastCounts.error = Math.max(0, bulkLastCounts.error - 1);
+            if (oldResult.status === 'duplicate') bulkLastCounts.duplicate = Math.max(0, bulkLastCounts.duplicate - 1);
+            bulkLastCounts.success += 1;
+            bulkLastResults[i] = {
+                ...oldResult,
+                status: 'success',
+                docname: created.docname,
+                ps_emp_id: created.ps_emp_id,
+                message: `Created ${created.docname} — Employee ID ${created.ps_emp_id}`,
+            };
+            renderBulkBanner();
+            renderBulkResultsTable();
+        } catch (err) {
+            banner.textContent = err.message || 'Retry failed — please check the fields and try again.';
+            banner.className = 'doc-banner error';
+            banner.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Save & Retry Import';
+        }
     }
 
     function psToggleTaAmount() {
